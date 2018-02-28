@@ -1,0 +1,9 @@
+<testsuites>
+<testsuite failures="1" tests="0" errors="1" name="Automation-Tests" skipped="0" time="0">
+<testcase classname="XmlReportCaptureFailure" name="XmlReportCaptureFailure" time="0">
+	<failure>An error occurred that prevented xml from being captured by the tested game. Additionally, the backup xml provided by Appium was not retrievable. 
+		This does not mean the tests themselves failed. Verify test success by looking at the output for the test names and pass/fail tokens in the logging.
+	</failure>
+</testcase>
+</testsuite>
+</testsuites>

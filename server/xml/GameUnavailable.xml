@@ -1,0 +1,8 @@
+<testsuites>
+<testsuite failures="1" tests="0" errors="1" name="Automation-Tests" skipped="0" time="0">
+<testcase classname="XmlReportCaptureFailure" name="XmlReportCaptureFailure" time="0">
+	<failure>A Game Unavailable popup occurred in execution of the automation test that prevented the framework from recording test statuses. Test results will appear in the log of pubnub channel communications.
+	</failure>
+</testcase>
+</testsuite>
+</testsuites>
