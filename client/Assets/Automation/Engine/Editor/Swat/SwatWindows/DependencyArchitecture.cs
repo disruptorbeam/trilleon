@@ -53,13 +53,11 @@ namespace TrilleonAutomation {
 			DependencyOrderingMasterless = new List<KeyValuePair<KeyValuePair<int,string>,List<KeyValuePair<Type,MethodInfo>>>>();
 			GetDependencyClassTestStructure();
 			_buildingList = false;
-
+			
 		}
 
 		public override bool UpdateWhenNotInFocus() {
-
 			return false;
-
 		}
 
 		public override void OnTabSelected() { }
