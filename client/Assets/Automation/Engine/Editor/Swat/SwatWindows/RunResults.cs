@@ -38,9 +38,7 @@ namespace TrilleonAutomation {
 		public override void Set() { }
 
 		public override bool UpdateWhenNotInFocus() {
-
 			return false;
-
 		}
 
 		public override void OnTabSelected() {
