@@ -1,10 +1,36 @@
-var all_tests = []
+/* 
++   This file is part of Trilleon.  Trilleon is a client automation framework.
++  
++   Copyright (C) 2017 Disruptor Beam
++  
++   Trilleon is free software: you can redistribute it and/or modify
++   it under the terms of the GNU Lesser General Public License as published by
++   the Free Software Foundation, either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
+
+var all_tests = [];
 var SCREENSHOT_STAGE_DELIMITER = "PT_STAGE_";
 var last_opened_display_panel;
 var is_screenshot_report = false;
-var GAME_NAME, GAME_ENV, BUILD_NUMBER, DOMAIN_URL;
+var GAME_NAME = null;
+var GAME_ENV = null;
+var BUILD_NUMBER = null;
+var DOMAIN_URL = null;
+var SUCCESS_CHAR = "&#x2713;";
+var FAIL_CHAR = "&#x2717;";
+var TRY_SUCCESS_CHAR = "&#9826";
+var TRY_FAIL_CHAR = "&#9769";
 
-$(function() {
+$(document).ready(function() {
 
 	GAME_NAME = $("#game_name_hidden").val();
 	GAME_ENV = $("#game_env_hidden").val();
@@ -18,7 +44,7 @@ $(function() {
 
 	if(!is_screenshot_report) {
 
-		testResultsJson = currentJsonToRender = JSON.parse(document.getElementById("results_hidden").value.replace(/@APOS@/g,"\"").replace(/\n/g,"\\n").replace(/\t/g,"\\t").replace(/\r/g,"\\r"));
+		testResultsJson = currentJsonToRender = JSON.parse(document.getElementById("results_hidden").value.replace(/@APOS@/g,"\"").replace(/@QUOT@/g,"'").replace(/\n/g,"\\n").replace(/\t/g,"\\t").replace(/\r/g,"\\r"));
 
 		//If this is a single-test temporary report, parse out all but requested test from table.
 		var filter_test = $("#filter_single_test").val();
@@ -111,6 +137,7 @@ function BuildTable() {
 
          	 if(assertions.length > 0) {
 
+         	 	var isTry = false;
 	         	for(var a = 0; a < assertions.length - 1; a++) {
 	         		var assertion = unescape(assertions[a].assertion);
 	         	 	if(assertion.indexOf("--WARNING--") >= 0) {
@@ -127,7 +154,11 @@ function BuildTable() {
 	         	 			warning_list.append("<div class='warning_message'>" + assertion + "</div>");
 	         			}
 	         	 	}
-	         	 	assertions_html += "<div><div class='check_green' style='width:5%;'>&#x2713;</div><div class='assertion_item' style='width:95%;'>" + assertion + "</div></div>";
+	         	 	if(assertion.indexOf("**TRY_SUCCESS**") >= 0) {
+	         	 		isTry = true;
+	         	 		assertion.replace("**TRY_SUCCESS**", "");
+	         	 	}
+	         	 	assertions_html += "<div><div class='check_green' style='width:5%;'>" + (isTry ? TRY_SUCCESS_CHAR : SUCCESS_CHAR) + "</div><div class='assertion_item' style='width:95%;'>" + assertion + "</div></div>";
 	         	}
 	         	if(data.status == "Failed") {
 	         	 	var error = assertions[assertions.length - 1].assertion;
@@ -136,11 +167,20 @@ function BuildTable() {
 	         	 		$(row).addClass("status_critical_error_show");
 	         	 		$(".critical_error_detected").show();
 	         	 	}
-	         	 	assertions_html += "<div><span class='check_red' style='width:5%;'>&#x2717;</span><span class='assertion_item' style='width:95%;'>" + error + "</span></div>";
+	         	 	if(error.indexOf("**TRY_FAIL**") >= 0) {
+	         	 		isTry = true;
+	         	 		error.replace("**TRY_FAIL**", "");
+	         	 	}
+	         	 	assertions_html += "<div><span class='" + (isTry ? "check_orange" : "check_red") + "' style='width:5%;'>" + (isTry ? TRY_FAIL_CHAR : FAIL_CHAR) + "</span><span class='assertion_item' style='width:95%;'>" + error + "</span></div>";
 	         	}
-	         	if(data.status == "Passed"){
+	         	if(data.status == "Passed") {
+	         		var message = unescape(assertions[assertions.length - 1].assertion);
 	         	 	$(".error_button").removeClass("error_button").addClass("passed_button");
-	         	 	assertions_html += "<div><div class='check_green' style='width:5%;'>&#x2713;</div><div class='assertion_item' style='width:95%;'>" + unescape(assertions[assertions.length - 1].assertion) + "</div></div>";
+	         	 	if(message.indexOf("**TRY_SUCCESS**") >= 0) {
+	         	 		isTry = true;
+	         	 		message.replace("**TRY_SUCCESS**", "");
+	         	 	}
+	         	 	assertions_html += "<div><div class='check_green' style='width:5%;'>" + (isTry ? TRY_SUCCESS_CHAR : SUCCESS_CHAR) + "</div><div class='assertion_item' style='width:95%;'>" + message + "</div></div>";
 	         	}
 	         	$(row).find(".assertions").html(assertions_html);
 
@@ -772,7 +812,7 @@ function BuildCommunicationHistory() {
 		var message = messages[x].split("##")[1];
 		var className = messages[x].split("##")[0].toLowerCase() == "client" ? "message_right" : "message_left"
 		if(typeof message != 'undefined' && message.length > 0) {
-			message_exchange_list.append("<div class='" + className + "'>" + message.replace(/@APOS@/g, "\"") + "</div>");
+			message_exchange_list.append("<div class='" + className + "'>" + message.replace(/@APOS@/g, "\"").replace(/@QUOT@/g,"'") + "</div>");
 		}
 
 	}

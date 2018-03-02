@@ -1,3 +1,22 @@
+/* 
++   This file is part of Trilleon.  Trilleon is a client automation framework.
++  
++   Copyright (C) 2017 Disruptor Beam
++  
++   Trilleon is free software: you can redistribute it and/or modify
++   it under the terms of the GNU Lesser General Public License as published by
++   the Free Software Foundation, either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.
++*/
+
  a:hover { text-decoration:none; }
  .additional_tools { font-size:2em; vertical-align:middle; margin:20px; position:inherit; color:white; text-decoration:none; } 
  .additional_tools_div { display:inline-block; margin-top:40px; cursor:pointer; } 
@@ -13,6 +32,7 @@
  .chart_image_div { width:45px; height:45px; margin-left:5; }
  .chart_result { margin:10px; }
  .check_green { width:5%; vertical-align:top; color:green; font-size:1.2em; display:inline-block; }
+ .check_orange { width:5%; vertical-align:top; color:orange; font-size:1.2em; display:inline-block; }
  .check_red { width:5%; vertical-align:top; color:red; font-size:1.2em; display:inline-block; }
  .critical_error_detected { width:100%; text-align:center; height:40px; display:none; border:1px solid #fc8ae9; border-radius:6px; margin-top:10px; text-align:center; color:white; font-size:1.75em; }
  .close { float:right; border:1px solid black; border-radius:6px; padding:4px 6px 4px 6px; margin-left:10px; margin-bottom:25px; } 
