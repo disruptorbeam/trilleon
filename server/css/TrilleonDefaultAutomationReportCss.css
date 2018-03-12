@@ -13,6 +13,7 @@
  .chart_image_div { width:45px; height:45px; margin-left:5; }
  .chart_result { margin:10px; }
  .check_green { width:5%; vertical-align:top; color:green; font-size:1.2em; display:inline-block; }
+ .check_orange { width:5%; vertical-align:top; color:orange; font-size:1.2em; display:inline-block; }
  .check_red { width:5%; vertical-align:top; color:red; font-size:1.2em; display:inline-block; }
  .critical_error_detected { width:100%; text-align:center; height:40px; display:none; border:1px solid #fc8ae9; border-radius:6px; margin-top:10px; text-align:center; color:white; font-size:1.75em; }
  .close { float:right; border:1px solid black; border-radius:6px; padding:4px 6px 4px 6px; margin-left:10px; margin-bottom:25px; } 

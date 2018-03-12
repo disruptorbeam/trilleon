@@ -47,7 +47,9 @@ class GameAppiumTest(BaseAppiumTest):
 
         self.postMessage("{\"set_test_run_id\":\"" + self.test_run_id_internal + "\"}")
         time.sleep(1)
-        
+        if os.environ.get('PRE_TEST_COMMANDS') is not None:
+            self.postMessage("{\"console_command\":\"" + os.environ['PRE_TEST_COMMANDS'] + "\"}")
+        time.sleep(5)
         if os.environ.get('LOOP_TESTS') is not None:
             self.postMessage("{\"loop_tests\":\"" + os.environ['LOOP_TESTS'] + "\"}")
         time.sleep(5)

@@ -31,8 +31,6 @@ fi
 echo "Making ${DEFAULT_DIRECTORY}/LatestTestResults directory."
 mkdir ${DEFAULT_DIRECTORY}/LatestTestResults
 
-export FILE_NAME=${BUILD_NUMBER}
-
 # Create the node json that will be used to register with Selenium Grid (required for parallel execution).
 chmod a+rwx ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/sh/CreateUniqueNodeJson.sh
 ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/sh/CreateUniqueNodeJson.sh
@@ -116,9 +114,9 @@ while read -r val; do
 done <<< "$PID"
 
 # Create Test Results history directory (if necessary) and current results directory.
-if [ ! -d ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport ]; then
-    echo "Creating ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport directory."
-    mkdir -p ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport
+if [ ! -d ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport ]; then
+    echo "Creating ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport directory."
+    mkdir -p ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport
 fi
 
 # Remove old staging results file.
@@ -136,7 +134,7 @@ chmod a+rwx ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/TrilleonDefaultAutomati
 cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/py/BaseAppiumTest.py" ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE} # Inhereted UnitTest.TestCase class with utilities needed by test.
 cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/py/GameAppiumTest.py" ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE} # Actual test case that launches server test.
 cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/sh/run-tests.sh" ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE} # Local Appium shell
-cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/TrilleonDefaultAutomationReportDatatable.js" ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/${BASE_SCRIPTS_PATH}/js/report.js # Javascript used in html report.
+cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/TrilleonDefaultAutomationReportDatatable.js" ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/${BASE_SCRIPTS_PATH}/js/report.js # Javascript used in html report.
 cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/TrilleonDefaultAutomationReportDatatable.js" ${DEFAULT_DIRECTORY}/LatestTestResults/${BASE_SCRIPTS_PATH}/js/report.js
 
 # Copy json config files for nodes.
@@ -150,20 +148,20 @@ sh ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/run-tests.sh
 echo "Base Directory ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}"
 
 if [ -f ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/TEST-all.xml ]; then
-    echo "Results found and copied to both ${DEFAULT_DIRECTORY}/TEST-all.xml AND ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}.xml"
+    echo "Results found and copied to both ${DEFAULT_DIRECTORY}/TEST-all.xml AND ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}.xml"
     cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/TEST-all.xml ${DEFAULT_DIRECTORY}/TEST-all.xml
-    cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/TEST-all.xml ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/results.xml
+    cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/TEST-all.xml ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/results.xml
 else
     if [ -f ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/FatalErrorDetected.txt ]; then
         cp ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/xml/GameUnavailable.xml ${DEFAULT_DIRECTORY}/TEST-all.xml
-        cp ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/xml/GameUnavailable.xml ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/results.xml
+        cp ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/xml/GameUnavailable.xml ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/results.xml
     elif [ -f ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/test-reports.xml ]; then
-        echo "RESULTS NOT FOUND. Copying testrunner xml instead to both ${DEFAULT_DIRECTORY}/TEST-all.xml AND ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}.xml"
+        echo "RESULTS NOT FOUND. Copying testrunner xml instead to both ${DEFAULT_DIRECTORY}/TEST-all.xml AND ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}.xml"
         cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/test-reports.xml ${DEFAULT_DIRECTORY}/TEST-all.xml
-        cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/test-reports.xml ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/results.xml
+        cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/test-reports.xml ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/results.xml
     else
         cp ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/xml/Default.xml ${DEFAULT_DIRECTORY}/TEST-all.xml
-        cp ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/xml/Default.xml ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/results.xml
+        cp ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/xml/Default.xml ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/results.xml
     fi
 fi
 
@@ -223,19 +221,19 @@ else
     echo "WARNING: No GameInitializationTime.txt found!"
 fi
 
-echo "Copying appium log to ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/Appium/appium.log"
-cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/appium.log ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/appium.log
+echo "Copying appium log to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/Appium/appium.log"
+cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/appium.log ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/appium.log
 
 echo "Copying device id txt file to ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/test_run_id.txt"
 cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/test_run_id.txt ${DEFAULT_DIRECTORY}/test_run_id.txt
 
-echo "Copying screenshots directory to ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/screenshots"
-cp -rv ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/screenshots ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport
+echo "Copying screenshots directory to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/screenshots"
+cp -rv ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/screenshots ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport
 
 echo "Copying screenshots directory to ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}_ScreenshotGalleryReport"
 cp -rv ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/screenshots ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}_ScreenshotGalleryReport
 
-echo "Copying test run header html directory to ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/TestRunHeaderHtml.txt"
+echo "Copying test run header html directory to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/TestRunHeaderHtml.txt"
 cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/TestRunHeaderHtml.txt ${DEFAULT_DIRECTORY} # Unique device details for device used in this test run.
 
 echo "Copying pubnub communications text to ${DEFAULT_DIRECTORY}/RelevantPubNubCommunications.txt"

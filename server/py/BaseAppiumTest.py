@@ -109,7 +109,7 @@ class BaseAppiumTest(unittest.TestCase):
     buddyName = ""
     buddyCheckFileName = ""
     buddyCheckComplete = False
-    channel = "Trilleon_Automation" #TODO: Add the channel your game clients post and listen on!
+    channel = "Trilleon-Automation"
     DBID = ""
     project_id = ""
     gridIdentity = ""
@@ -120,6 +120,7 @@ class BaseAppiumTest(unittest.TestCase):
     heartbeat_index = 1
     last_heartbeat_detected = None
     max_time_since_heartbeat = 80
+    partialDataDelimiter = "$$$"
     
     fatalErrorDetected = False
     fatalErrorMessage = ""
@@ -128,7 +129,7 @@ class BaseAppiumTest(unittest.TestCase):
     started = False
     complete = False
     timeout_default = 300
-    test_execution_timeout = 2400
+    test_execution_timeout = 4800
     parsing_xml = False
     results = ""
     auto_screenshot_index = 0
@@ -146,8 +147,7 @@ class BaseAppiumTest(unittest.TestCase):
         with open("test_run_id.txt", "w") as f:
             f.write(test_run_id)
 
-        # TODO: Add your publish and subscribe keys!
-        self.pubnub = Pubnub(publish_key="",subscribe_key="")
+        self.pubnub = Pubnub(publish_key="TODO: YOUR KEY HERE!",subscribe_key="TODO: YOUR KEY HERE!")
         self.setChannelPrefixes()
         self.pubnub.subscribe(channels=self.channel, callback=callback, error=error)
         self.set_screenshot_dir('%s/screenshots' % (os.getcwd()))
@@ -174,7 +174,7 @@ class BaseAppiumTest(unittest.TestCase):
         if os.environ.get('DEVICE_PLATFORM') == "ios":
             self.device_width = int(os.environ.get('DEVICE_WIDTH'))
             self.device_height = int(os.environ.get('DEVICE_HEIGHT'))
-        with open("testresultsjson.txt", "w") as f: #open the file
+        with open("testresultsjson.txt", "w") as f:
             f.write("[")
 
         # Set up driver
@@ -219,7 +219,7 @@ class BaseAppiumTest(unittest.TestCase):
         self.pubnub.unsubscribe(self.channel)
         self.writeAutomationResults('TEST-all.xml')
         if self.fatalErrorDetected == True:
-            with open("FatalErrorDetected.txt", "w") as f: #open the file
+            with open("FatalErrorDetected.txt", "w") as f:
                 f.write(self.fatalErrorMessage)
         time.sleep(5)
         try:
@@ -227,10 +227,10 @@ class BaseAppiumTest(unittest.TestCase):
         except:
             log("Error encountered while quitting driver")
 
-        with open("test_status.txt", "w") as f: #open the file
+        with open("test_status.txt", "w") as f:
             f.write(os.environ['TEST_RUN_STATUS'])
         pylogtext = ""
-        with open("PyLog.txt", "r") as f: #open the file
+        with open("PyLog.txt", "r") as f:
             pylogtext = f.read()
         if "CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST" in pylogtext:
             raise Exception("CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST Detected!")
@@ -239,8 +239,8 @@ class BaseAppiumTest(unittest.TestCase):
     def writeAutomationResults(self, filename):
         # Verify that JSON recorded is valid. Add placeholder JSON if it is not.
         text = ""
-        with open("testresultsjson.txt", "r") as f: #open the file
-            text = f.read()
+        with open("testresultsjson.txt", "r") as f:
+            text = f.read() # Replace any missing commas between JSON objects and attributes.
         
         if len(self.results) > 0:
             if "failure" in self.results:
@@ -250,9 +250,9 @@ class BaseAppiumTest(unittest.TestCase):
             # Game error popup check.
             if self.fatalErrorDetected:
                 os.environ['TEST_RUN_STATUS'] = "CRASH_DURING_RUN"
-                with open("testresultsjson.txt", "a") as f: #open the file
+                with open("testresultsjson.txt", "a") as f:
                     f.write("{\"order_ran\":\"999\", \"status\":\"Failed\", \"name\":\"ERROR_POPUP\", \"class\":\"FATAL_ERROR\", \"test_categories\":\"ERROR_POPUP\", \"result_details\":\"The game produced an error popup that affected automation execution. Check screenshot for details.\", \"assertions\":[]},")
-            with open(os.getcwd() + "/" + filename, "w") as f: #open the file
+            with open(os.getcwd() + "/" + filename, "w") as f:
                 f.write(self.results)
 
         else:
@@ -261,21 +261,21 @@ class BaseAppiumTest(unittest.TestCase):
             # If there is existing JSON, report that app crashed or hanged.
             if len(text) > 5:
                 os.environ['TEST_RUN_STATUS'] = "CRASH_DURING_RUN"
-                with open("testresultsjson.txt", "a") as f: #open the file
+                with open("testresultsjson.txt", "a") as f:
                     f.write("{\"order_ran\":\"999\", \"status\":\"Failed\", \"name\":\"GAME_CRASHED_OR_HANGED\", \"class\":\"FATAL_ERROR\", \"test_categories\":\"CRASH_HANG\", \"result_details\":\"The game either suddenly crashed, or automation execution encountered an unhandled fatal error that halted test execution. View screenshot for details.\", \"assertions\":[]},")
             else:
                 # If results were not recorded, then the app never loaded, crashed, or automation could not launch.
                 if "checking_in" not in self.get_communication_history():
                     os.environ['TEST_RUN_STATUS'] = "CRASH_DURING_LAUNCH"
-                    with open("testresultsjson.txt", "w") as f: #open the file
+                    with open("testresultsjson.txt", "w") as f:
                         f.write("[{\"order_ran\":\"0\", \"status\":\"Failed\", \"name\":\"GAME_LAUNCH_FAILURE\", \"class\":\"FATAL_ERROR\", \"test_categories\":\"LAUNCH_FAILURE\", \"result_details\":\"The game crashed on load, or otherwise failed to reach a state where automation could register on the pubsub communication channel.\", \"assertions\":[]},")
                 else:
                     os.environ['TEST_RUN_STATUS'] = "CRASH_AFTER_LAUNCH"
                     if "order_ran" in self.get_communication_history():
-                        with open("testresultsjson.txt", "a") as f: #open the file
+                        with open("testresultsjson.txt", "a") as f:
                             f.write(",{\"order_ran\":\"0\", \"status\":\"Failed\", \"name\":\"GAME_LAUNCH_FAILURE\", \"class\":\"FATAL_ERROR\", \"test_categories\":\"LAUNCH_FAILURE\", \"result_details\":\"The game launched, and automation registered on the pubsub communication channel, but either the app crashed, or automation was blocked from beginning its test run.\", \"assertions\":[]},")
                     else:
-                        with open("testresultsjson.txt", "w") as f: #open the file
+                        with open("testresultsjson.txt", "w") as f:
                             f.write("[{\"order_ran\":\"0\", \"status\":\"Failed\", \"name\":\"GAME_LAUNCH_FAILURE\", \"class\":\"FATAL_ERROR\", \"test_categories\":\"LAUNCH_FAILURE\", \"result_details\":\"The game launched, and automation registered on the pubsub communication channel, but either the app crashed, or automation was blocked from beginning its test run.\", \"assertions\":[]},")
 
     def set_screenshot_dir(self, screenshot_dir):
@@ -347,7 +347,7 @@ class BaseAppiumTest(unittest.TestCase):
             #index -= 1
             #if index > 0:
                 #self.parentDirectory += piece + "/"
-        #with open(self.buddyCheckFileName, "a") as f: #open the file
+        #with open(self.buddyCheckFileName, "a") as f:
             #f.write(self.gridIdentity)
         log("Writing Device Identity [" + self.gridIdentity + "] To File [" + self.buddyCheckFileName + "].")
 
@@ -355,7 +355,7 @@ class BaseAppiumTest(unittest.TestCase):
     def buddy_check(self):
         return True
         #fileReadTest = ""
-        #with open(self.buddyCheckFileName, "r") as f: #open the file
+        #with open(self.buddyCheckFileName, "r") as f:
             #fileReadTest = f.read()
         #self.buddyCheckComplete = True
         log("Reading Buddy Check File. Expecting To See Buddy Name [" + self.buddyName + "] In File Contents [" + fileReadTest + "].")
@@ -420,21 +420,42 @@ class BaseAppiumTest(unittest.TestCase):
         log("Command Recieved: [Get JSON]")
         recent_posts = self.get_communication_history()
         if "completed_automation" in recent_posts or force == True:
+            log("Generating JSON.")
             initialDelimiter = "SINGLE_TEST_RESULTS_JSON|"
             delimiter = "|"
             rawAll = recent_posts.split(initialDelimiter)
             json = ""
             index = 0
+            partialInitialDelimiter = "SINGLE_TEST_RESULTS_JSON_MULTI_PART|"
             for x in rawAll:
                 if index > 0 and len(x) > 0:
-                    json += x.split(delimiter)[0]
+                    # Handle test results reporting that was too large to send in a single message, requiring several parts of a single result report.
+                    if partialInitialDelimiter in x:
+                        rawPartials = x.split(partialInitialDelimiter) # All partial message pieces
+                        indexPartial = 0
+                        piecesFinal = ["" for x in range(len(rawPartials))]
+                        for z in rawPartials:
+                            if indexPartial == 0:
+                                json += rawPartials[0].split(delimiter)[0] # First, record the test that preceded the partial test details report.
+                            else:
+                                piecesPartial = z.split(self.partialDataDelimiter)
+                                piecesFinal[int(piecesPartial[0])] = piecesPartial[1].split(delimiter)[0] # The first piece after splicing is the index/order of this piece. Set that piece equal to the actual message data.
+                            indexPartial += 1
+                        for f in piecesFinal:
+                            json += f # Should piece together valid json in correct order if previous for loop correctly handled ordering.
+                    else:
+                        json += x.split(delimiter)[0]
                 index += 1
             
             # "@APOS@" token is a special encoding of double qoutes to prevent issues with PubNub message encoding and proper formatting of JSON
-            json = json.replace("@APOS@", "\"")
-            
+            json = json.replace("@APOS@", "\"").replace("}{", "},{")
+            if not json.endswith("]"):
+                if json.endswith(","):
+                    json = json[:-1] + "]"
+                else:
+                    json += "]"
             fileContent = ""
-            with open("testresultsjson.txt", "r") as f: #open the file
+            with open("testresultsjson.txt", "r") as f:
                 fileContent = f.read()
             log("JSON FINAL LENGTH [" + str(len(json)) + "]")
             try:
@@ -442,7 +463,7 @@ class BaseAppiumTest(unittest.TestCase):
             except Exception as e:
                 log("Failed to parse final json [" + str(e) + "]")
             if json not in fileContent:
-                with open("testresultsjson.txt", "a") as f: #open the file
+                with open("testresultsjson.txt", "a") as f:
                     f.write(json)
             return True
         else:
@@ -479,7 +500,7 @@ class BaseAppiumTest(unittest.TestCase):
     def get_communication_history(self):
         results = ""
         try:
-            with open("RelevantPubNubCommunications.txt", "r") as f: #open the file
+            with open("RelevantPubNubCommunications.txt", "r") as f:
                 results = f.read()
         except Exception as e:
             log("Exception Reading History Text: " + str(e))
@@ -546,45 +567,54 @@ class BaseAppiumTest(unittest.TestCase):
                 except BaseException as e:
                     log("")
 
+    def find_json_for_performance_attribute(self, delimiter):
+        recent_posts = self.get_communication_history()
+        delimiter = "|"
+        json = ""
+        index = 0
+        partialInitialDelimiter = delimiter + "_MULTI_PART|"
+        rawAll = recent_posts.split(partialInitialDelimiter)
+        for x in rawAll:
+            if index > 0 and len(x) > 0:
+                # Handle test results reporting that was too large to send in a single message, requiring several parts of a single result report.
+                rawPartials = x.split(partialInitialDelimiter) # All partial message pieces
+                indexPartial = 0
+                piecesFinal = ["" for x in range(len(rawPartials))]
+                for z in rawPartials:
+                    if indexPartial == 0:
+                        json += rawPartials[0].split(delimiter)[0] # First, record the test that preceded the partial test details report.
+                    else:
+                        piecesPartial = z.split(self.partialDataDelimiter)
+                        piecesFinal[int(piecesPartial[0])] = piecesPartial[1].split(delimiter)[0] # The first piece after splicing is the index/order of this piece. Set that piece equal to the actual message data.
+                    indexPartial += 1
+                for f in piecesFinal:
+                    json += f # Should piece together valid json in correct order if previous for loop correctly handled ordering.
+            index += 1
+
+        # "@APOS@" token is a special encoding of double qoutes to prevent issues with PubNub message encoding and proper formatting of JSON
+        return json.replace("@APOS@", "\"").replace("}{", "},{")
+
     # Check if specific messages have been communicated over PubNub and extract relevant details.
     def check_for_client_responses(self, command, postAllParsed):
         historyString = ""
         if command == "heap_json":
-            historyString = self.get_specific_json_from_history("HEAP_JSON")
-            if len(historyString) > 0:
-                log("Collecting Heap Size Json")
-                initialDelimiter = "HEAP_JSON|"
-                finalDelimiter = "|"
-                raw = historyString.split(initialDelimiter)[1]
-                json = raw.split(finalDelimiter)[0]
-                fileWrite = open("HeapJson.txt", "w")
-                fileWrite.write(json)
-                fileWrite.close()
-                return True
+            log("Collecting Heap Json")
+            fileWrite = open("HeapJson.txt", "w")
+            fileWrite.write(self.find_json_for_performance_attribute("HEAP_JSON"))
+            fileWrite.close()
+            return True
         if command == "garbage_collection_json":
-            historyString = self.get_specific_json_from_history("GC_JSON")
-            if len(historyString) > 0:
-                log("Collecting Garbage Collection Json")
-                initialDelimiter = "GC_JSON|"
-                finalDelimiter = "|"
-                raw = historyString.split(initialDelimiter)[1]
-                json = raw.split(finalDelimiter)[0]
-                fileWrite = open("GarbageCollectionJson.txt", "w")
-                fileWrite.write(json)
-                fileWrite.close()
-                return True
+            log("Collecting GC Json")
+            fileWrite = open("GarbageCollectionJson.txt", "w")
+            fileWrite.write(self.find_json_for_performance_attribute("GC_JSON"))
+            fileWrite.close()
+            return True
         if command == "fps_json":
-            historyString = self.get_specific_json_from_history("FPS_JSON")
-            if len(historyString) > 0:
-                log("Collecting FPS Json")
-                initialDelimiter = "FPS_JSON|"
-                finalDelimiter = "|"
-                raw = historyString.split(initialDelimiter)[1]
-                json = raw.split(finalDelimiter)[0]
-                fileWrite = open("FpsJson.txt", "w")
-                fileWrite.write(json)
-                fileWrite.close()
-                return True
+            log("Collecting FPS Json")
+            fileWrite = open("FpsJson.txt", "w")
+            fileWrite.write(self.find_json_for_performance_attribute("FPS_JSON"))
+            fileWrite.close()
+            return True
         if command == "garbage_collection":
             historyString = self.get_specific_json_from_history("GARBAGE_COLLECTION")
             if len(historyString) > 0:
@@ -640,7 +670,7 @@ class BaseAppiumTest(unittest.TestCase):
                 initialDelimiter = "DEVICE_DETAILS_HTML|"
                 finalDelimiter = "|"
                 raw = historyString.split(initialDelimiter)[1]
-                html = raw.split(finalDelimiter)[0].replace("@APOS@", "\"")
+                html = raw.split(finalDelimiter)[0].replace("@APOS@", "\"").replace("@QUOT@", "'")
                 fileWrite = open("TestRunHeaderHtml.txt", "w")
                 fileWrite.write(html)
                 fileWrite.close()
