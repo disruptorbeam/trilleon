@@ -1,3 +1,22 @@
+/* 
++   This file is part of Trilleon.  Trilleon is a client automation framework.
++  
++   Copyright (C) 2017 Disruptor Beam
++  
++   Trilleon is free software: you can redistribute it and/or modify
++   it under the terms of the GNU Lesser General Public License as published by
++   the Free Software Foundation, either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 ﻿using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -104,77 +123,73 @@ namespace TrilleonAutomation {
 
 				for(int x = 0; x < DependencyOrderingMaster.Count; x++) {
 
-					if(DependencyOrderingMaster[x].Key.Key != 0) {
+					int index = 0;
+					//If this is a master DependencyClass list.
+					List<int> match = FoldoutListMasterIds.FindAll(y => y == DependencyOrderingMaster[x].Key.Key);
+					if(!match.Any()) {
 
-						int index = 0;
-						//If this is a master DependencyClass list.
-						List<int> match = FoldoutListMasterIds.FindAll(y => y == DependencyOrderingMaster[x].Key.Key);
-						if(!match.Any()) {
+						index = FoldoutListMasterIds.Count;
+						FoldoutListMasterIds.Add(index);
+						FoldoutListMasterBools.Add(false);
 
-							index = FoldoutListMasterIds.Count;
-							FoldoutListMasterIds.Add(index + 1);
-							FoldoutListMasterBools.Add(false);
+					} else {
 
-						} else {
+						index = FoldoutListMasterIds.FindIndex(a => a == DependencyOrderingMaster[x].Key.Key);
 
-							index = FoldoutListMasterIds.FindIndex(a => a == DependencyOrderingMaster[x].Key.Key);
+					}
 
-						}
+					string FoldoutTitle = string.Format("Dependency Class {0}", index);
+					EditorGUILayout.BeginHorizontal(padding);
+					FoldoutListMasterBools[index] = Nexus.Self.Foldout(FoldoutListMasterBools[index], FoldoutTitle, true);
+					EditorGUILayout.EndHorizontal();
 
-						string FoldoutTitle = string.Format("Dependency Class {0}", index + 1);
-						EditorGUILayout.BeginHorizontal(padding);
-						FoldoutListMasterBools[index] = Nexus.Self.Foldout(FoldoutListMasterBools[index], FoldoutTitle, true);
-						EditorGUILayout.EndHorizontal();
+					if(FoldoutListMasterBools[index]) {
 
-						if(FoldoutListMasterBools[index]) {
+						for(int m = 0; m < DependencyOrderingMaster[x].Value.Count; m++) {
 
-							for(int m = 0; m < DependencyOrderingMaster[x].Value.Count; m++) {
+							//Add this type as a component if not already a MonoBehavior instance.
+							if(TestMonitorHelpers.Helper.GetComponent(DependencyOrderingMaster[x].Value[m].Key) == null){
 
-								//Add this type as a component if not already a MonoBehavior instance.
-								if(TestMonitorHelpers.Helper.GetComponent(DependencyOrderingMaster[x].Value[m].Key) == null){
+								TestMonitorHelpers.Helper.AddComponent(DependencyOrderingMaster[x].Value[m].Key);
 
-									TestMonitorHelpers.Helper.AddComponent(DependencyOrderingMaster[x].Value[m].Key);
+							}
 
-								}
+							MonoBehaviour thisComponent = TestMonitorHelpers.Helper.GetComponent(DependencyOrderingMaster[x].Value[m].Key) as MonoBehaviour;
+							int scriptIndex = 0;
+							MonoScript thisScript = MonoScript.FromMonoBehaviour(thisComponent);
 
-								MonoBehaviour thisComponent = TestMonitorHelpers.Helper.GetComponent(DependencyOrderingMaster[x].Value[m].Key) as MonoBehaviour;
-								int scriptIndex = 0;
-								MonoScript thisScript = MonoScript.FromMonoBehaviour(thisComponent);
+							if(!masterlessSriptFiles.Contains(thisScript)) {
 
-								if(!masterlessSriptFiles.Contains(thisScript)) {
+								masterlessSriptFiles.Add(thisScript);
+								scriptIndex = masterlessSriptFiles.Count - 1;
 
-									masterlessSriptFiles.Add(thisScript);
-									scriptIndex = masterlessSriptFiles.Count - 1;
+							} else {
 
-								} else {
+								scriptIndex = masterlessSriptFiles.FindIndex(a => a == thisScript);
 
-									scriptIndex = masterlessSriptFiles.FindIndex(a => a == thisScript);
+							}
 
-								}
+							EditorGUILayout.LabelField(string.Format("{0}) {1}", m + 1, DependencyOrderingMaster[x].Value[m].Value.Name), s);
+							EditorGUILayout.BeginHorizontal(padding);
+							GUILayout.Space(20);
+							masterlessSriptFiles[scriptIndex] = thisScript;
+							masterlessSriptFiles[scriptIndex] = EditorGUILayout.ObjectField(masterlessSriptFiles[scriptIndex], DependencyOrderingMaster[x].Value[m].Key, true, new GUILayoutOption[] { GUILayout.MaxWidth(175) }) as MonoScript;
+							EditorGUILayout.EndHorizontal();
 
-								EditorGUILayout.LabelField(string.Format("{0}) {1}", m + 1, DependencyOrderingMaster[x].Value[m].Value.Name), s);
-								EditorGUILayout.BeginHorizontal(padding);
-								GUILayout.Space(20);
-								masterlessSriptFiles[scriptIndex] = thisScript;
-								masterlessSriptFiles[scriptIndex] = EditorGUILayout.ObjectField(masterlessSriptFiles[scriptIndex], DependencyOrderingMaster[x].Value[m].Key, true, new GUILayoutOption[] { GUILayout.MaxWidth(175) }) as MonoScript;
-								EditorGUILayout.EndHorizontal();
+							//If the MonoScript is empty, the current test class has a different name than the file containing it. Warn that this should not be the case.
+							if(string.IsNullOrEmpty(thisScript.text)) {
 
-								//If the MonoScript is empty, the current test class has a different name than the file containing it. Warn that this should not be the case.
-								if(string.IsNullOrEmpty(thisScript.text)) {
-
-									s.normal.textColor = Color.red;
-									EditorGUILayout.LabelField("The above test class name does not match the file name. Please ensure that they match.", s);
-									s.normal.textColor = defaultColor;
-
-								}
+								s.normal.textColor = Color.red;
+								EditorGUILayout.LabelField("The above test class name does not match the file name. Please ensure that they match.", s);
+								s.normal.textColor = defaultColor;
 
 							}
 
 						}
 
-						EditorGUILayout.Space();
+					}
 
-					} 
+					EditorGUILayout.Space();
 
 				}
 
@@ -285,15 +300,19 @@ namespace TrilleonAutomation {
 			}
 
 			//Add groupings of master dependencies (DependencyTests under DependencyClasses)
-			int classId = 1;
+			int classId = 0;
 			for(int a = 0; a < masterDependencyClasses.Count; a++) {
 
 				List<KeyValuePair<Type,MethodInfo>> allMasterDependencyMethods = new List<KeyValuePair<Type,MethodInfo>>();
 				for(int all = 0; all < masterDependencyClasses.Count; all++) {
+					
 					List<MethodInfo> allMethods = masterDependencyClasses[all].GetMethods().ToList().FindAll(y => y.GetCustomAttributes(typeof(DependencyTest), false).ToList().Any());
 					for(int am = 0; am < allMethods.Count; am++) {
+						
 						allMasterDependencyMethods.Add(new KeyValuePair<Type,MethodInfo>(masterDependencyClasses[all], allMethods[am]));
+
 					}
+
 				}
 
 				List<MethodInfo> thisDependencyClassIdMethods = allMasterDependencyMethods.FindAll(x => {
@@ -322,10 +341,14 @@ namespace TrilleonAutomation {
 						});
 
 						if(nextMethod.Any()) {
+							
 							//Add method to next order in list.
 							DepTestThese.Add(new KeyValuePair<Type,MethodInfo>(allMasterDependencyMethods.FindAll(x => x.Value.Name == nextMethod.First().Name).First().Key, nextMethod.First()));
+						
 						} else {
+							
 							throw new UnityException(string.Format("There should be a DependencyTest of ID {0} under the DependencyClass ( Name: {1} - ID: {2} )", ms + 1, allMasterDependencyMethods.FindAll(x => x.Value.Name == nextMethod.First().Name).First().Key.Name, DepClassThis.Key));
+						
 						}
 
 					}
@@ -334,7 +357,9 @@ namespace TrilleonAutomation {
 					DependencyOrderingMaster.Add(new KeyValuePair<KeyValuePair<int,string>,List<KeyValuePair<Type,MethodInfo>>>(DepClassThis, DepTestThese));
 
 				} else {
+					
 					break;
+
 				}
 
 				classId++;
@@ -359,6 +384,16 @@ namespace TrilleonAutomation {
 
 				//Add this pairing to the building list of all Dependencies.
 				DependencyOrderingMasterless.Add(new KeyValuePair<KeyValuePair<int,string>,List<KeyValuePair<Type,MethodInfo>>>(DepClassThis, DepTestThese));
+
+			}
+
+			//Filter debug classes, unless debug classes represent ALL existing dependency archituecture tests. In that case, show debug tests to demonstrate how this editor window works.
+			List<KeyValuePair<KeyValuePair<int,string>,List<KeyValuePair<Type,MethodInfo>>>> filteredDebugMaster = DependencyOrderingMaster.FindAll(x => !x.Value.FindAll(t => t.Key.GetCustomAttributes(typeof(DebugClass), false).Length > 0).Any());
+			List<KeyValuePair<KeyValuePair<int,string>,List<KeyValuePair<Type,MethodInfo>>>> filteredDebugMasterfilteredDebugMaster = DependencyOrderingMasterless.FindAll(x => !x.Value.FindAll(t => t.Key.GetCustomAttributes(typeof(DebugClass), false).Length > 0).Any());
+			if(filteredDebugMaster.Any() || filteredDebugMasterfilteredDebugMaster.Any()) {
+
+				DependencyOrderingMaster = filteredDebugMaster;
+				DependencyOrderingMasterless = filteredDebugMasterfilteredDebugMaster;
 
 			}
 

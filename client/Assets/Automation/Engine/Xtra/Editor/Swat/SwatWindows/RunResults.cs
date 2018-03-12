@@ -1,3 +1,22 @@
+/* 
++   This file is part of Trilleon.  Trilleon is a client automation framework.
++  
++   Copyright (C) 2017 Disruptor Beam
++  
++   Trilleon is free software: you can redistribute it and/or modify
++   it under the terms of the GNU Lesser General Public License as published by
++   the Free Software Foundation, either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 ﻿using UnityEditor;
 using UnityEngine;
 using UnityEditor.AnimatedValues;
@@ -240,9 +259,8 @@ namespace TrilleonAutomation {
 			//Delete reports and associated meta files.
 			for(int x = 0; x < automationReports.Count; x++) {
 
-				string directory = string.Format("{0}{1}{2}", FileBroker.BASE_NON_UNITY_PATH, ConfigReader.GetString ("EDITOR_RESOURCE_TEST_REPORTS_DIRECTORY"), GameMaster.GAME_NAME);
-				Directory.Delete(directory, true);
-				Directory.CreateDirectory(directory);
+				Directory.Delete(FileBroker.REPORTS_DIRECTORY, true);
+				Directory.CreateDirectory(FileBroker.REPORTS_DIRECTORY);
 				ReDrawAutomationReports = true;
 				_fileDeletedTime = DateTime.Now;
 				_showFileDeletedMessage = true;

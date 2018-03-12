@@ -1,4 +1,4 @@
-﻿/* 
+/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -15,9 +15,9 @@
 +
 +   You should have received a copy of the GNU Lesser General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
+*/
 
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Text;
@@ -366,8 +366,10 @@ namespace TrilleonAutomation {
 			TestRunContext = new BatchContext();
 			CurrentTestContext = new TestContext();
 
+			Application.logMessageReceived -= AutoConsole.GetLog; //Detach if already attached.
+			Application.logMessageReceived += AutoConsole.GetLog; //Attach handler to recieve incoming logs.
 			#if UNITY_EDITOR
-			EditorApplication.playmodeStateChanged += AssemblyUnlock;
+			EditorApplication.playModeStateChanged += AssemblyUnlock;
 			#endif
 
 			Initialized = true;
@@ -379,16 +381,11 @@ namespace TrilleonAutomation {
 		//Cleanup delegates and anything GC does not handle on destruction.
 		~AutomationMaster() {
 			
-			EditorApplication.playmodeStateChanged -= AssemblyUnlock;
+			EditorApplication.playModeStateChanged -= AssemblyUnlock;
 
 		}
 
-		static void AssemblyUnlock() {
-
-			CallbackFunction();
-
-		}
-		static void CallbackFunction() {
+		static void AssemblyUnlock(PlayModeStateChange p) {
 
 			//Lock reload assemblies while automation is active and application is running.
 			if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
@@ -521,7 +518,7 @@ namespace TrilleonAutomation {
 			}
 
 			#if UNITY_EDITOR
-			EditorApplication.playmodeStateChanged = CallbackFunction;
+			EditorApplication.playModeStateChanged += AssemblyUnlock;
 			EditorApplication.LockReloadAssemblies();
 			#endif
 
@@ -648,7 +645,6 @@ namespace TrilleonAutomation {
 				StartCoroutine(TestRunnerMonitor()); //Begin monitoring progress of current test run.
 				Arbiter.SendCommunication("starting_automation", "0");
 				string message = string.Format("Starting Automation: {0} Tests", TestRunMethodCount + additional_tests);
-				Application.logMessageReceived += AutoConsole.GetLog; //Attach handler to recieve incoming logs.
 				ReportOnTest(message, false, MessageLevel.Abridged);
 
 			}
@@ -2611,7 +2607,7 @@ namespace TrilleonAutomation {
 								}
 								if(match) {
 
-									results.Add(new KeyValuePair<string, MethodInfo>(string.Format("{0}|{1}", AllMethodsInFramework[at].Key.Split(DELIMITER)[0], AllMethodsInFramework[at].Value.Name), AllMethodsInFramework[at].Value));
+									results.Add(new KeyValuePair<string, MethodInfo>(string.Format("{0}|{1}", AllMethodsInFramework[d].Key.Split(DELIMITER)[0], AllMethodsInFramework[d].Value.Name), AllMethodsInFramework[d].Value));
 
 								}
 

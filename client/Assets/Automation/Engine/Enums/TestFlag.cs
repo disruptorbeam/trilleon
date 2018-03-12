@@ -1,4 +1,4 @@
-﻿/* 
+/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -15,9 +15,9 @@
 +
 +   You should have received a copy of the GNU Lesser General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
+*/
 
-namespace TrilleonAutomation {
+﻿namespace TrilleonAutomation {
 
 	/// <summary>
 	/// Wan't specific assertions to not cease test execution during failure? Try `yield return StartCoroutine(Q.assert.Soft.CheckSomeValue())`. This indicates to the compiler NOT to cease execution of the test if just this assertion fails.

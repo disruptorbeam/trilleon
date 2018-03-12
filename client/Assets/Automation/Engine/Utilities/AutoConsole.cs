@@ -1,4 +1,4 @@
-﻿/* 
+/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -15,10 +15,11 @@
 +
 +   You should have received a copy of the GNU Lesser General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
+*/
 
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using UnityEditor;
+using System.Reflection;
 #endif
 using UnityEngine;
 using System;
@@ -275,7 +276,7 @@ namespace TrilleonAutomation {
 				#endif
 
 				//If this error occurred directly in the Trilleon Framework (not editor), then stop all tests and report on the exception.
-				if(stackTrace.Contains("TrilleonAutomation.") && !stackTrace.Contains("/Editor/") && !ReportOnce) {
+				if(AutomationMaster.Initialized && stackTrace.Contains("TrilleonAutomation.") && !stackTrace.Contains("/Editor/") && !ReportOnce) {
 
 					ReportOnce = true;
 					AutomationMaster.Arbiter.SendCommunication("An unhandled exception occurred in the Trilleon Framework, disrupting the test run execution");
@@ -296,21 +297,35 @@ namespace TrilleonAutomation {
 					AutomationMaster.Arbiter.SendCommunication(string.Format("ASSERTION DATA:[{0}]", assertionData));
 					AutomationMaster.AutomationReport.ReportUnhandledException(message, stackTrace);
 
-					//Reset test runner
 					#if UNITY_EDITOR
+					//Reset test runner
 					GameObject helper = GameObject.Find(TestMonitorHelpers.NAME);
-					if(helper != null) AutomationMaster.Destroy(helper);
+					if(helper != null)
+						AutomationMaster.Destroy(helper);
 					#endif
+
 					AutomationMaster.Destroy(AutomationMaster.StaticSelf);
 					AutomationMaster.Initialize();
 					AutomationMaster.StaticSelfComponent.ResetTestRunner();
 					AutoConsole.PostMessage("Exception in framework killed TestRunner. Framework reset and ready for new commands.", MessageLevel.Abridged);
 
-				} else {
+				} else if(AutomationMaster.Initialized) {
 
 					AutomationMaster.TestRunContext.Exceptions.Add(message, stackTrace);
 
 				}
+
+
+				#if UNITY_EDITOR
+				if(!AutomationMaster.Initialized && stackTrace.Contains("TrilleonAutomation.") && message.ToLower().Contains("object reference")) {
+
+					//Without AutomationMaster.Initialize(), a null reference error will occur trying to use most functionality in the Trilleon framework.
+					string missingRefError = "Object reference error in Trilleon framework without initialization. This is most often caused when TrilleonAutomation.Initialize() is not called. This method is required in your Game's startup logic to activate Trilleon.";
+					Debug.LogError(missingRefError);
+					AutoConsole.PostMessage(missingRefError, MessageLevel.Abridged);
+
+				}
+				#endif
 
 			}
 

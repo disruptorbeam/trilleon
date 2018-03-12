@@ -194,24 +194,24 @@ HTML="
         </body>"
 
 echo "Copying appium log to archive and latest."
-cp ${DEFAULT_DIRECTORY}/appium.log ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}
+cp ${DEFAULT_DIRECTORY}/appium.log ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}
 
 echo "Copying py log to archive and latest."
-cp ${DEFAULT_DIRECTORY}/PyLog.txt ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}
+cp ${DEFAULT_DIRECTORY}/PyLog.txt ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}
 
-echo "Copying ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/. to ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/scripts"
-cp -rv ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/. ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/scripts
-echo "Copying ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/css/. to ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/scripts"
-cp -rv ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/css/. ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/scripts
+echo "Copying ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/. to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts"
+cp -rv ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/. ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts
+echo "Copying ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/css/. to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts"
+cp -rv ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/css/. ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts
 
-echo "HTML sent to ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/report.html"
-echo ${HTML} > ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/report.html
+echo "HTML sent to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/report.html"
+echo ${HTML} > ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/report.html
 
 echo "Copying appium log to archive and latest."
 cp ${DEFAULT_DIRECTORY}/appium.log ${DEFAULT_DIRECTORY}/LatestTestResults
 
 echo "Copying from archive folder to latest test results folder."
-cp -rv ${DEFAULT_DIRECTORY}/TestResultsArchive/${FILE_NAME}/HtmlReport/. ${DEFAULT_DIRECTORY}/LatestTestResults
+cp -rv ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/. ${DEFAULT_DIRECTORY}/LatestTestResults
 
 if [ -f "${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}.zip" ]; then
     echo "Removing top level zip folders from previous run."
@@ -230,5 +230,8 @@ else
     zip -FSrj ${APPIUM_DEVICE}_ScreenshotGalleryReport.zip ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}_ScreenshotGalleryReport
 fi
 
-echo "Moving zips to workspace level."
+echo "Moving zip to workspace level."
 mv ${DEFAULT_DIRECTORY}/LatestTestResults/${APPIUM_DEVICE}.zip  ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}.zip
+
+echo "Moving zip to current build's archive level."
+mv ${DEFAULT_DIRECTORY}/LatestTestResults/${APPIUM_DEVICE}.zip  ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/${APPIUM_DEVICE}.zip

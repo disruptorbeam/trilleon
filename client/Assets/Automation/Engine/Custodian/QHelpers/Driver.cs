@@ -1,4 +1,4 @@
-﻿/* 
+/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -15,9 +15,9 @@
 +
 +   You should have received a copy of the GNU Lesser General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
+*/
 
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -227,11 +227,11 @@ namespace TrilleonAutomation {
 
 				if(isTry) {
 
-					yield return StartCoroutine(Q.assert.Quiet.Try.Fail(string.Format("Provided ScrollRect for \"{0}\" is null.", scrollRect.gameObject.name)));
+					yield return StartCoroutine(Q.assert.Quiet.Try.Fail("Provided ScrollRect is null."));
 
 				} else {
 
-					yield return StartCoroutine(Q.assert.Quiet.Try.Fail(string.Format("Provided ScrollRect for \"{0}\" is null.", scrollRect.gameObject.name)));
+					yield return StartCoroutine(Q.assert.Quiet.Try.Fail("Provided ScrollRect is null."));
 
 				}
 				yield break;

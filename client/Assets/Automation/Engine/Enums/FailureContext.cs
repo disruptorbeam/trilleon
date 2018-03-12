@@ -1,4 +1,4 @@
-﻿/* 
+/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -15,9 +15,9 @@
 +
 +   You should have received a copy of the GNU Lesser General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
+*/
 
-namespace TrilleonAutomation {
+﻿namespace TrilleonAutomation {
 
 	/// <summary>
 	/// Unbound = Failure is called in a non-test method without the context of an instantiated current method.

@@ -15,7 +15,7 @@
 +
 +   You should have received a copy of the GNU Lesser General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
+*/
 
  a:hover { text-decoration:none; }
  .additional_tools { font-size:2em; vertical-align:middle; margin:20px; position:inherit; color:white; text-decoration:none; } 

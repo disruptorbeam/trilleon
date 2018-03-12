@@ -15,7 +15,7 @@
 +
 +   You should have received a copy of the GNU Lesser General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
+*/
 
 var all_tests = [];
 var SCREENSHOT_STAGE_DELIMITER = "PT_STAGE_";

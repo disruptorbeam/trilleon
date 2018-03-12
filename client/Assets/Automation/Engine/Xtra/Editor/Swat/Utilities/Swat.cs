@@ -1,3 +1,22 @@
+/* 
++   This file is part of Trilleon.  Trilleon is a client automation framework.
++  
++   Copyright (C) 2017 Disruptor Beam
++  
++   Trilleon is free software: you can redistribute it and/or modify
++   it under the terms of the GNU Lesser General Public License as published by
++   the Free Software Foundation, either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 ﻿using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -1114,9 +1133,9 @@ namespace TrilleonAutomation {
 		public bool IsValidError(string errorToLowerCase) {
 
 			/*
-            All three of these editors can occur when a control group "Begin..." and "End..." are conditionally drawn/not drawn between two passes. 
-            They do not affect anything and can be ignored in the same way as "Coroutine Continue Failure" errors in game code.
-         */
+              All three of these editors can occur when a control group "Begin..." and "End..." are conditionally drawn/not drawn between two passes. 
+              They do not affect anything and can be ignored in the same way as "Coroutine Continue Failure" errors in game code.
+         	*/
 
 			return !errorToLowerCase.ToLower().Contains("mismatched layoutgroup") && !errorToLowerCase.ToLower().Contains("position in a group with only") && !errorToLowerCase.ToLower().Contains("you are pushing more guiclips than you are popping");
 

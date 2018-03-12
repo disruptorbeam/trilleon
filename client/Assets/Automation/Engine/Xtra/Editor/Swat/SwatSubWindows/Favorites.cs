@@ -1,3 +1,22 @@
+/* 
++   This file is part of Trilleon.  Trilleon is a client automation framework.
++  
++   Copyright (C) 2017 Disruptor Beam
++  
++   Trilleon is free software: you can redistribute it and/or modify
++   it under the terms of the GNU Lesser General Public License as published by
++   the Free Software Foundation, either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 ﻿using System;
 using System.Text;
 using UnityEngine;
@@ -194,7 +213,7 @@ namespace TrilleonAutomation {
 			int foldoutIndex = 0;
 			for(int f = 0; f < FavoritesList.Count; f++) {
 
-				EditorGUILayout.BeginHorizontal();
+				EditorGUILayout.BeginHorizontal(new GUILayoutOption[] { GUILayout.Width(320) });
 				EditorGUILayout.LabelField(FavoritesList[f].Key, favoriteHeader);
 				Nexus.Self.Button("Launch", "Edit this Favorite.", 
 					new Nexus.SwatDelegate(delegate() {    
@@ -233,7 +252,6 @@ namespace TrilleonAutomation {
 						string command = string.Format("&&{0}%{1}", commandClasses.Trim(','), commandTests.Trim(',')); ;
 						Nexus.Self.Tests.LaunchTests(command, "mix");
 					}), launch, new GUILayoutOption[] { GUILayout.MaxWidth(200) });
-				GUILayout.Space(-25);
 				Nexus.Self.Button("Delete", "Edit this Favorite.", 
 					new Nexus.SwatDelegate(delegate() {    
 						keyToDelete = FavoritesList[f].Key;
@@ -315,6 +333,7 @@ namespace TrilleonAutomation {
 			FileBroker.SaveNonUnityTextResource(FileResource.Favorites, sb.ToString(), false);
 			newName = string.Empty;
 			Set();
+			Nexus.Self.Tests.Update_Data = true;
 
 		}
 
@@ -339,7 +358,8 @@ namespace TrilleonAutomation {
 			}
 			FileBroker.SaveNonUnityTextResource(FileResource.Favorites, newData.ToString(), true);
 			Set();
-			 
+			Nexus.Self.Tests.Update_Data = true;
+
 		}
 
 		string GetTestsClassName(string test) {
