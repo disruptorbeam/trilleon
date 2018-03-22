@@ -91,10 +91,10 @@ namespace TrilleonAutomation {
 
 			}
 
-			GUI.DrawTexture(new Rect(0, 0, position.width, position.height), Nexus.MakeTexture(1, 1, Color.gray));
+			GUI.DrawTexture(new Rect(0, 0, position.width, position.height), Swat.MakeTextureFromColor(Color.gray));
 
 			divider = new GUIStyle(GUI.skin.box);
-			divider.normal.background = Nexus.MakeTexture(1, 1, Color.white);
+			divider.normal.background = Swat.MakeTextureFromColor(Color.white);
 			divider.margin = new RectOffset(25, 0, 10, 20);
 
 			header = new GUIStyle(GUI.skin.label);
@@ -108,7 +108,7 @@ namespace TrilleonAutomation {
 			buttons = new GUIStyle(GUI.skin.button);
 			buttons.fixedHeight = buttonHeight;
 			buttons.fixedWidth = buttonWidth;
-			buttons.normal.background = Nexus.MakeTexture(1, 1, (Color)new Color32(80, 80, 80, 255));
+			buttons.normal.background = Swat.MakeTextureFromColor((Color)new Color32(80, 80, 80, 255));
 			buttons.normal.textColor = Color.white;
 
 			messageLabel = new GUIStyle(GUI.skin.label);
@@ -141,7 +141,7 @@ namespace TrilleonAutomation {
 				buttons.fixedHeight = buttonHeight;
 				buttons.fixedWidth = buttonWidth;
 				buttons.margin = new RectOffset(5, 0, 0, 0);
-				buttons.normal.background = Nexus.MakeTexture(1, 1, (Color)new Color32(80, 80, 80, 255));
+				buttons.normal.background = Swat.MakeTextureFromColor((Color)new Color32(80, 80, 80, 255));
 				buttons.normal.textColor = Color.white;
 
 			} else {

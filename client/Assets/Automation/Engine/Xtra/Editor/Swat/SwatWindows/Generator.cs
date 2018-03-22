@@ -276,7 +276,7 @@ namespace TrilleonAutomation {
 			}
 
 			//ObjectAction or AdvancedWait selection without GameObject to inspect.
-			if(Nexus.Overseer.inspectedObject == null && (Nexus.Overseer.stepMaster == AutoStepMaster.ObjectStep || Nexus.Overseer.stepMaster == AutoStepMaster.AdvancedWait)) {
+			if(Nexus.Overseer.inspectedObject == null && (Nexus.Overseer.stepMaster == AutoStepMaster.ObjectStep || Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor)) {
 
 				EditorGUILayout.Space();
 				GUIStyle s = new GUIStyle(GUI.skin.label);
@@ -287,7 +287,7 @@ namespace TrilleonAutomation {
 			}
 
 			//ObjectAction selection with GameObject to inspect.
-			if(Nexus.Overseer.inspectedObject && (Nexus.Overseer.stepMaster == AutoStepMaster.ObjectStep || Nexus.Overseer.stepMaster == AutoStepMaster.AdvancedWait)) {
+			if(Nexus.Overseer.inspectedObject && (Nexus.Overseer.stepMaster == AutoStepMaster.ObjectStep || Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor)) {
 
 				EditorGUILayout.Space();
 
@@ -473,17 +473,9 @@ namespace TrilleonAutomation {
 					#endregion
 
 					//AdvancedWait selection.
-					if(Nexus.Overseer.inspectedObject && Nexus.Overseer.stepMaster == AutoStepMaster.AdvancedWait) {
+					if(Nexus.Overseer.inspectedObject && Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor) {
 
-						Nexus.Overseer.condition = (Condition)EditorGUILayout.EnumPopup("Condition: ", Nexus.Overseer.condition, new GUILayoutOption[] { GUILayout.Width(275) });
-						if(Nexus.Overseer.condition != lastCondition) {
-							ResetValues();
-							lastCondition = Nexus.Overseer.condition;
-						}
-						Nexus.Overseer.tryAction = EditorGUILayout.Toggle("Try? ", Nexus.Overseer.tryAction);
-						if(Nexus.Overseer.condition == Condition.TextContains) {
-							Nexus.Overseer.textContainsToUse = EditorGUILayout.TextField("Search Val: ", Nexus.Overseer.textContainsValue.Length > 25 ? Nexus.Overseer.textContainsValue.Substring(0, 25) : Nexus.Overseer.textContainsValue);
-						}
+						//TODO: Uodate for WAIT FOR logic. EditorGUILayout.TextField();
 						EditorGUILayout.Space();
 
 					} else {
@@ -913,7 +905,7 @@ namespace TrilleonAutomation {
 					if(privateCrumb) {
 
 						//Alert user that this breadcrumb trail requires implementation of public accessors to be valid.
-						breadcrumb.normal.background = Swat.MakeTexture(1, 1, new Color32(255, 0, 0, 50));
+						breadcrumb.normal.background = Swat.MakeTextureFromColor(new Color32(255, 0, 0, 50));
 						if(expandErredBreadcrumbs) {
 
 							drillDowns[dd] = true;
@@ -1056,7 +1048,7 @@ namespace TrilleonAutomation {
 			addWaitInput.alignment = TextAnchor.MiddleCenter;
 
 			assertTypeToggle = new GUIStyle(GUI.skin.button);
-			assertTypeToggle.normal.background = Swat.MakeTexture(1, 1, (Color)new Color32(225, 225, 225, 255));
+			assertTypeToggle.normal.background = Swat.MakeTextureFromColor((Color)new Color32(225, 225, 225, 255));
 			assertTypeToggle.margin = new RectOffset(0, 0, -5, 0);
 			assertTypeToggle.fixedHeight = 29;
 			assertTypeToggle.fixedWidth = 120;
@@ -1176,7 +1168,7 @@ namespace TrilleonAutomation {
 
 				GUIStyle stop = new GUIStyle(GUI.skin.button);;
 				stop.margin = new RectOffset(5, 0, 0, 0);
-				stop.normal.background = Swat.MakeTexture(1, 1, (Color)new Color32(125, 0, 0, 255));
+				stop.normal.background = Swat.MakeTextureFromColor((Color)new Color32(125, 0, 0, 255));
 				stop.normal.textColor = Color.white;
 				stop.fontStyle = FontStyle.Bold;
 				stop.fontSize = 15;
@@ -1304,7 +1296,7 @@ namespace TrilleonAutomation {
 						} else {
 
 							currentAlphaStep -= (byte)1;
-							stepWrapper.normal.background = Swat.MakeTexture(1, 1, (Color)new Color32(0, 200, 0, currentAlphaStep));
+							stepWrapper.normal.background = Swat.MakeTextureFromColor((Color)new Color32(0, 200, 0, currentAlphaStep));
 							Nexus.Self.Repaint();
 
 						}
@@ -1649,7 +1641,7 @@ namespace TrilleonAutomation {
 
 					GUILayout.Space(15f);
 					GUIStyle viewCode = new GUIStyle(GUI.skin.button);
-					viewCode.normal.background = Swat.MakeTexture(1, 1, Swat.TextGreen);
+					viewCode.normal.background = Swat.MakeTextureFromColor(Swat.TextGreen);
 					viewCode.normal.textColor = Color.white;
 					viewCode.fontSize = 14;
 					viewCode.fontStyle = FontStyle.Bold;

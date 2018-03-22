@@ -60,9 +60,9 @@ namespace TrilleonAutomation {
 		}
 
 		public override void OnTabSelected() { 
-			
+
 			GetConfig();
-		
+
 		}
 
 		public override void Render() {
@@ -215,7 +215,7 @@ namespace TrilleonAutomation {
 
 						//Is this a new pending setting that has not yet been saved? If so, skip this.
 						if(settingsSaved.Count > i) {
-							
+
 							hiddenFields.Add(new string[] { keyCasing, settingsSaved[i].Value });
 							lastMatchVal.Add(hiddenFields[hiddenFields.Count - 1]);
 
@@ -228,18 +228,18 @@ namespace TrilleonAutomation {
 					bool isBool = false;
 					bool boolValue = false;
 					switch(thisEntry[1].ToLower()) {
-						case "false":
-							isBool = true;
-							break;
-						case "true":
-							boolValue = true;
-							isBool = true;
-							break;
+					case "false":
+						isBool = true;
+						break;
+					case "true":
+						boolValue = true;
+						isBool = true;
+						break;
 					} 
 
 					//Add label and instantiate field as equal to the entry in our editableFields list.
 					if(customKeys) {
-						
+
 						EditorGUILayout.BeginVertical();
 
 					}
@@ -268,12 +268,12 @@ namespace TrilleonAutomation {
 
 						if(criticalFields[i]) {
 
-							inputToggle.normal.background = Swat.MakeTexture (1, 1, (Color)new Color32(200, 0, 0, 50));
+							inputToggle.normal.background = Swat.MakeTextureFromColor((Color)new Color32(200, 0, 0, 50));
 							critsAny++;
 
 						} else {
 
-							inputToggle.normal.background = Swat.MakeTexture (1, 1, (Color)new Color32(0, 200, 0, 50));
+							inputToggle.normal.background = Swat.MakeTextureFromColor((Color)new Color32(0, 200, 0, 50));
 							changesMade = true;
 
 						}
@@ -380,7 +380,7 @@ namespace TrilleonAutomation {
 			GUILayout.Space(65);
 			if(changesMade) {
 
-				buttonChoices.normal.background = Swat.MakeTexture(1, 1, (Color)new Color32(0, 255, 0, 50));
+				buttonChoices.normal.background = Swat.MakeTextureFromColor((Color)new Color32(0, 255, 0, 50));
 
 			}
 			if(GUILayout.Button("Save Changes", buttonChoices, GUILayout.Width(100))) {
@@ -468,6 +468,7 @@ namespace TrilleonAutomation {
 				} else {
 
 					string key = editableFields[i][0].ToUpper().Replace(' ', '_');
+					HandleSpecificKeyChangeRequirements(key, editableFields[i][1]);
 					textInfo.AppendLine(string.Format("{0}{1}={2}", criticalFields[i] ? "!" : string.Empty, key, editableFields[i][1]));
 
 				}
@@ -484,6 +485,26 @@ namespace TrilleonAutomation {
 			saved = true;
 			Set();
 			GetConfig();
+
+		}
+
+		void HandleSpecificKeyChangeRequirements(string key, string value) {
+
+			switch(key) {
+				case "NEVER_AUTO_LOCK_RELOAD_ASSEMBLIES":
+					if(value == "True") {
+
+						EditorApplication.UnlockReloadAssemblies();
+
+					} else {
+					
+						EditorApplication.LockReloadAssemblies();
+
+					}
+					break;
+				default:
+					break;
+			}
 
 		}
 

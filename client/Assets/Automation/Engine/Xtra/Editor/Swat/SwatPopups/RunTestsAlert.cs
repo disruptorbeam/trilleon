@@ -150,7 +150,7 @@ namespace TrilleonAutomation {
 
 			}
 
-			GUI.DrawTexture(new Rect(0, 0, position.width, position.height), Nexus.MakeTexture(1, 1, Color.gray));
+			GUI.DrawTexture(new Rect(0, 0, position.width, position.height), Swat.MakeTextureFromColor(Color.gray));
 
 			scrollBar = new GUIStyle();
 			scrollBar.margin = new RectOffset(25, 20, 0, 0);
@@ -159,7 +159,7 @@ namespace TrilleonAutomation {
 			toggleGroup.margin = new RectOffset(12, 0, 0, 0);
 
 			divider = new GUIStyle(GUI.skin.box);
-			divider.normal.background = Nexus.MakeTexture(2, 2, Swat.ActionButtonTextColor);
+			divider.normal.background = Swat.MakeTextureFromColor(Swat.ActionButtonTextColor);
 			divider.margin = new RectOffset(25, 0, 10, 20);
 
 			requiredTestsStyle = new GUIStyle(GUI.skin.label);
@@ -187,7 +187,7 @@ namespace TrilleonAutomation {
 			buttons.fixedHeight = buttonHeight;
 			buttons.fixedWidth = buttonWidth;
 			buttons.normal.textColor = Swat.ActionButtonTextColor;
-			buttons.normal.background = Nexus.MakeTexture(1, 1, (Color)new Color32(80, 80, 80, 255));
+			buttons.normal.background = Swat.MakeTextureFromColor((Color)new Color32(80, 80, 80, 255));
 
 			EditorGUILayout.BeginVertical();
 			GUILayout.Space(15);

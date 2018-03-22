@@ -95,7 +95,7 @@ namespace TrilleonAutomation {
 			}
 
 			//Only send Abridged (Important) messages to the Arbiter communication channel.
-			if(consoleMessage.level == MessageLevel.Abridged) {
+			if(AutomationMaster.Initialized && consoleMessage.level == MessageLevel.Abridged) {
 				
 				AutomationMaster.Arbiter.SendCommunication(consoleMessage.message);
 

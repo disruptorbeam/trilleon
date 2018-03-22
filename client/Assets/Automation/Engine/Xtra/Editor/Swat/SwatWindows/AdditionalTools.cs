@@ -242,7 +242,7 @@ namespace TrilleonAutomation {
 					} else {
 
 						currentAlphaStep -= (byte)1;
-						stepWrapper.normal.background = Swat.MakeTexture(1, 1, (Color)new Color32(0, 200, 0, currentAlphaStep));
+						stepWrapper.normal.background = Swat.MakeTextureFromColor((Color)new Color32(0, 200, 0, currentAlphaStep));
 						Nexus.Self.Repaint();
 
 					}

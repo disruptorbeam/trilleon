@@ -172,7 +172,7 @@ namespace TrilleonAutomation {
 		public static Texture2D TabButtonBackgroundTexture { 
 			get { 
 				if(_tabButtonBackgroundTexture == default(Texture2D)) {
-					_tabButtonBackgroundTexture = MakeTexture(1, 1, (Color)new Color32(200, 200, 200, 255));
+					_tabButtonBackgroundTexture = MakeTextureFromColor((Color)new Color32(200, 200, 200, 255));
 				}
 				return _tabButtonBackgroundTexture;
 			} 
@@ -187,7 +187,7 @@ namespace TrilleonAutomation {
 		public static Texture2D ToggleButtonBackgroundSelectedTexture { 
 			get { 
 				if(_toggleButtonBackgroundSelectedTexture == default(Texture2D)) {
-					_toggleButtonBackgroundSelectedTexture = MakeTexture(1, 1, (Color)new Color32(200, 200, 200, 255));
+					_toggleButtonBackgroundSelectedTexture = MakeTextureFromColor((Color)new Color32(200, 200, 200, 255));
 				}
 				return _toggleButtonBackgroundSelectedTexture;
 			} 
@@ -196,7 +196,7 @@ namespace TrilleonAutomation {
 		public static Texture2D ToggleButtonBackgroundTexture { 
 			get { 
 				if(_toggleButtonBackgroundTexture == default(Texture2D)) {
-					_toggleButtonBackgroundTexture = MakeTexture(1, 1, (Color)new Color32(100, 100, 100, 255));
+					_toggleButtonBackgroundTexture = MakeTextureFromColor((Color)new Color32(100, 100, 100, 255));
 				}
 				return _toggleButtonBackgroundTexture;
 			} 
@@ -216,7 +216,7 @@ namespace TrilleonAutomation {
 		public static Texture2D ActionButtonTexture { 
 			get { 
 				if(_actionButtonTexture == default(Texture2D)) {
-					_actionButtonTexture = MakeTexture(1, 1, (Color)new Color32(100, 100, 100, 255));
+					_actionButtonTexture = MakeTextureFromColor((Color)new Color32(100, 100, 100, 255));
 				}
 				return _actionButtonTexture;
 			} 
@@ -231,7 +231,7 @@ namespace TrilleonAutomation {
 		public static Texture2D BoxAreaBackgroundTexture { 
 			get { 
 				if(_boxAreaBackgroundTexture == default(Texture2D)) {
-					_boxAreaBackgroundTexture = MakeTexture(1, 1, (Color)new Color32(235, 235, 235, 255));
+					_boxAreaBackgroundTexture = MakeTextureFromColor((Color)new Color32(235, 235, 235, 255));
 				}
 				return _boxAreaBackgroundTexture;
 			} 
@@ -487,7 +487,7 @@ namespace TrilleonAutomation {
 
 			if(popping) {
 
-				GUI.DrawTexture(new Rect(0, 0, position.width, position.height), Nexus.MakeTexture(1, 1, (Color)new Color32(100, 100, 100, 150)));
+				GUI.DrawTexture(new Rect(0, 0, position.width, position.height), Swat.MakeTextureFromColor((Color)new Color32(100, 100, 100, 150)));
 
 			}
 
@@ -725,7 +725,7 @@ namespace TrilleonAutomation {
 			get { 
 				GUIStyle tooltipStyle = new GUIStyle(GUI.skin.label);
 				tooltipStyle.normal.textColor = Color.white;
-				tooltipStyle.normal.background = MakeTexture(2, 2, new Color32(140, 140, 140, 255));
+				tooltipStyle.normal.background = MakeTextureFromColor(new Color32(140, 140, 140, 255));
 				tooltipStyle.margin = new RectOffset(2, 2, 2, 2);
 				tooltipStyle.alignment = TextAnchor.MiddleCenter;
 				tooltipStyle.wordWrap = true;
@@ -985,7 +985,7 @@ namespace TrilleonAutomation {
 				activeness.fixedWidth = style.fixedWidth + statusTextAreaWidth;
 
 			}
-			activeness.normal.background = MakeTexture(1, 1, (invertBooleanColorIndication ? !isToggledOn : isToggledOn) ? (Color)new Color32(0, 135, 0, 255) : (Color)new Color32(135, 0, 0, 255));
+			activeness.normal.background = MakeTextureFromColor((invertBooleanColorIndication ? !isToggledOn : isToggledOn) ? (Color)new Color32(0, 135, 0, 255) : (Color)new Color32(135, 0, 0, 255));
 
 			EditorGUILayout.BeginHorizontal(activeness);
 			GUILayout.Space(-0.25f);
@@ -1042,7 +1042,7 @@ namespace TrilleonAutomation {
 
 				GUIStyle error = new GUIStyle(GUI.skin.label);
 				error.normal.textColor = Color.white;
-				error.normal.background = MakeTexture(2, 2, new Color32(175, 0, 0, 225));
+				error.normal.background = MakeTextureFromColor(new Color32(175, 0, 0, 225));
 				error.alignment = TextAnchor.MiddleCenter;
 				error.margin = new RectOffset(2, 2, 2, 2);
 				error.wordWrap = true;
@@ -1082,7 +1082,7 @@ namespace TrilleonAutomation {
 				}
 
 				GUIStyle load = new GUIStyle(GUI.skin.box);
-				load.normal.background = MakeTexture(1, 1, (Color)new Color32(75, 75, 75, 150));
+				load.normal.background = MakeTextureFromColor((Color)new Color32(75, 75, 75, 150));
 				load.normal.textColor = Color.white;
 				load.fontSize = 24;
 				load.alignment = TextAnchor.MiddleCenter;
@@ -1100,18 +1100,11 @@ namespace TrilleonAutomation {
 
 		#region Helpers
 
-		public static Texture2D MakeTexture(int width, int height, Color col) {
+		public static Texture2D MakeTextureFromColor(Color color) {
 
-			Color[] pix = new Color[width * height];
-			for( int i = 0; i < pix.Length; ++i ) {
-
-				pix[ i ] = col;
-
-			}
-			Texture2D result = new Texture2D( width, height );
-			result.SetPixels( pix );
+			Texture2D result = new Texture2D(1, 1);
+			result.SetPixels(new Color[] { color });
 			result.Apply();
-
 			return result;
 
 		}
@@ -1133,9 +1126,9 @@ namespace TrilleonAutomation {
 		public bool IsValidError(string errorToLowerCase) {
 
 			/*
-              All three of these editors can occur when a control group "Begin..." and "End..." are conditionally drawn/not drawn between two passes. 
-              They do not affect anything and can be ignored in the same way as "Coroutine Continue Failure" errors in game code.
-         	*/
+            All three of these editors can occur when a control group "Begin..." and "End..." are conditionally drawn/not drawn between two passes. 
+            They do not affect anything and can be ignored in the same way as "Coroutine Continue Failure" errors in game code.
+         */
 
 			return !errorToLowerCase.ToLower().Contains("mismatched layoutgroup") && !errorToLowerCase.ToLower().Contains("position in a group with only") && !errorToLowerCase.ToLower().Contains("you are pushing more guiclips than you are popping");
 

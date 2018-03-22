@@ -369,9 +369,15 @@ namespace TrilleonAutomation {
 			Application.logMessageReceived -= AutoConsole.GetLog; //Detach if already attached.
 			Application.logMessageReceived += AutoConsole.GetLog; //Attach handler to recieve incoming logs.
 			#if UNITY_EDITOR
-			EditorApplication.playModeStateChanged += AssemblyUnlock;
+				#if UNITY_2017_2_OR_NEWER
+					EditorApplication.playModeStateChanged += AssemblyUnlock;
+				#else 
+					EditorApplication.playmodeStateChanged += AssemblyUnlock;
+				#endif
 			#endif
-
+			#if UNITY_WEBGL
+			WebGLBroker.AutomationReady();
+			#endif
 			Initialized = true;
 
 		}
@@ -380,21 +386,39 @@ namespace TrilleonAutomation {
 
 		//Cleanup delegates and anything GC does not handle on destruction.
 		~AutomationMaster() {
-			
-			EditorApplication.playModeStateChanged -= AssemblyUnlock;
+
+			#if UNITY_2017_2_OR_NEWER
+				EditorApplication.playModeStateChanged -= AssemblyUnlock;
+			#else 
+				EditorApplication.playmodeStateChanged -= AssemblyUnlock;
+			#endif
 
 		}
 
-		static void AssemblyUnlock(PlayModeStateChange p) {
+		#if UNITY_2017_2_OR_NEWER
+			static void AssemblyUnlock(PlayModeStateChange p) {
 
-			//Lock reload assemblies while automation is active and application is running.
-			if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
+				//Lock reload assemblies while automation is active and application is running.
+				if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
 
-				EditorApplication.UnlockReloadAssemblies();
+					EditorApplication.UnlockReloadAssemblies();
+
+				}
 
 			}
+		#else 
+			static void AssemblyUnlock() {
 
-		}
+				//Lock reload assemblies while automation is active and application is running.
+				if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
+
+					EditorApplication.UnlockReloadAssemblies();
+
+				}
+
+			}
+		#endif
+
 
 		public static void PauseEditorOnFailure() {
 
@@ -518,8 +542,16 @@ namespace TrilleonAutomation {
 			}
 
 			#if UNITY_EDITOR
-			EditorApplication.playModeStateChanged += AssemblyUnlock;
-			EditorApplication.LockReloadAssemblies();
+				#if UNITY_2017_2_OR_NEWER
+					EditorApplication.playModeStateChanged += AssemblyUnlock;
+				#else 
+					EditorApplication.playmodeStateChanged += AssemblyUnlock;
+				#endif
+			if(!ConfigReader.GetBool("NEVER_AUTO_LOCK_RELOAD_ASSEMBLIES")) {
+
+				EditorApplication.LockReloadAssemblies();
+
+			}
 			#endif
 
 			ValidationRun = message.ToLower().Contains("trilleon/validation");
@@ -961,6 +993,7 @@ namespace TrilleonAutomation {
 					dependencies.AddRange(dependencyWebOnClass.Dependencies);
 
 				}
+
 				for(int t = 0; t < dependencies.Count; t++) {
 
 					///Check if dependency has run, and whether it has passed, failed, or been ignored.
@@ -1050,6 +1083,38 @@ namespace TrilleonAutomation {
 					}
 
 				}
+
+			}
+
+			//Handle "Or" based dependencies, where only one test from the list is required to be passed to run this test.
+			List<string> OneOfDependencies = dependenciesWebList != null ? dependenciesWebList.OneOfDependencies : new List<string>();
+			bool oneOfDepCheck = OneOfDependencies.Count > 0;
+			if(oneOfDepCheck) {
+
+				//Ignore this check if none of the possible dependencies are even included in the current test run.
+				if(Methods.FindAll(o => OneOfDependencies.Contains(o.Value.Name)).Any()) {
+					
+					for(int p = 0; p < OneOfDependencies.Count; p++) {
+
+						if(TestRunContext.Passed.Tests.Contains(OneOfDependencies[p])) {
+
+							oneOfDepCheck = false;
+							break;
+
+						}
+
+					}
+
+					if(oneOfDepCheck) {
+
+						Deferred.Add(new KeyValuePair<string,MethodInfo>(string.Format("{0}{1}{2}", CurrentTestContext.ClassName, DELIMITER, CurrentTestContext.TestName), method.Value));
+						yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
+						yield break;
+
+					}
+
+				}
+
 
 			}
 
@@ -1410,10 +1475,15 @@ namespace TrilleonAutomation {
 
 					List<string> dependencies = new List<string>();
 					if(dependenciesList != null) {
+						
 						dependencies.AddRange(dependenciesList.Dependencies);
+						dependencies.AddRange(dependenciesList.OneOfDependencies);
+
 					}
 					if(dependenciesOnClass != null) {
+						
 						dependencies.AddRange(dependenciesOnClass.Dependencies);
+
 					}
 					if(!dependencies.Any()) {
 
@@ -1870,7 +1940,7 @@ namespace TrilleonAutomation {
 
 			List<string> resultsRecursive = new List<string>();
 			DependencyWeb  thisDepTest = depWebTests.Find(x => x.Key == currentTest).Value;
-			List<KeyValuePair<string,DependencyWeb>> directDeps = searchUp ? depWebTests.FindAll(d => thisDepTest.Dependencies.Contains(d.Key)) : depWebTests.FindAll(d => d.Value.Dependencies.Contains(currentTest));
+			List<KeyValuePair<string,DependencyWeb>> directDeps = searchUp ? depWebTests.FindAll(d => thisDepTest.Dependencies.Contains(d.Key) || thisDepTest.OneOfDependencies.Contains(d.Key)) : depWebTests.FindAll(d => d.Value.Dependencies.Contains(currentTest) || d.Value.OneOfDependencies.Contains(currentTest));
 
 			if(buildingList == default(List<string>)) {
 
@@ -2358,10 +2428,15 @@ namespace TrilleonAutomation {
 
 					List<string> dependencies = new List<string>();   
 					if(dw != null) {
+						
 						dependencies.AddRange(dw.Dependencies);
+						dependencies.AddRange(dw.OneOfDependencies);
+
 					}
 					if(dwc != null) {
+						
 						dependencies.AddRange(dwc.Dependencies);
+
 					}
 
 					if(dependencies.Any()) {
