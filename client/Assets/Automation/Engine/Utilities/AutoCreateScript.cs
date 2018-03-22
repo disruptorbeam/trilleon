@@ -26,7 +26,7 @@ using System;
 
 namespace TrilleonAutomation {
 
-   public enum AutoStepMaster { ObjectStep, SimpleWait, AdvancedWait };
+   public enum AutoStepMaster { ObjectStep, SimpleWait, WaitFor };
    public enum AutoStepType { None, Action, ObjectAssert, BoolAssert };
    public enum AutoAction { None, Click, TryClick, ClickAndHold, SendKeys };
    public enum AutoBoolAssert { None, IsTrue, Fail };

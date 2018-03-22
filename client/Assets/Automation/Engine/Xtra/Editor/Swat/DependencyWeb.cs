@@ -189,7 +189,7 @@ namespace TrilleonAutomation {
 			//Display selected node's details in details panel.
 			GUIStyle infoBox = new GUIStyle(GUI.skin.box);
 			infoBox.richText = true;
-			infoBox.normal.background = MakeTexture(2, 2, new Color(0.175f, 0.175f, 0.175f, 1f));
+			infoBox.normal.background = MakeTextureFromColor(new Color(0.175f, 0.175f, 0.175f, 1f));
 			infoBox.alignment = TextAnchor.UpperLeft;
 			GUI.Box(new Rect(new Vector2(position.width - (infoBoxMinWidth - 5), 4), new Vector2(boxWidth, boxHeight)), nodeDetails, infoBox);
 
@@ -340,6 +340,7 @@ namespace TrilleonAutomation {
 
 				DependencyWeb dw = (DependencyWeb)Attribute.GetCustomAttribute(allDependencyTests[i].Value, typeof(DependencyWeb));
 				List<string> dtNames = dw.Dependencies;
+				dtNames.AddRange(dw.OneOfDependencies);
 				testsAndTheirDependenciesList.Add(new KeyValuePair<string, string[]>(allDependencyTests[i].Key, dtNames.ToArray()));
 
 			}

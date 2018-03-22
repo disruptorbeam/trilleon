@@ -34,7 +34,8 @@ namespace TrilleonAutomation {
 
 	public class Driver : MonoBehaviour {
 
-		public const float TIME_PER_KEY_TO_SEND = 0.1f; //Default amount of time added to total SendKeys time for each key requested.
+		public const float TIME_PER_KEY_TO_SEND = 0.075f; //Default amount of time added to total SendKeys time for each key requested.
+		public const int MAX_NUMBER_OF_KEYS_TO_TYPE = 20; //The maximum number of keys to type at a normal pace. Otherwise, set text equal to value all at once.
 		public const float TIMEOUT_DEFAULT = 20f; //Default timeout for Do-type events.
 		public const float TRY_TIMEOUT_DEFAULT = 10f; //Default timeout for Try-type events.
 		public const float INTERLOOP_WAIT_TIME = 1f; //Dictates the time between loop executions for wait functions.
@@ -123,7 +124,7 @@ namespace TrilleonAutomation {
 		/// <summary>
 		/// Sets the text field of an InputField object. Sets text character by character for a typing effect that would also trigger update listeners.
 		/// </summary>
-		public IEnumerator SendKeys(InputField field, string keysToSend){
+		public IEnumerator SendKeys(InputField field, string keysToSend, bool isAppend = false){
 
 			PreCommandCheck(true);
 
@@ -134,24 +135,46 @@ namespace TrilleonAutomation {
 				AutoHud.UpdateMessage(string.Format("{0} SendKeys \"{1}\"", field.gameObject.name, keysToSend));
 				Click(field.gameObject); //Send focus to input.
 
-				char[] keys = keysToSend.ToCharArray();
-				for(int x = 0; x < keys.Length; x++) {
+				if(!isAppend) {
 
-					field.text = string.Format("{0}{1}", field.text, keys[x]);
-					yield return StartCoroutine(WaitRealTime(TIME_PER_KEY_TO_SEND));
+					field.text = string.Empty;
+
+				}
+				if(keysToSend.Length > MAX_NUMBER_OF_KEYS_TO_TYPE) {
+
+					field.text = keysToSend;
+					if(isTry) {
+
+						yield return StartCoroutine(Q.assert.Try.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend.Substring(0, MAX_NUMBER_OF_KEYS_TO_TYPE), field.gameObject.name)));
+
+					} else {
+
+						yield return StartCoroutine(Q.assert.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend.Substring(0, MAX_NUMBER_OF_KEYS_TO_TYPE), field.gameObject.name)));
+
+					}
+
+				} else {
+					
+					char[] keys = keysToSend.ToCharArray();
+					for(int x = 0; x < keys.Length; x++) {
+
+						field.text = string.Format("{0}{1}", field.text, keys[x]);
+						yield return StartCoroutine(WaitRealTime(TIME_PER_KEY_TO_SEND));
+
+					}
+
+					if(isTry) {
+
+						yield return StartCoroutine(Q.assert.Try.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
+
+					} else {
+
+						yield return StartCoroutine(Q.assert.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
+
+					}
 
 				}
 				Click(field.gameObject.transform.parent.gameObject); //Remove focus from input.
-
-				if(isTry) {
-					
-					yield return StartCoroutine(Q.assert.Try.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
-
-				} else {
-
-					yield return StartCoroutine(Q.assert.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
-
-				}
 
 			} else {
 
@@ -330,7 +353,7 @@ namespace TrilleonAutomation {
 		/// 3) Is the object active itself?
 		/// 4) Performs game-specific checks as defined in GameMaster. For example, do you have a Tutorial mask that blocks raycasts down to the object, despite it being otherwise active? (you will need to explicitly add the logic to check that)
 		/// </summary>
-		public bool IsActiveVisibleAndInteractable(GameObject g, bool checkComponents = false) {
+		public bool IsActiveVisibleAndInteractable(GameObject g, bool checkComponents = true) {
 
 
 			PreCommandCheck();
@@ -361,7 +384,7 @@ namespace TrilleonAutomation {
 			} 
 
 		}
-		public bool IsActiveVisibleAndInteractable(List<Component> cs, bool checkComponents = false) {
+		public bool IsActiveVisibleAndInteractable(List<Component> cs, bool checkComponents = true) {
 
 			for(int x = 0; x < cs.Count; x++) {
 
@@ -376,7 +399,7 @@ namespace TrilleonAutomation {
 			return true;
 
 		}
-		public bool IsActiveVisibleAndInteractable(Component c, bool checkComponents = false) {
+		public bool IsActiveVisibleAndInteractable(Component c, bool checkComponents = true) {
 
 			if(c == null) {
 
@@ -389,7 +412,7 @@ namespace TrilleonAutomation {
 			}
 
 		}
-		public bool IsActiveVisibleAndInteractable(List<GameObject> gs, bool checkComponents = false) {
+		public bool IsActiveVisibleAndInteractable(List<GameObject> gs, bool checkComponents = true) {
 
 			for(int x = 0; x < gs.Count; x++) {
 
@@ -845,7 +868,8 @@ namespace TrilleonAutomation {
 		/// <param name="g">GameObject to click.</param>
 		/// <param name="optionalOnFailMessage">Click fail message.</param>
 		/// <param name="timeout">Timeout period where the driver will wait for the clickable object to be interactable.</param>
-		public IEnumerator Click(GameObject g, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout = TIMEOUT_DEFAULT) {
+		/// <param name="clickInactive">Ignore that the clickable object is currently inactive.</param>
+		public IEnumerator Click(GameObject g, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout = TIMEOUT_DEFAULT, bool clickInactive = false) {
 
 			PreCommandCheck(true);
 
@@ -893,7 +917,11 @@ namespace TrilleonAutomation {
 
 				} else {
 
-					yield return StartCoroutine(WaitFor(() => Q.driver.IsActiveVisibleAndInteractable(g), optionalOnFailMessage, timeout));
+					if(!clickInactive) {
+						
+						yield return StartCoroutine(WaitFor(() => Q.driver.IsActiveVisibleAndInteractable(g), optionalOnFailMessage, timeout));
+
+					}
 					ExecuteEvents.Execute<IPointerClickHandler>(o, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
 					ExecuteEvents.Execute<IPointerDownHandler>(o, new PointerEventData(EventSystem.current), ExecuteEvents.pointerDownHandler);
 					ExecuteEvents.Execute<IPointerUpHandler>(o, new PointerEventData(EventSystem.current), ExecuteEvents.pointerUpHandler);
@@ -908,7 +936,7 @@ namespace TrilleonAutomation {
 			PostCommandCheck(true);
 
 		}
-		public IEnumerator Click(GameObject g, By by, string findByValue, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout =  TIMEOUT_DEFAULT) {
+		public IEnumerator Click(GameObject g, By by, string findByValue, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout =  TIMEOUT_DEFAULT, bool clickInactive = false) {
 
 			PreCommandCheck(true);
 
@@ -959,7 +987,11 @@ namespace TrilleonAutomation {
 
 				} else {
 					
-					yield return StartCoroutine(WaitFor(() => Q.driver.IsActiveVisibleAndInteractable(g), optionalOnFailMessage, timeout));
+					if(!clickInactive) {
+
+						yield return StartCoroutine(WaitFor(() => Q.driver.IsActiveVisibleAndInteractable(g), optionalOnFailMessage, timeout));
+
+					}
 					ExecuteEvents.Execute<IPointerClickHandler>(o, new PointerEventData(EventSystem.current), ExecuteEvents.pointerClickHandler);
 					ExecuteEvents.Execute<IPointerDownHandler>(o, new PointerEventData(EventSystem.current), ExecuteEvents.pointerDownHandler);
 					ExecuteEvents.Execute<IPointerUpHandler>(o, new PointerEventData(EventSystem.current), ExecuteEvents.pointerUpHandler);
@@ -975,12 +1007,12 @@ namespace TrilleonAutomation {
 			PostCommandCheck(true);
 
 		}
-		public IEnumerator Click(Component c, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout = TIMEOUT_DEFAULT) {
+		public IEnumerator Click(Component c, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout = TIMEOUT_DEFAULT, bool clickInactive = false) {
 
 			yield return StartCoroutine(Click(c == null ? null : c.gameObject, optionalOnFailMessage, timeout));
 
 		}
-		public IEnumerator Click(Component c, By by, string findByValue, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout =  TIMEOUT_DEFAULT) {
+		public IEnumerator Click(Component c, By by, string findByValue, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout =  TIMEOUT_DEFAULT, bool clickInactive = false) {
 
 			yield return StartCoroutine(Click(c == null ? null : c.gameObject, by, findByValue, optionalOnFailMessage, timeout));
 
@@ -1024,9 +1056,7 @@ namespace TrilleonAutomation {
 		/// <summary>
 		/// Buttons may have a Long-hold script that expects the button to be held down for a certain period of time to launch the button event.
 		/// </summary>
-		/// <param name="obj">Object.</param>
-		/// <param name="timeToHoldSimulateTouch">Time to hold simulate touch.</param>
-		public IEnumerator ClickAndHold(GameObject g, float timeToHoldSimulateTouch, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout =  TIMEOUT_DEFAULT) {
+		public IEnumerator ClickAndHold(GameObject g, float timeToHoldSimulateTouch, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout =  TIMEOUT_DEFAULT, bool clickInactive = false) {
 
 			PreCommandCheck();
 

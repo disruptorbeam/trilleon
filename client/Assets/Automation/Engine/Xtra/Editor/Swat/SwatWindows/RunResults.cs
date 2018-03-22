@@ -140,7 +140,7 @@ namespace TrilleonAutomation {
 			deleteFileButton.normal.textColor = Color.red;
 
 			GUIStyle divider = new GUIStyle(GUI.skin.box);
-			divider.normal.background = Swat.MakeTexture(2, 2, boxGreen);
+			divider.normal.background = Swat.MakeTextureFromColor(boxGreen);
 			divider.margin = new RectOffset(35, 10, 10, 10);
 
 			GUIStyle deleteAllButton = new GUIStyle(GUI.skin.button);

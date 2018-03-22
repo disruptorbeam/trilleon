@@ -39,7 +39,6 @@ namespace TrilleonAutomation {
 
 		public override void Set() { 
 		
-			VariableInputFields = new List<string>().OfSpecificValues(10, string.Empty);
 			Commands = ConsoleCommandsBase.RegisteredCommands;
 
 		}
@@ -55,7 +54,7 @@ namespace TrilleonAutomation {
 		public override void Render() {
 
 			console = new GUIStyle(GUI.skin.box);
-			console.normal.background = Swat.MakeTexture(1, 1, (Color)new Color32(100, 100, 100, 255));
+			console.normal.background = Swat.MakeTextureFromColor((Color)new Color32(100, 100, 100, 255));
 			console.wordWrap = true;
 			console.normal.textColor = Color.white;
 			console.padding = new RectOffset(10, 20, 0, 0);
@@ -83,7 +82,7 @@ namespace TrilleonAutomation {
 			editorName.normal.textColor = Swat.WindowDefaultTextColor;
 
 			load = new GUIStyle(GUI.skin.box);
-			load.normal.background = Swat.MakeTexture(1, 1, (Color)new Color32(75, 75, 75, 255));
+			load.normal.background = Swat.MakeTextureFromColor((Color)new Color32(75, 75, 75, 255));
 			load.normal.textColor = Color.white;
 			load.fontSize = 18;
 			load.alignment = TextAnchor.MiddleCenter;
@@ -108,6 +107,7 @@ namespace TrilleonAutomation {
 			search = EditorGUILayout.TextField(search, variables, new GUILayoutOption[] { GUILayout.MaxWidth(400) });
 			GUILayout.Space(25);
 
+			int inputFieldId = 0;
 			for(int x = 0; x < Commands.Count; x++) {
 
 				Command command = Commands[x];
@@ -146,8 +146,14 @@ namespace TrilleonAutomation {
 					}
 
 					GUILayout.Space(4);
-					VariableInputFields[x] = EditorGUILayout.TextField(VariableInputFields[x], variables, new GUILayoutOption[] { GUILayout.MaxWidth(400) });
+					if(VariableInputFields.Count == inputFieldId) {
+
+						VariableInputFields.Add(string.Empty);
+
+					}
+					VariableInputFields[inputFieldId] = EditorGUILayout.TextField(VariableInputFields[inputFieldId], variables, new GUILayoutOption[] { GUILayout.MaxWidth(400) });
 					GUILayout.Space(8);
+					inputFieldId++;
 
 				}
 				if(GUILayout.Button("Launch", open)) {

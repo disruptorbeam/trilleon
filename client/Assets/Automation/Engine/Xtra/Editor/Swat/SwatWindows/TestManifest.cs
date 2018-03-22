@@ -44,6 +44,8 @@ namespace TrilleonAutomation {
 		const string PAUSE_ON_FAILURE = "||";
 		const string CLEARCACHE = "✤";
 		const string TOGGLEBUDDY = "♥";
+		const string RELOADLOCKON = "Ⓛ";
+		const string RELOADLOCKOFF = "Ⓤ";
 		const string SOFTRESET = "☈";
 		const string FAVORITE = "★";
 		const string VALIDATE = "☤";
@@ -63,7 +65,7 @@ namespace TrilleonAutomation {
 		int _selectedCategory = 0;
 		int _redrawRateSeconds = 10;
 		float _lastWindowWidth = 0;
-		bool expandCategories, _hardStop, hideBoxArea, _ignoreBuddyTests, loopModeActive;
+		bool editorPlayModeActivationHandled, expandCategories, _hardStop, hideBoxArea, _ignoreBuddyTests, loopModeActive;
 		bool showPassed = true;
 		bool showFailed = true;
 		bool showSkipped = true;
@@ -71,6 +73,7 @@ namespace TrilleonAutomation {
 		bool showNoData = true;
 		bool _viewModeCategory = true;
 		public bool Update_Data = true;
+		public bool LockAssemblies;
 		string selectedTest = string.Empty;
 		string lastSelectedTest = string.Empty;
 
@@ -159,6 +162,7 @@ namespace TrilleonAutomation {
 
 		public override void Set() {
 
+			LockAssemblies = ConfigReader.GetBool("NEVER_AUTO_LOCK_RELOAD_ASSEMBLIES") ? false : AutomationMaster.Busy;
 			_isEditorRunning = Application.isPlaying;
 			_firstPass = true;
 			_resetOnStart = Nexus.Overseer.softReset;
@@ -217,6 +221,14 @@ namespace TrilleonAutomation {
 			testStatusBox.margin = new RectOffset(10, 10, 0, 0);
 			_lastWindowWidth = Nexus.Self.position.width;
 
+			//Flip assembly unlock flag if applicable.
+			if(!editorPlayModeActivationHandled && EditorApplication.isPlaying && AutomationMaster.Busy) {
+
+				editorPlayModeActivationHandled = true;
+				LockAssemblies = ConfigReader.GetBool("NEVER_AUTO_LOCK_RELOAD_ASSEMBLIES") ? false : AutomationMaster.Busy;
+
+			}
+
 			//Application has launched in Editor Play Mode. Retrieve the test results again.
 			if((!_isEditorRunning && Application.isPlaying) || (_isEditorRunning && !Application.isPlaying)) {
 
@@ -230,7 +242,6 @@ namespace TrilleonAutomation {
 
 				//Only perform logic-based operations every `LOGIC_UPDATE_INTERVAL_SECONDS_FOR_RETAINING_PERFORMANCE` seconds.
 				Update_Data = System.Math.Abs(_lastLogicUpdate.Subtract(DateTime.UtcNow).TotalSeconds) > LOGIC_UPDATE_INTERVAL_SECONDS_FOR_RETAINING_PERFORMANCE;
-
 
 			} 
 
@@ -367,6 +378,31 @@ namespace TrilleonAutomation {
 				}), toolBarButtons, new GUILayoutOption[] { GUILayout.Width(25), GUILayout.Height(25) });
 			extraToolCount++;
 
+			/* TODO: Add when Unity fixes their broken assembly locking.
+			//Toggle Buddy Tests toolbar button.
+			if(LockAssemblies) {
+				toolBarButtons.normal.textColor = Color.red; 
+			} else {
+				toolBarButtons.normal.textColor = Nexus.TextGreen; 
+			}
+			toolBarButtons.fontSize = !Nexus.isPc ? 19 : 19;
+			toolBarButtons.padding = !Nexus.isPc ? new RectOffset(0, 4, 0, 2): new RectOffset(0, 4, 0, 2);
+			Nexus.Self.Button(LockAssemblies ? RELOADLOCKON : RELOADLOCKOFF, string.Format("Toggle Assembly lock, allowing/stopping automatic recompile as you make edits to tests. Currently {0}.", LockAssemblies ? "Locked" : "Unlocked"), 
+				new Nexus.SwatDelegate(delegate() {                
+					LockAssemblies = !LockAssemblies;
+					if(LockAssemblies) {
+
+						EditorApplication.LockReloadAssemblies();
+
+					} else {
+
+						EditorApplication.UnlockReloadAssemblies();
+
+					}
+				}), toolBarButtons, new GUILayoutOption[] { GUILayout.Width(25), GUILayout.Height(25) });
+			extraToolCount++;
+			*/
+
 			//Validate framework toolbar button.
 			if(AutomationMaster.Validated_Phase1 == null && AutomationMaster.Validated_Phase2 == null ) {
 				toolBarButtons.normal.textColor = Swat.WindowDefaultTextColor; 
@@ -402,6 +438,8 @@ namespace TrilleonAutomation {
 				new Nexus.SwatDelegate(delegate() {   
 					AutomationMaster.UnitTestMode = !AutomationMaster.UnitTestMode;
 					_reget = Update_Data = true;
+					Nexus.Self.Favorites.FavoritesList = new List<KeyValuePair<string,List<KeyValuePair<bool,string>>>>();
+					Nexus.Self.Favorites.Set();
 				}), toolBarButtons, new GUILayoutOption[] { GUILayout.Width(25), GUILayout.Height(25) });
 			extraToolCount++;
 
@@ -1229,7 +1267,7 @@ namespace TrilleonAutomation {
 			if(AutomationMaster.Busy && Application.isPlaying && !_hardStop) {
 
 				GUIStyle load = new GUIStyle(GUI.skin.box);
-				load.normal.background = Swat.MakeTexture(1, 1, (Color)new Color32(75, 75, 75, 255));
+				load.normal.background = Swat.MakeTextureFromColor((Color)new Color32(75, 75, 75, 255));
 				load.normal.textColor = Color.white;
 				load.fontSize = 24;
 				load.alignment = TextAnchor.MiddleLeft;
@@ -1355,6 +1393,7 @@ namespace TrilleonAutomation {
 				for(int d = 0; d < dw.Count; d++) {
 
 					dependencies.AddRange(dw[d].Dependencies);
+					dependencies.AddRange(dw[d].OneOfDependencies);
 
 				}
 				_selectedMethodAttributes.Add(new KeyValuePair<string, string>("Dependency Web", string.Join(",", dependencies.ToArray())));

@@ -147,7 +147,7 @@ namespace TrilleonAutomation {
 			details.padding = detailsBox.padding = new RectOffset(5, 5, 5, 5);
 
 			divider = new GUIStyle(GUI.skin.box);
-			divider.normal.background = Swat.MakeTexture(2, 2, Color.white);
+			divider.normal.background = Swat.MakeTextureFromColor(Color.white);
 			divider.margin = new RectOffset(25, 0, 10, 20);
 
 			header = new GUIStyle(GUI.skin.label);

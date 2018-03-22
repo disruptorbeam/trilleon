@@ -139,21 +139,29 @@ namespace TrilleonAutomation {
 
 		private Random random = new Random();
 		public string LoremIpsum(int length) {
+			
 			const string loremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
 			int ipsumLength = loremIpsum.Length;
 			int currentLength = 0;
 			StringBuilder finalIpsum = new StringBuilder();;
-			while(currentLength < length) {
+			while(finalIpsum.Length < length) {
+				
 				int remainingLength = length - currentLength;
 				if(remainingLength > ipsumLength) {
+					
 					finalIpsum.AppendLine(loremIpsum);
 					currentLength += ipsumLength;
+
 				} else {
+					
 					finalIpsum.AppendLine(loremIpsum.Substring(0, remainingLength));
-					break;
+					currentLength = 0; //Reset to beginning of Lorem Ipsum sample, and begin appending same text until requested length is satisfied.
+
 				}
+
 			}
 			return finalIpsum.ToString();
+
 		}
 
 		char[] alphaNumerics = { 'a', 'A', 'b', 'B', 'c', 'C', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'K', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'O', 'p', 'P', 'q', 'Q', 'r', 'R', 's', 'S', 't', 'T', 'u', 'U', 'v', 'V', 'w', 'W', 'x', 'X', 'y', 'Y', 'z', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };

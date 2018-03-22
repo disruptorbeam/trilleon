@@ -27,6 +27,7 @@
 	LatestTestResults,
 	LatestTestResultsMeta,
 	Favorites,
+	FavoritesUnit,
 	TrilleonConfig,
 	ReportCss,
 	ReportJavascript

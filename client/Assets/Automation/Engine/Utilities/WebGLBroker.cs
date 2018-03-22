@@ -19,6 +19,7 @@
 
 ﻿#if UNITY_WEBGL || UNITY_EDITOR
 using System;
+using System.Collections;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -30,16 +31,35 @@ namespace TrilleonAutomation {
 	/// </summary>
 	public class WebGLBroker : MonoBehaviour {
 
+		bool AwaitingScreenshot { get; set; }
+
 		//Outgoing call to browser (Points to Engine > Xtra > Plugin javascript file and functions).
 		[DllImport("__Internal")]
 		public static extern void ReportXmlResults(string xml);
 		[DllImport("__Internal")]
 		public static extern void ReportJsonResults(string json);
+		[DllImport("__Internal")]
+		public static extern void AutomationReady();
+
+		//Send a screenshot request to anything listening on the web page.
+		[DllImport("__Internal")]
+		private static extern void ScreenshotRequest();
+		public void RequestScreenshot(string screenshotName) {
+
+			AwaitingScreenshot = true;
+			ScreenshotRequest();
+
+		}
 
 		//Incoming call from browser (Sent by "SendMessage()" Unity javascript method that points to this class and method).
 		public void LaunchTest(string test) {
 
 			AutomationMaster.Arbiter.ReceiveMessage(string.Format("{{ \"automation_command\": \"rt *{0}\" }}", test), true);
+
+		}
+		public void ScreenshotResponse() {
+
+			AwaitingScreenshot = false;
 
 		}
 

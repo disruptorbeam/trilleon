@@ -347,7 +347,7 @@ namespace TrilleonAutomation {
 						
 						} else {
 							
-							throw new UnityException(string.Format("There should be a DependencyTest of ID {0} under the DependencyClass ( Name: {1} - ID: {2} )", ms + 1, allMasterDependencyMethods.FindAll(x => x.Value.Name == nextMethod.First().Name).First().Key.Name, DepClassThis.Key));
+							throw new UnityException(string.Format("There should be a DependencyTest of ID {0} under the DependencyClass ( Name: {1} - ID: {2} )", ms + 1, allMasterDependencyMethods.FindAll(x => x.Value.Name == thisDependencyClassIdMethods[ms].Name).First().Key.Name, DepClassThis.Key));
 						
 						}
 

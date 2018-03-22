@@ -104,13 +104,13 @@ namespace TrilleonAutomation {
 
 			}
 
-			GUI.DrawTexture(new Rect(0, 0, position.width, position.height), Nexus.MakeTexture(1, 1, Color.gray));
+			GUI.DrawTexture(new Rect(0, 0, position.width, position.height), Swat.MakeTextureFromColor(Color.gray));
 
 			scrollBar = new GUIStyle();
 			scrollBar.margin = new RectOffset(25, 20, 0, 0);
 
 			divider = new GUIStyle(GUI.skin.box);
-			divider.normal.background = Swat.MakeTexture(2, 2, Color.white);
+			divider.normal.background = Swat.MakeTextureFromColor(Color.white);
 			divider.margin = new RectOffset(25, 0, 10, 20);
 
 			toggleGroup = new GUIStyle();
@@ -136,7 +136,7 @@ namespace TrilleonAutomation {
 			buttons.fixedHeight = buttonHeight;
 			buttons.fixedWidth = buttonWidth;
 			buttons.normal.textColor = Color.white;
-			buttons.normal.background = Nexus.MakeTexture(1, 1, (Color)new Color32(80, 80, 80, 255));
+			buttons.normal.background = Swat.MakeTextureFromColor((Color)new Color32(80, 80, 80, 255));
 
 			buttonGroup = new GUIStyle();
 
@@ -154,12 +154,16 @@ namespace TrilleonAutomation {
 				toggle.padding = CatsSelected[x] ? new RectOffset(0, 0, -6, 0) : new RectOffset(2, 0, -2, 0);
 				toggle.fontSize = CatsSelected[x] ? 25 : 18;
 				if(GUILayout.Button(CatsSelected[x] ? Swat.TOGGLE_ON : Swat.TOGGLE_OFF, toggle)) {
+					
 					CatsSelected[x] = !CatsSelected[x];
+
 				}
 
 				GUILayout.Space(-15);
 				if(GUILayout.Button(string.Format("  {0}", Cats[x]), toggleLabel)) {
+					
 					CatsSelected[x] = !CatsSelected[x]; //Toggle accompanying checkbox.
+
 				}
 				EditorGUILayout.EndHorizontal();
 				GUILayout.Space(-10);
@@ -205,22 +209,72 @@ namespace TrilleonAutomation {
 				
 				Nexus.Overseer.ignoreDependentTestsForRun = true;
 				string command = string.Empty;
+				string testsOnly = string.Empty;
 				for(int x = 0; x < Cats.Count; x++) {
 
 					if(CatsSelected[x]) {
 
-						string category = string.Empty;
-						if(Cats[x].Contains("(")) {
-							category = Cats[x].Replace("<", string.Empty).Replace(">", string.Empty).Split('(')[1].Trim(')');
+						if(Cats[x].StartsWith("*")) {
+
+							string cat = Cats[x].Replace("*", string.Empty);
+							List<KeyValuePair<string,List<KeyValuePair<bool,string>>>> match = Nexus.Self.Favorites.FavoritesList.FindAll(f => f.Key == cat);
+							if(match.Count == 0) {
+
+								SimpleAlert.Pop(string.Format("Cannot find data for Favorite, \"{0}\", selected in multi-category launch.", cat), null);
+								return;
+
+							} else {
+
+								List<KeyValuePair<bool,string>> contents = match.First().Value;
+								for(int c = 0; c < contents.Count; c++) {
+
+									if(contents[c].Key) {
+
+										//If the next item in this list is not a category, then the current category is merely a header for the test list that follows, and should not be included.
+										if(c + 1 < contents.Count && !contents[c + 1].Key) {
+
+											continue;
+
+										}
+										
+										command += string.Format("{0},", contents[c].Value);
+
+									} else {
+
+										testsOnly += string.Format("{0},", contents[c].Value);
+
+									}
+
+								}
+
+							}
+
 						} else {
-							category = Cats[x].Replace("<", string.Empty).Replace(">", string.Empty);
+
+							string category = string.Empty;
+							if(Cats[x].Contains("(")) {
+
+								category = Cats[x].Replace("<", string.Empty).Replace(">", string.Empty).Split('(')[1].Trim(')');
+
+							} else {
+
+								category = Cats[x].Replace("<", string.Empty).Replace(">", string.Empty);
+
+							}
+							command += string.Format("{0},", category);
+
 						}
-						command += string.Format("{0},", category);
 
 					}
 
 				}
-				command = command.Trim(',');
+				command = command.Trim(',').Replace("*", "@"); //@ represents favorite when * represents single test.
+				if(testsOnly.Length > 0) {
+
+					command = string.Format("&&{0}%{1}", command, testsOnly);
+
+				}
+
 				Close();
 				Nexus.Self.Tests.LaunchTests(command, "class");
 				IsVisible = false;

@@ -82,6 +82,7 @@ namespace TrilleonAutomation {
 			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.BuddyHistory, "nexus_buddy_data_history.txt"));
 			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.NexusTabs, "nexus_tab_preferences.txt"));
 			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.Favorites, "nexus_manifest_favorites.txt"));
+			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.FavoritesUnit, "nexus_manifest_favorites_unit.txt"));
 
 			BASE_NON_UNITY_PATH = string.Empty;
 			if(Application.platform == RuntimePlatform.WindowsEditor) {

@@ -38,6 +38,7 @@ namespace TrilleonAutomation {
 		int SelectedCatIndex { get; set; }
 		int SelectedTestIndex { get; set; }
 		bool makeNew { get; set; }
+		bool isEdit { get; set; }
 		bool saveCurrent { get; set; }
 		List<KeyValuePair<string,string>> buildingAdded = new List<KeyValuePair<string,string>>();
 		string[] _requestedMethods;
@@ -51,7 +52,7 @@ namespace TrilleonAutomation {
 
 			}
 
-			string rawFavoritesData = FileBroker.GetNonUnityTextResource(FileResource.Favorites);
+			string rawFavoritesData = FileBroker.GetNonUnityTextResource(AutomationMaster.UnitTestMode ? FileResource.FavoritesUnit : FileResource.Favorites);
 			List<string> favoritesEachRaw = rawFavoritesData.Split(AutomationMaster.DELIMITER).ToList();
 			FavoritesList = new List<KeyValuePair<string,List<KeyValuePair<bool,string>>>>();
 			for(int f = 0; f < favoritesEachRaw.Count; f++) {
@@ -64,6 +65,7 @@ namespace TrilleonAutomation {
 				}
 
 				List<string> pieces = favoritesEachRaw[f].Split(new string[] { internalDelimiter }, StringSplitOptions.None).ToList();
+				pieces = pieces.RemoveNullAndEmpty(); //Remove possible empties due to line breaks at end of file.
 				string name = pieces.First();
 				List<KeyValuePair<bool,string>> tests = new List<KeyValuePair<bool,string>>();
 				for(int t = 1; t < pieces.Count; t++) {
@@ -89,38 +91,49 @@ namespace TrilleonAutomation {
 			methods.Sort();
 			_requestedMethods = methods.ToArray();
 			_categories = Nexus.Self.Tests.CatKeys.FindAll(x => !x.StartsWith("*")).ToArray();
+			FavoritesList = new List<KeyValuePair<string,List<KeyValuePair<bool,string>>>>();
+			Set();
 
 		}
 
 		public override void Render() {
 
+			GUIStyle add = new GUIStyle(GUI.skin.button);
+			add.margin = new RectOffset(20, 0, -10, 0);
+			add.fixedWidth = 50;
+			add.fixedHeight = 30;
+			add.normal.textColor = Swat.TabButtonTextColor;
+			add.normal.background = Swat.TabButtonBackgroundTexture;
+
 			GUIStyle addNew = new GUIStyle(GUI.skin.button);
 			addNew.margin = new RectOffset(20, 0, 0, 0);
 			addNew.fixedWidth = 75;
 			addNew.fixedHeight = 25;
+			addNew.fontSize = 14;
 			addNew.normal.textColor = Swat.ActionButtonTextColor;
-			addNew.normal.background = Swat.ActionButtonTexture;
 
-			GUIStyle delete = new GUIStyle(GUI.skin.button);
-			delete.margin = new RectOffset(-10, 0, -5, 0);
-			delete.fixedWidth = 50;
-			delete.fixedHeight = 25;
-			delete.normal.textColor = Swat.ActionButtonTextColor;
-			delete.normal.background = Swat.ActionButtonTexture;
+			if(makeNew) {
 
-			GUIStyle launch = new GUIStyle(GUI.skin.button);
-			launch.margin = new RectOffset(-10, 0, -5, 0);
-			launch.fixedWidth = 50;
-			launch.fixedHeight = 25;
-			launch.normal.textColor = Swat.TabButtonTextColor;
-			launch.normal.background = Swat.TabButtonBackgroundTexture;
+				addNew.normal.background = Swat.MakeTextureFromColor(Color.black);
 
-			GUIStyle save = new GUIStyle(GUI.skin.button);
-			save.margin = new RectOffset(20, 0, 0, 0);
-			save.fixedWidth = 100;
-			save.fixedHeight = 25;
-			save.normal.textColor = Color.white;
-			save.normal.background = Swat.MakeTexture(1, 1, Color.black);
+			} else {
+				
+				addNew.normal.background = Swat.ActionButtonTexture;
+
+			}
+
+			GUIStyle deleteItem = new GUIStyle(GUI.skin.button);
+			deleteItem.margin = new RectOffset(20, 0, -2, 0);
+			deleteItem.fontSize = 16;
+			deleteItem.normal.textColor = Color.red;
+			deleteItem.normal.background = Swat.TabButtonBackgroundTexture;
+
+			GUIStyle launchGroup = new GUIStyle(GUI.skin.button);
+			launchGroup.margin = new RectOffset(-10, 2, -5, 0);
+			launchGroup.fixedWidth = 25;
+			launchGroup.fixedHeight = 25;
+			launchGroup.normal.textColor = Swat.TabButtonTextColor;
+			launchGroup.normal.background = Swat.TabButtonBackgroundTexture;
 
 			GUIStyle favoriteHeader = new GUIStyle(GUI.skin.label);
 			favoriteHeader.padding = new RectOffset(10, 0, 0, 0);
@@ -151,45 +164,93 @@ namespace TrilleonAutomation {
 			cs.wordWrap = true;
 			cs.fontStyle = FontStyle.Italic;
 			Nexus.Self.Button(makeNew ? "Cancel" : "Add New", "Add new Favorite test run.", 
-				new Nexus.SwatDelegate(delegate() {                
+				new Nexus.SwatDelegate(delegate() { 
+					
 					makeNew = !makeNew;
+					isEdit = false;
 					buildingAdded = new List<KeyValuePair<string,string>>();
+
 				}), addNew);
-			GUILayout.Space(35);
+			GUILayout.Space(30);
 
 			if(makeNew) {
 
-				SelectedCatIndex = Nexus.Self.DropDown(SelectedCatIndex, _categories, 20);
-				GUILayout.Space(5);
+				EditorGUILayout.BeginHorizontal();
 				Nexus.Self.Button("Add", "Add To List.", 
-					new Nexus.SwatDelegate(delegate() {                
+					new Nexus.SwatDelegate(delegate() {       
+						
 						if(!buildingAdded.FindAll(x => x.Key == _categories[SelectedCatIndex]).Any()) {
+							
 							buildingAdded.Add(new KeyValuePair<string,string>(string.Format("{0}{1}", _categories[SelectedCatIndex], classIndicator), string.Empty));
-						}
-					}), addNew);
-				GUILayout.Space(10);
-				SelectedTestIndex = Nexus.Self.DropDown(SelectedTestIndex, _requestedMethods, 20);
-				GUILayout.Space(5);
-				Nexus.Self.Button("Add", "Add To List.", 
-					new Nexus.SwatDelegate(delegate() {    
-						if(!buildingAdded.FindAll(x => x.Value == _requestedMethods[SelectedTestIndex]).Any()) {
-							buildingAdded.Add(new KeyValuePair<string,string>(GetTestsClassName(_requestedMethods[SelectedTestIndex]), _requestedMethods[SelectedTestIndex]));
-						}
-					}), addNew);
 
+						}
+
+					}), add);
+				GUILayout.Space(-20);
+				SelectedCatIndex = Nexus.Self.DropDown(SelectedCatIndex, _categories, 20, width: 280);
+				EditorGUILayout.EndHorizontal();
 				GUILayout.Space(10);
+				EditorGUILayout.BeginHorizontal();
+				Nexus.Self.Button("Add", "Add To List.", 
+					new Nexus.SwatDelegate(delegate() {   
+						
+						if(!buildingAdded.FindAll(x => x.Value == _requestedMethods[SelectedTestIndex]).Any()) {
+							
+							buildingAdded.Add(new KeyValuePair<string,string>(GetTestsClassName(_requestedMethods[SelectedTestIndex]), _requestedMethods[SelectedTestIndex]));
+
+						}
+
+					}), add);
+				GUILayout.Space(-20);
+				SelectedTestIndex = Nexus.Self.DropDown(SelectedTestIndex, _requestedMethods, 20, width: 280);
+				EditorGUILayout.EndHorizontal();
+
+				GUILayout.Space(15);
 				for(int b = 0; b < buildingAdded.Count; b++) {
 
+					//If the next item is a test under this class, then don't render the classname as a header. We only want to render class names as a header in the saved, non-editable display.
+					if(b + 1 < buildingAdded.Count ? buildingAdded[b].Value.Length == 0 && buildingAdded[b + 1].Value.Length > 0 && buildingAdded[b].Key.Replace("*", string.Empty) == buildingAdded[b + 1].Key : false) {
+
+						continue;
+
+					}
+					EditorGUILayout.BeginHorizontal();
+					bool deleted = false;
+					Nexus.Self.Button("X", "Remove this item.", 
+						new Nexus.SwatDelegate(delegate() {   
+
+							//Check if the previous item is a class name and matches this test's class name. If so, then check if the next item does not share the same category name.
+							//If both are true, then remove the previous item, as it is just a category header that no longer has any tests under it. Leave it if there are other tests after this one that require that category header.
+							if((b - 1 >= 0 ? buildingAdded[b - 1].Value.Length == 0 && buildingAdded[b].Key == buildingAdded[b - 1].Key.Replace("*", string.Empty) : false) && (b + 1 < buildingAdded.Count ? buildingAdded[b + 1].Key != buildingAdded[b].Key : true)) {
+								
+								buildingAdded.RemoveAt(b - 1);
+								b--;
+
+							}
+							buildingAdded.RemoveAt(b);
+							b--;
+							deleted = true;
+
+						}), deleteItem, new GUILayoutOption[] { GUILayout.Width(20) });
+					if(deleted) {
+						
+						EditorGUILayout.EndHorizontal();
+						continue;
+
+					}
+					GUILayout.Space(-10);
 					EditorGUILayout.LabelField(string.Format("{0}{1}", buildingAdded[b].Value.Length > 0 ? string.Format("({0}) ", buildingAdded[b].Key) : buildingAdded[b].Key, buildingAdded[b].Value.Length > 0 ? buildingAdded[b].Value : string.Empty), typeHeader);
+					EditorGUILayout.EndHorizontal();
 					GUILayout.Space(2);
 
 				}
-				GUILayout.Space(10);
+				GUILayout.Space(15);
 
 				EditorGUILayout.LabelField("Name:", typeHeader);
 				newName = EditorGUILayout.TextField(newName, nameField, new GUILayoutOption[] { GUILayout.Width(150) });
 				Nexus.Self.Button("Save", "Save Favorite.", 
 					new Nexus.SwatDelegate(delegate() {
+						
 						if(newName.Trim().Length == 0) {
 
 							SimpleAlert.Pop("A name is required to save this Favorites list.", null);
@@ -198,6 +259,10 @@ namespace TrilleonAutomation {
 
 							SimpleAlert.Pop("At least one category or test needs to be added to this Favorites list to save.", null);
 
+						} else if(FavoritesList.FindAll(c => c.Key == newName.Trim()).Any() && (isEdit ? FavoritesList[EditId].Key != newName.Trim() : true)) {
+
+							SimpleAlert.Pop("There is already a Favorite with this name. Please choose a unique name.", null);
+
 						} else {
 							
 							saveCurrent = true;
@@ -205,18 +270,29 @@ namespace TrilleonAutomation {
 							SaveNew();
 
 						}
-					}), save);
-				GUILayout.Space(35);
+
+					}), addNew);
+				GUILayout.Space(20);
+				EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+				GUILayout.Space(20);
 
 			}
 
 			int foldoutIndex = 0;
 			for(int f = 0; f < FavoritesList.Count; f++) {
 
-				EditorGUILayout.BeginHorizontal(new GUILayoutOption[] { GUILayout.Width(320) });
+				if(isEdit && EditId == f) {
+
+					continue;
+
+				}
+
+				EditorGUILayout.BeginHorizontal(new GUILayoutOption[] { GUILayout.Width(300) });
+				launchGroup.fontSize = 16;
 				EditorGUILayout.LabelField(FavoritesList[f].Key, favoriteHeader);
-				Nexus.Self.Button("Launch", "Edit this Favorite.", 
+				Nexus.Self.Button("▶", "Launch this Favorite.", 
 					new Nexus.SwatDelegate(delegate() {    
+						
 						//This is a Favorite list, and not a true Category. Gather requested tests/classes.
 						List<KeyValuePair<bool,string>> favoriteList = FavoritesList[f].Value;
 						string commandClasses = string.Empty;
@@ -235,9 +311,13 @@ namespace TrilleonAutomation {
 								//All Tests In This Class
 								string category = string.Empty;
 								if(favoriteList[x].Value.Contains("(")) {
+									
 									category = favoriteList[x].Value.Replace("*", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty).Split('(')[1].Trim(')');
+
 								} else {
+									
 									category = favoriteList[x].Value.Replace("*", string.Empty).Replace("<", string.Empty).Replace(">", string.Empty);
+
 								}
 								commandClasses += string.Format("{0},", category);
 
@@ -251,19 +331,54 @@ namespace TrilleonAutomation {
 						}
 						string command = string.Format("&&{0}%{1}", commandClasses.Trim(','), commandTests.Trim(',')); ;
 						Nexus.Self.Tests.LaunchTests(command, "mix");
-					}), launch, new GUILayoutOption[] { GUILayout.MaxWidth(200) });
-				Nexus.Self.Button("Delete", "Edit this Favorite.", 
+
+					}), launchGroup);
+				launchGroup.fontSize = 22;
+				Nexus.Self.Button("✎", "Edit this Favorite.", 
+					new Nexus.SwatDelegate(delegate() { 
+						
+						makeNew = true;
+						isEdit = true;
+						newName = FavoritesList[f].Key;
+						EditId = f;
+						buildingAdded = new List<KeyValuePair<string,string>>();
+						for(int l = 0; l < FavoritesList[f].Value.Count; l++) {
+
+							KeyValuePair<string,string> newItem = new KeyValuePair<string,string>();
+							if(FavoritesList[f].Value[l].Key) {
+								
+								newItem = new KeyValuePair<string,string>(string.Format("{0}{1}", FavoritesList[f].Value[l].Value, classIndicator), string.Empty);
+
+							} else {
+								
+								newItem = new KeyValuePair<string,string>(GetTestsClassName(FavoritesList[f].Value[l].Value), FavoritesList[f].Value[l].Value);
+
+							}
+
+							//Avoid possible duplicates
+							if(l + 1 == FavoritesList[f].Value.Count || (!buildingAdded.FindAll(b => b.Key == newItem.Key).Any() && !buildingAdded.FindAll(b => b.Value == newItem.Value).Any())) {
+
+								buildingAdded.Add(newItem);
+
+							}
+
+						}
+
+					}), launchGroup);
+				launchGroup.fontSize = 16;
+				Nexus.Self.Button("X", "Delete this Favorite.", 
 					new Nexus.SwatDelegate(delegate() {    
+						
 						keyToDelete = FavoritesList[f].Key;
 						SimpleAlert.Pop("Are you sure you want to delete this Favorites list?", new EditorDelegate(DeleteFavorite));
-					}), delete, new GUILayoutOption[] { GUILayout.MaxWidth(200) });
-				EditorGUILayout.EndHorizontal();
 
+					}), launchGroup);
+				EditorGUILayout.EndHorizontal();
 				GUILayout.Space(10);
 
 				for(int z = 0; z < FavoritesList[f].Value.Count; z++) {
-					
-					if(FavoritesList[f].Value[z].Key && (z + 1 == FavoritesList[f].Value.Count || FavoritesList[f].Value[z + 1].Key)) {
+
+					if((z + 1 == FavoritesList[f].Value.Count && FavoritesList[f].Value[z].Key) || (z + 1 < FavoritesList[f].Value.Count && FavoritesList[f].Value[z + 1].Key && FavoritesList[f].Value[z].Key)) {
 
 						EditorGUILayout.LabelField(FavoritesList[f].Value[z].Value, typeHeader);
 						GUILayout.Space(10);
@@ -298,14 +413,20 @@ namespace TrilleonAutomation {
 
 		void SaveNew() {
 
-			buildingAdded = buildingAdded.OrderByKeys();
 			StringBuilder sb = new StringBuilder();
-
 			if(FavoritesList.Count > 0) {
 				
 				sb.Append(AutomationMaster.DELIMITER);
 
-			} 
+			}
+
+			if(isEdit) {
+
+				keyToDelete = FavoritesList[EditId].Key;
+				DeleteFavorite();
+				isEdit = false;
+
+			}
 
 			sb.Append(newName);
 			sb.Append(internalDelimiter);
@@ -330,7 +451,7 @@ namespace TrilleonAutomation {
 				handledClasses.Add(className);
 
 			}
-			FileBroker.SaveNonUnityTextResource(FileResource.Favorites, sb.ToString(), false);
+			FileBroker.SaveNonUnityTextResource(AutomationMaster.UnitTestMode ? FileResource.FavoritesUnit : FileResource.Favorites, sb.ToString(), false);
 			newName = string.Empty;
 			Set();
 			Nexus.Self.Tests.Update_Data = true;
@@ -340,7 +461,7 @@ namespace TrilleonAutomation {
 		//Take raw file data and simply splice out substring that represents this Favorite's data.
 		void DeleteFavorite() {
 
-			string rawFavoritesData = FileBroker.GetNonUnityTextResource(FileResource.Favorites);
+			string rawFavoritesData = FileBroker.GetNonUnityTextResource(AutomationMaster.UnitTestMode ? FileResource.FavoritesUnit : FileResource.Favorites);
 			List<string> split = rawFavoritesData.Split(new string[] { string.Format("{0}{1}", AutomationMaster.DELIMITER, keyToDelete) }, StringSplitOptions.None).ToList();
 
 			StringBuilder newData = new StringBuilder();
@@ -356,7 +477,7 @@ namespace TrilleonAutomation {
 				newData.Append(string.Format("{0}{1}", AutomationMaster.DELIMITER, split[s]));
 
 			}
-			FileBroker.SaveNonUnityTextResource(FileResource.Favorites, newData.ToString(), true);
+			FileBroker.SaveNonUnityTextResource(AutomationMaster.UnitTestMode ? FileResource.FavoritesUnit : FileResource.Favorites, newData.ToString(), true);
 			Set();
 			Nexus.Self.Tests.Update_Data = true;
 
