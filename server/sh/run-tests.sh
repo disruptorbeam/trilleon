@@ -15,10 +15,10 @@ pip install pycryptodome
 echo "Starting Appium ..."
 if [ ${DEVICE_PLATFORM} = "ios" ]; then
     export APPLICATION=~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/application.ipa
-    node /usr/local/bin/appium --session-override --nodeconfig ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/${DEVICE_UDID}.json -p ${UNIQUE_PORT} -U ${DEVICE_UDID} --log ${DEFAULT_DIRECTORY}/appium.log 2>&1 &
+    node ${APPIUM_LOCATION} --session-override --nodeconfig ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/${DEVICE_UDID}.json -p ${UNIQUE_PORT} -U ${DEVICE_UDID} --log ${DEFAULT_DIRECTORY}/appium.log 2>&1 &
 else
     export APPLICATION=~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/application.apk
-    node /usr/local/bin/appium --nodeconfig ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/${DEVICE_UDID}.json -p ${UNIQUE_PORT} -U ${DEVICE_UDID} --log ${DEFAULT_DIRECTORY}/appium.log 2>&1 &
+    node ${APPIUM_LOCATION} --nodeconfig ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/${DEVICE_UDID}.json -p ${UNIQUE_PORT} -U ${DEVICE_UDID} --log ${DEFAULT_DIRECTORY}/appium.log 2>&1 &
     export DEVICE_MODEL="$(adb -s ${DEVICE_UDID} shell getprop | grep ro.product.model)"
     export DEVICE_VERSION="$(adb -s ${DEVICE_UDID} shell getprop | grep ro.build.version.release)"
     export DEVICE_MANUFACTURER="$(adb -s ${DEVICE_UDID} shell getprop | grep ro.product.manufacturer)"

@@ -25,7 +25,7 @@ using System.Text;
 
 namespace TrilleonAutomation{
 
-	public class MemoryTracker : MonoBehaviour {
+	public class PerformanceTracker : MonoBehaviour {
 
 		public static double max_fps {
 			get { 
@@ -117,9 +117,13 @@ namespace TrilleonAutomation{
 			double thisGCMemory = Math.Round((float)GC.GetTotalMemory(true)/1000000, 0);
 			_total_gc_memory += thisGCMemory;
 			if(thisGCMemory < _min_gc_memory) {
+				
 				_min_gc_memory = thisGCMemory;
+
 			} else if(thisGCMemory > _max_gc_memory) {
+				
 				_max_gc_memory = thisGCMemory;
+
 			}
 			GCEntries.Add(new KeyValuePair<string[],double>(new string[] { key, now }, thisGCMemory));
 
@@ -129,9 +133,13 @@ namespace TrilleonAutomation{
 			double thisRCMemory = Math.Round((float)allMemory/1000000, 0);
 			_total_hs_memory += thisRCMemory;
 			if(thisRCMemory < _min_hs_memory) {
+				
 				_min_hs_memory = thisRCMemory;
+
 			} else if(thisRCMemory > _max_hs_memory) {
+				
 				_max_hs_memory = thisRCMemory;
+
 			}
 			HSEntries.Add(new KeyValuePair<string[],double>(new string[] { key, now }, thisRCMemory));
 
@@ -139,9 +147,13 @@ namespace TrilleonAutomation{
 			double thisFPS = Convert.ToDouble(Math.Round(1.0f / Time.deltaTime));
 			_total_fps += thisFPS;
 			if(thisFPS < _min_fps) {
+				
 				_min_fps = thisFPS;
+
 			} else if(thisFPS > _max_fps) {
+				
 				_max_fps = thisFPS;
+
 			}
 			FPSEntries.Add(new KeyValuePair<string[],double>(new string[] { key, now }, thisFPS));
 
@@ -194,13 +206,17 @@ namespace TrilleonAutomation{
 			StringBuilder report = new StringBuilder();
 			report.Append("[");
 			for(int i = 0; i < GCEntries.Count; i++) {
+				
 				string time = GCEntries[i].Key[1];
 				double memory_kilobytes = GCEntries[i].Value;
 				string message = GCEntries[i].Key[0];
 				report.Append(string.Format("{{ \"memory\" : {0}, \"time\" : \"{1}\", \"message\" : \"{2}\" }}", memory_kilobytes.ToString(), time, message));
 				if(i + 1 != GCEntries.Count) {
+					
 					report.Append(",");
+
 				}
+
 			}
 			report.Append("]");
 			_total_gc_memory = 0;
@@ -221,8 +237,11 @@ namespace TrilleonAutomation{
 				string message = HSEntries[i].Key[0];
 				report.Append(string.Format("{{ \"memory\" : {0}, \"time\" : \"{1}\", \"message\" : \"{2}\" }}", memory_kilobytes.ToString(), time, message));
 				if(i + 1 != HSEntries.Count) {
+					
 					report.Append(",");
+
 				}
+
 			}
 			report.Append("]");
 			_total_hs_memory = 0;

@@ -100,16 +100,16 @@ namespace TrilleonAutomation {
 		}
 		private static GameMaster _gameMaster;
 
-		public static MemoryTracker MemoryTracker {
+		public static PerformanceTracker MemoryTracker {
 			get { 
 				if(_memoryTracker == null) {
-					_memoryTracker = StaticSelf.GetComponent<MemoryTracker>();
+					_memoryTracker = StaticSelf.GetComponent<PerformanceTracker>();
 				}
 				return _memoryTracker; 
 			}
 			set { _memoryTracker = value; }
 		}
-		private static MemoryTracker _memoryTracker;
+		private static PerformanceTracker _memoryTracker;
 
 		public static BuddyHandler BuddyHandler {
 			get { 
@@ -419,7 +419,6 @@ namespace TrilleonAutomation {
 			}
 		#endif
 
-
 		public static void PauseEditorOnFailure() {
 
 			if(PauseOnFailure) {
@@ -445,7 +444,7 @@ namespace TrilleonAutomation {
 			gameObject.AddComponent<GameServerBroker>(); //Brokers communication with any related game server.
 			gameObject.AddComponent<Commands>(); //Game-specific SetUp commands.
 			gameObject.AddComponent<BuddyHandler>(); //BuddyHandler.Buddy handling logic.
-			gameObject.AddComponent<MemoryTracker>(); //Track memory usage.
+			gameObject.AddComponent<PerformanceTracker>(); //Track memory usage.
 			gameObject.AddComponent<AutomationReport>(); //Report on test run.
 			#if UNITY_WEBGL || UNITY_EDITOR
 			gameObject.AddComponent<WebGLBroker>(); //WebGL interactions
@@ -475,6 +474,7 @@ namespace TrilleonAutomation {
 
 						string[] launchCommands = launchCommandsRaw.Split(DELIMITER);
 						UnitTestMode = launchCommands.ToList().Last() == "U" ? true : false;
+						DisregardDependencies = launchCommands[1] == "test" ? true: false;
 						string command = string.Format("[{{\"automation_command\":\"rt {0}{1}\"}}]", launchCommands[1] == "test" ? "*" : string.Empty, launchCommands[0]);
 						overseer.Master_Editor_Override = new KeyValuePair<string,string>(launchCommands[0], launchCommands[1]);
 						if(launchCommands.Length == 3) {
@@ -771,7 +771,7 @@ namespace TrilleonAutomation {
 			//Finish tracking memory usage.
 			yield return StartCoroutine(MemoryTracker.TrackMemory("Automation Finished"));
 
-			MemoryTracker.auto_track = false;
+			PerformanceTracker.auto_track = false;
 			if(!ValidationRun) {
 
 				string message = "Completed Automation Run. Generating Report And Cleaning Up Test Runner.";
@@ -805,18 +805,18 @@ namespace TrilleonAutomation {
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
 			AutoConsole.PostMessage(string.Format("DEVICE_DETAILS_HTML|{0}|", GameMaster.GetGameSpecificEmailReportTagLine()), MessageLevel.Abridged);
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
-			AutoConsole.PostMessage(string.Format("GARBAGE_COLLECTION|{0},{1},{2}|", MemoryTracker.min_gc_memory, MemoryTracker.GetAverageGarbageCollectorMemoryUsageDuringTestRun(), MemoryTracker.max_gc_memory), MessageLevel.Abridged);
+			AutoConsole.PostMessage(string.Format("GARBAGE_COLLECTION|{0},{1},{2}|", PerformanceTracker.min_gc_memory, PerformanceTracker.GetAverageGarbageCollectorMemoryUsageDuringTestRun(), PerformanceTracker.max_gc_memory), MessageLevel.Abridged);
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
-			AutoConsole.PostMessage(string.Format("HEAP_SIZE|{0},{1},{2}|", MemoryTracker.min_hs_memory, MemoryTracker.GetAverageHeapSizeMemoryUsageDuringTestRun(), MemoryTracker.max_hs_memory), MessageLevel.Abridged);
+			AutoConsole.PostMessage(string.Format("HEAP_SIZE|{0},{1},{2}|", PerformanceTracker.min_hs_memory, PerformanceTracker.GetAverageHeapSizeMemoryUsageDuringTestRun(), PerformanceTracker.max_hs_memory), MessageLevel.Abridged);
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
-			AutoConsole.PostMessage(string.Format("FPS_VALUES|{0},{1},{2}|", MemoryTracker.min_fps, MemoryTracker.GetAverageFPSDuringTestRun(), MemoryTracker.max_fps), MessageLevel.Abridged);
+			AutoConsole.PostMessage(string.Format("FPS_VALUES|{0},{1},{2}|", PerformanceTracker.min_fps, PerformanceTracker.GetAverageFPSDuringTestRun(), PerformanceTracker.max_fps), MessageLevel.Abridged);
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
 
-			AutomationReport.SendJsonInPieces("HEAP_JSON", MemoryTracker.GetHeapSizeCounterJsonReportWithReset());
+			AutomationReport.SendJsonInPieces("HEAP_JSON", PerformanceTracker.GetHeapSizeCounterJsonReportWithReset());
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
-			AutomationReport.SendJsonInPieces("GC_JSON", MemoryTracker.GetGarbageCollectorJsonReportWithReset());
+			AutomationReport.SendJsonInPieces("GC_JSON", PerformanceTracker.GetGarbageCollectorJsonReportWithReset());
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
-			AutomationReport.SendJsonInPieces("FPS_JSON", MemoryTracker.GetFpsJsonReportWithReset());
+			AutomationReport.SendJsonInPieces("FPS_JSON", PerformanceTracker.GetFpsJsonReportWithReset());
 
 			Application.logMessageReceived -= AutoConsole.GetLog; //Clean up delegate.
 			ResetTestRunner();
@@ -2185,7 +2185,7 @@ namespace TrilleonAutomation {
 				CheckServerHeartbeat();
 
 				double timediff = DateTime.Now.Subtract(_lastScreenshot).TotalSeconds;
-				if(IsServerListening && Math.Abs(timediff) > MemoryTracker.Screenshot_Interval) {
+				if(IsServerListening && Math.Abs(timediff) > PerformanceTracker.Screenshot_Interval) {
 
 				_lastScreenshot = DateTime.Now;
 				if(!NoIntervalScreenshots) {
@@ -2958,7 +2958,7 @@ namespace TrilleonAutomation {
 			List<KeyValuePair<string,MethodInfo>> results = methodsToRun;
 			int intialMethodCount = methodsToRun.Count;
 
-			if(results.Count <= 1) {
+			if(results.Count <= 1 || DisregardDependencies) {
 				
 				return results;
 
@@ -3053,6 +3053,7 @@ namespace TrilleonAutomation {
 				newResults.AddRange(results);
 				results = newResults;
 			}
+			results = results.RemoveNulls();
 
 			//While Buddy System tests are removed from the main method list after this point, the current method count should equal the initial count.
 			if(intialMethodCount != results.Count) {

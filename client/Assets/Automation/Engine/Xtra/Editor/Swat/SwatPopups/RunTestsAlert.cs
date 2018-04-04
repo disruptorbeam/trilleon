@@ -291,7 +291,6 @@ namespace TrilleonAutomation {
 					newTestList += string.Format("{0},{1}", string.Join(",", requestedTestNames.ToArray()), string.Join(",", listToRun.ToArray()));
 
 				}
-
 				Nexus.Overseer.Master_Editor_Override = new KeyValuePair<string, string>(newTestList, testType);
 
 				bool ready = true;
@@ -304,7 +303,7 @@ namespace TrilleonAutomation {
 
 					if(dependencies.Count > 0) {
 						
-						RunTestsAlert.Pop(selected, dependencies, name, testType);
+						RunTestsAlert.Pop(selected, dependencies, testName, testType, true);
 						ready = false;
 
 					} 
@@ -325,10 +324,18 @@ namespace TrilleonAutomation {
 
 				if(GUILayout.Button("Disregard", buttons)) {
 
-					Nexus.Overseer.ignoreDependentTestsForRun = true;
-					Nexus.Self.Tests.LaunchTests(testName, testType);
+					string newTestList = string.Empty; 
+
+					if(requestedTestNames.Count > 1) {
+
+						newTestList = string.Join(",", requestedTestNames.ToArray());
+						Nexus.Overseer.Master_Editor_Override = new KeyValuePair<string, string>(newTestList, testType);
+						AutomationMaster.DisregardDependencies = true; //Ignore dependencies.
+
+					}
+					AutomationMaster.DisregardDependencies = Nexus.Overseer.ignoreDependentTestsForRun = true;
+					Nexus.Self.Tests.LaunchTests(string.IsNullOrEmpty(newTestList) ? testName : newTestList, string.IsNullOrEmpty(newTestList) ? testType : "test");
 					IsVisible = false;
-					AutomationMaster.DisregardDependencies = true; //Ignore dependencies.
 					Close();
 
 				}

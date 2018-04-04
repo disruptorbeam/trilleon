@@ -640,21 +640,21 @@ namespace TrilleonAutomation {
 					html.Append("<div class='tab_toggle button tab_toggle_inner status_success_hide' type='button' onclick='ToggleChartDisplay($(this));'><div class='tab_toggle_name'>Asset Run Time</div></div>");        
 					html.Append("<div class='tab_toggle button tab_toggle_right_end status_success_hide' type='button' onclick='ToggleChartDisplay($(this));'><div class='tab_toggle_name'>FPS</div></div>"); 
 					html.Append("<div id='chart_gc_div'>");
-					html.Append(string.Format("<span class='chart_result'><strong>Min GC Memory:</strong> {0} mb</span>", MemoryTracker.min_gc_memory));
-					html.Append(string.Format("<span class='chart_result'><strong>Avg GC Memory:</strong> {0} mb</span>", MemoryTracker.GetAverageGarbageCollectorMemoryUsageDuringTestRun()));
-					html.Append(string.Format("<span class='chart_result'><strong>Max GC Memory:</strong> {0} mb</span>", MemoryTracker.max_gc_memory));
+					html.Append(string.Format("<span class='chart_result'><strong>Min GC Memory:</strong> {0} mb</span>", PerformanceTracker.min_gc_memory));
+					html.Append(string.Format("<span class='chart_result'><strong>Avg GC Memory:</strong> {0} mb</span>", PerformanceTracker.GetAverageGarbageCollectorMemoryUsageDuringTestRun()));
+					html.Append(string.Format("<span class='chart_result'><strong>Max GC Memory:</strong> {0} mb</span>", PerformanceTracker.max_gc_memory));
 					html.Append("<div id='chart_gc' class='memory_gc_chart'></div>");
 					html.Append("</div>");
 					html.Append("<div id='chart_rt_div'>");
-					html.Append(string.Format("<span class='chart_result'><strong>Min RT Memory:</strong> {0} mb</span>", MemoryTracker.min_hs_memory));
-					html.Append(string.Format("<span class='chart_result'><strong>Avg RT Memory:</strong> {0} mb</span>", MemoryTracker.GetAverageHeapSizeMemoryUsageDuringTestRun()));
-					html.Append(string.Format("<span class='chart_result'><strong>Max RT Memory:</strong> {0} mb</span>", MemoryTracker.max_hs_memory));
+					html.Append(string.Format("<span class='chart_result'><strong>Min RT Memory:</strong> {0} mb</span>", PerformanceTracker.min_hs_memory));
+					html.Append(string.Format("<span class='chart_result'><strong>Avg RT Memory:</strong> {0} mb</span>", PerformanceTracker.GetAverageHeapSizeMemoryUsageDuringTestRun()));
+					html.Append(string.Format("<span class='chart_result'><strong>Max RT Memory:</strong> {0} mb</span>", PerformanceTracker.max_hs_memory));
 					html.Append("<div id='chart_rt' class='memory_rt_chart'></div>");
 					html.Append("</div>");
 					html.Append("<div id='chart_fps_div'>");
-					html.Append(string.Format("<span class='chart_result'><strong>Min FPS:</strong> {0} </span>", MemoryTracker.min_fps));
-					html.Append(string.Format("<span class='chart_result'><strong>Avg FPS:</strong> {0} </span>", MemoryTracker.GetAverageFPSDuringTestRun()));
-					html.Append(string.Format("<span class='chart_result'><strong>Max FPS:</strong> {0} </span>", MemoryTracker.max_fps));
+					html.Append(string.Format("<span class='chart_result'><strong>Min FPS:</strong> {0} </span>", PerformanceTracker.min_fps));
+					html.Append(string.Format("<span class='chart_result'><strong>Avg FPS:</strong> {0} </span>", PerformanceTracker.GetAverageFPSDuringTestRun()));
+					html.Append(string.Format("<span class='chart_result'><strong>Max FPS:</strong> {0} </span>", PerformanceTracker.max_fps));
 					html.Append("<div id='chart_fps' class='fps_chart'></div>");
 					html.Append("</div></div>");
 
@@ -664,9 +664,9 @@ namespace TrilleonAutomation {
 						screenshotLinks.Append(string.Format("{0}.png|", _allScreenshots[x]));
 					}
 					html.Append(string.Format("<input id='screenshot_file_names' type='hidden' value='{0}'/>", screenshotLinks.ToString()));
-					html.Append(string.Format("<input id='memory_usage_rt_hidden' type='hidden' value='{0}'/>", MemoryTracker.GetHeapSizeCounterJsonReportWithReset()));
-					html.Append(string.Format("<input id='memory_usage_gc_hidden' type='hidden' value='{0}'/>", MemoryTracker.GetGarbageCollectorJsonReportWithReset()));
-					html.Append(string.Format("<input id='performance_fps_hidden' type='hidden' value='{0}'/>", MemoryTracker.GetFpsJsonReportWithReset()));
+					html.Append(string.Format("<input id='memory_usage_rt_hidden' type='hidden' value='{0}'/>", PerformanceTracker.GetHeapSizeCounterJsonReportWithReset()));
+					html.Append(string.Format("<input id='memory_usage_gc_hidden' type='hidden' value='{0}'/>", PerformanceTracker.GetGarbageCollectorJsonReportWithReset()));
+					html.Append(string.Format("<input id='performance_fps_hidden' type='hidden' value='{0}'/>", PerformanceTracker.GetFpsJsonReportWithReset()));
 					html.Append("<input id='test_run_type' type='hidden' value='full'/>");
 
 				} else {
