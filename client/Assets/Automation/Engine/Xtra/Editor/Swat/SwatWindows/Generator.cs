@@ -47,7 +47,7 @@ namespace TrilleonAutomation {
 
 			//Will we populate elements based on highlighted element in hierarchy window, or by dragging the desired object into our editor window.
 			inspectBasedOnSelectedHierarchy = ConfigReader.GetBool("EDITOR_WINDOW_INSPECT_BY_HIERARCHY_HIGHLIGHTED");
-
+		
 		}
 
 		public override bool UpdateWhenNotInFocus() {
@@ -163,6 +163,7 @@ namespace TrilleonAutomation {
 		List<KeyValuePair<string,string>> _refParentScriptParameterName = new List<KeyValuePair<string,string>>();
 		List<string> _displayedReferenceNames = new List<string>();
 		List<Component> components = new List<Component>();
+		GameObject inspectedObject = null;
 
 		#region Enum Holders
 
@@ -213,7 +214,7 @@ namespace TrilleonAutomation {
 				button.normal.background = Selection.activeGameObject.activeSelf ? Swat.ToggleButtonBackgroundSelectedTexture : Swat.ToggleButtonBackgroundTexture;
 
 				Nexus.Self.Button(Selection.activeGameObject.activeSelf ? "Hide" : "Show", "Show/Hide currently-selected game object in heirarchy window.", 
-					new Nexus.SwatDelegate(delegate() {                
+					new Nexus.SwatDelegate(delegate() {
 						Selection.activeGameObject.SetActive(!Selection.activeGameObject.activeSelf);
 					}), button, new GUILayoutOption[] { GUILayout.Width(120), GUILayout.Height(30) });
 
@@ -237,21 +238,22 @@ namespace TrilleonAutomation {
 			EditorGUILayout.Space();
 
 			if(inspectBasedOnSelectedHierarchy) {
-				Nexus.Overseer.inspectedObject = Selection.activeGameObject;
-				if(lastInspectedObject != Nexus.Overseer.inspectedObject) {
+				inspectedObject = Selection.activeGameObject;
+				if(lastInspectedObject != inspectedObject) {
 					NewObjectSelected();
 					setUpReferences = true;
+					return;
 				}
-				lastInspectedObject = Nexus.Overseer.inspectedObject;
+				lastInspectedObject = inspectedObject;
 			} else {
-				Nexus.Overseer.inspectedObject = EditorGUILayout.ObjectField("Inspect Object ", Nexus.Overseer.inspectedObject, typeof(GameObject), true, new GUILayoutOption[] { GUILayout.Width(HalfRowLengthElement), GUILayout.MaxWidth(400) }) as GameObject;
+				inspectedObject = EditorGUILayout.ObjectField("Inspect Object ", inspectedObject, typeof(GameObject), true, new GUILayoutOption[] { GUILayout.Width(HalfRowLengthElement), GUILayout.MaxWidth(400) }) as GameObject;
 			}
 
-			if(Nexus.Overseer.inspectedObject != Nexus.Overseer.storedObjectLast) {
+			if(inspectedObject != Nexus.Overseer.storedObjectLast) {
 				ResetValues();
 				breadCrumbTrails = new List<KeyValuePair<int,KeyValuePair<MonoScript,List<KeyValuePair<string,KeyValuePair<GameObject,KeyValuePair<AttributeInfo,Type>>>>>>>();
 				GetReferences();
-				Nexus.Overseer.storedObjectLast = Nexus.Overseer.inspectedObject;
+				Nexus.Overseer.storedObjectLast = inspectedObject;
 			}
 			EditorGUILayout.BeginHorizontal(); // ID 03
 			GUILayout.Space(10);
@@ -276,7 +278,7 @@ namespace TrilleonAutomation {
 			}
 
 			//ObjectAction or AdvancedWait selection without GameObject to inspect.
-			if(Nexus.Overseer.inspectedObject == null && (Nexus.Overseer.stepMaster == AutoStepMaster.ObjectStep || Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor)) {
+			if(inspectedObject == null && (Nexus.Overseer.stepMaster == AutoStepMaster.ObjectStep || Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor)) {
 
 				EditorGUILayout.Space();
 				GUIStyle s = new GUIStyle(GUI.skin.label);
@@ -287,11 +289,11 @@ namespace TrilleonAutomation {
 			}
 
 			//ObjectAction selection with GameObject to inspect.
-			if(Nexus.Overseer.inspectedObject && (Nexus.Overseer.stepMaster == AutoStepMaster.ObjectStep || Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor)) {
+			if(inspectedObject && (Nexus.Overseer.stepMaster == AutoStepMaster.ObjectStep || Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor)) {
 
 				EditorGUILayout.Space();
 
-				if(Nexus.Overseer.parentObject != null && Nexus.Overseer.inspectedObject != null) {
+				if(Nexus.Overseer.parentObject != null && inspectedObject != null) {
 
 					Nexus.Overseer.showBasic = Nexus.Self.Foldout(Nexus.Overseer.showBasic, "Show Basic GameObject Details", true);
 					EditorGUI.indentLevel++;
@@ -308,12 +310,12 @@ namespace TrilleonAutomation {
 						//If a generated object in the hierarchy window is selected in Play Mode, and then Play Mode is stopped, the inspected object will be null. Skip this if it is null.
 						Nexus.Overseer.parentObject = EditorGUILayout.ObjectField("Top Parent Object ", Nexus.Overseer.parentObject, typeof(GameObject), true, new GUILayoutOption[] { GUILayout.Width(HalfRowLengthElement), GUILayout.MaxWidth(400) }) as GameObject;
 						GUI.enabled = true;
-						Nexus.Overseer.objectName = EditorGUILayout.TextField("Object Name: ", Nexus.Overseer.inspectedObject.name);
+						Nexus.Overseer.objectName = EditorGUILayout.TextField("Object Name: ", inspectedObject.name);
 						Nexus.Overseer.countObjectsWithThisName = EditorGUILayout.TextField("# Active Objects w/ This Name: ", objectsWithThisName.Count.ToString());
 						if(driver != null) {
-							Nexus.Overseer.objectActiveness = EditorGUILayout.TextField("Is Active/Visible/Interactible: ", (driver.IsActiveVisibleAndInteractable(Nexus.Overseer.inspectedObject) ? "True" : "False"));
+							Nexus.Overseer.objectActiveness = EditorGUILayout.TextField("Is Active/Visible/Interactible: ", (driver.IsActiveVisibleAndInteractable(inspectedObject) ? "True" : "False"));
 						}
-						Nexus.Overseer.objectTag = EditorGUILayout.TextField("Object Tag: ", Nexus.Overseer.inspectedObject.tag);
+						Nexus.Overseer.objectTag = EditorGUILayout.TextField("Object Tag: ", inspectedObject.tag);
 						EditorGUIUtility.labelWidth = 0;
 
 					}
@@ -404,9 +406,9 @@ namespace TrilleonAutomation {
 
 					#endregion
 
-					if(Nexus.Overseer.inspectedObject.GetComponent<Button>() != null) {
+					if(inspectedObject.GetComponent<Button>() != null) {
 						Nexus.Overseer.objectType = AutoObjectType.Button;
-					} else if(Nexus.Overseer.inspectedObject.GetComponent<InputField>() != null) {
+					} else if(inspectedObject.GetComponent<InputField>() != null) {
 						Nexus.Overseer.objectType = AutoObjectType.InputField;
 					} else if(!string.IsNullOrEmpty(Nexus.Overseer.textVal)) {
 						Nexus.Overseer.objectType = AutoObjectType.Text;
@@ -473,13 +475,17 @@ namespace TrilleonAutomation {
 					#endregion
 
 					//AdvancedWait selection.
-					if(Nexus.Overseer.inspectedObject && Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor) {
+					if(/* Temporarily disable else's code generation logic */ true || inspectedObject && Nexus.Overseer.stepMaster == AutoStepMaster.WaitFor) {
 
-						//TODO: Uodate for WAIT FOR logic. EditorGUILayout.TextField();
+						labelRef.normal.textColor = Color.grey;
+						labelRef.fontStyle = FontStyle.Italic;
 						EditorGUILayout.Space();
+						EditorGUILayout.LabelField("Code Stub Generation Logic Is Temporarily Disabled.", labelRef);
+						EditorGUILayout.LabelField("Refactoring And Updating In Progress.", labelRef);
 
 					} else {
 
+						//TODO: Update for WAIT FOR logic. EditorGUILayout.TextField();
 						Nexus.Overseer.step = (AutoStepType)EditorGUILayout.EnumPopup("Step Type: ", Nexus.Overseer.step, new GUILayoutOption[] { GUILayout.Width(275) });
 						if(Nexus.Overseer.step != lastStep) {
 							ResetValues();
@@ -590,11 +596,11 @@ namespace TrilleonAutomation {
 			}
 
 			//Get All Parents Of This Object
-			if(Nexus.Overseer.inspectedObject != null) {
+			if(inspectedObject != null) {
 
-				Transform findReferencesInThisObjectTransform = Nexus.Overseer.inspectedObject.transform.parent;
+				Transform findReferencesInThisObjectTransform = inspectedObject.transform.parent;
 				List<GameObject> objectsToLookForReferencesOf = new List<GameObject>();
-				objectsToLookForReferencesOf.Add(Nexus.Overseer.inspectedObject);
+				objectsToLookForReferencesOf.Add(inspectedObject);
 
 				while(findReferencesInThisObjectTransform != null || (advancedSearch && AllGameObjects.Any())) {
 
@@ -948,7 +954,7 @@ namespace TrilleonAutomation {
 
 		void NewObjectSelected() {
 
-			if(Nexus.Overseer.inspectedObject == null) {
+			if(inspectedObject == null) {
 				return;
 			}
 
@@ -961,15 +967,15 @@ namespace TrilleonAutomation {
 			objectsWithThisName = Nexus.Overseer.parentObject.GetChildren().FindAll(x => x.name == Nexus.Overseer.objectName);
 
 			//Get text component value if any.
-			bool containsText = Nexus.Overseer.inspectedObject.GetComponent<Text>() != null;
-			Nexus.Overseer.textVal = containsText ? Nexus.Overseer.inspectedObject.GetComponent<Text>().text : string.Empty;
+			bool containsText = inspectedObject.GetComponent<Text>() != null;
+			Nexus.Overseer.textVal = containsText ? inspectedObject.GetComponent<Text>().text : string.Empty;
 			Nexus.Overseer.textType = containsText ? "Text" : string.Empty;
 			if(!containsText) {
 				for(int a = 0; a < GameMaster.AdditionalTextAssets.Count; a++) {
-					if(Nexus.Overseer.inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]) != null) {
-						Type type = Nexus.Overseer.inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]).GetType();
+					if(inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]) != null) {
+						Type type = inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]).GetType();
 						if(type != null) {
-							Nexus.Overseer.textVal = type.GetProperty("text").GetValue(Nexus.Overseer.inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]), null).ToString();
+							Nexus.Overseer.textVal = type.GetProperty("text").GetValue(inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]), null).ToString();
 							if(!string.IsNullOrEmpty(Nexus.Overseer.textVal)) {
 								Nexus.Overseer.textType = type.Name;
 								break;
@@ -980,7 +986,7 @@ namespace TrilleonAutomation {
 			}
 
 			//Get components of this object.
-			thisTestObject = TestMonitorHelpers.SetParentComponentObject(Nexus.Overseer.inspectedObject);
+			thisTestObject = TestMonitorHelpers.SetParentComponentObject(inspectedObject);
 
 			List<Type> thisTypeList = new List<Type>();
 			List<Assembly> assembliesAll = AppDomain.CurrentDomain.GetAssemblies().ToList();
@@ -988,7 +994,7 @@ namespace TrilleonAutomation {
 				thisTypeList.AddRange(assembliesAll[x].GetTypes().ToList().FindAll(z => z.Name.ToLower() == thisTestObject.ToLower()));
 			}
 			thisType = thisTypeList.First();
-			components = Nexus.Overseer.inspectedObject.GetComponents<Component>().ToList();
+			components = inspectedObject.GetComponents<Component>().ToList();
 
 		}
 

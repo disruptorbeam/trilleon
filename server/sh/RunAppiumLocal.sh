@@ -2,10 +2,12 @@ echo "NOT_RUN" > ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}_results.txt
 TEST_RUN_STATUS="NOT_RUN"
 
 # Remove all previous .txt, .xml, .properties, and .zip files from top level workspace directory.
-rm -f *.txt
-rm -f *.xml
-rm -f *.properties
-rm -f *.zip
+rm -f ${DEFAULT_DIRECTORY}/*.txt
+rm -f ${DEFAULT_DIRECTORY}/*.xml
+rm -f ${DEFAULT_DIRECTORY}/*.properties
+rm -f ${DEFAULT_DIRECTORY}/*.zip
+rm -f ${DEFAULT_DIRECTORY}/*.log
+
 # Removes all but the newest ipa/apk. After this is run, only one ipa/apk should exist in the workspace.
 rm -f $(ls -1t ${DEFAULT_DIRECTORY}/*.ipa | tail -n +2)
 rm -f $(ls -1t ${DEFAULT_DIRECTORY}/*.apk | tail -n +2)

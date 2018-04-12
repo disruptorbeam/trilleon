@@ -104,14 +104,29 @@ namespace TrilleonAutomation {
 			}
 			private List<GameException> _reported = new List<GameException>();
 
-			public void Add(string error, string stackTrace) {
+			public void Add(AutoConsole.Log error) {
+
 				GameException ex = new GameException();
+				ex.ScreenshotName = string.Format("EXCEPTION_{0}", Reported.Count);
+				AutomationMaster.StaticSelfComponent.TakeScreenshotAsync(false, ex.ScreenshotName);
 				ex.TimeStamp = System.DateTime.UtcNow.ToLongDateString();
 				ex.TestExecutionTime = System.DateTime.UtcNow.Subtract(AutomationMaster.CurrentTestContext.StartTime).TotalSeconds.ToString();
 				ex.CurrentRunningTest = AutomationMaster.CurrentTestContext.TestName;
-				ex.Error = AutomationReport.EncodeCharactersForJson(error);
-				ex.ErrorDetails = AutomationReport.EncodeCharactersForJson(stackTrace);
+				ex.Error = AutomationReport.EncodeCharactersForJson(error.message);
+				ex.ErrorDetails = AutomationReport.EncodeCharactersForJson(error.stackTrace);
+				ex.Occurrences = 1;
+				for(int r = 0; r < Reported.Count; r++) {
+
+					if(Reported[r].Error == ex.Error && Reported[r].ErrorDetails == ex.ErrorDetails) {
+
+						Reported[r].Occurrences++;
+						return;
+
+					}
+
+				}
 				_reported.Add(ex);
+
 			}
 
 		}
@@ -123,6 +138,8 @@ namespace TrilleonAutomation {
 			public string TestExecutionTime { get; set; }
 			public string Error { get; set; }
 			public string ErrorDetails { get; set; }
+			public string ScreenshotName { get; set; }
+			public int Occurrences { get; set; }
 
 		}
 

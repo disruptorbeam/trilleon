@@ -90,6 +90,12 @@ $(document).ready(function() {
 			BuildCommunicationHistory();
 		}
 
+		if($("#exceptions_hidden").val().length == 0) {
+			$("#exceptions_button").remove();
+		} else {
+			BuildExceptionPanel();
+		}
+
 		//Build memory usage chart.
 		google.charts.load("visualization", "1", {packages: ['corechart', 'line']});
 		if($("#filter_single_test").length == 0) {
@@ -97,8 +103,8 @@ $(document).ready(function() {
 		}
 
 		// Add build number with url to Details.
-		var job_url_html = $("#build_name_hidden").lenght > 0 ? "<a href='" + DOMAIN_URL + $("#build_name_hidden").val() + "'>" + $("#build_name_hidden").val() + "</a>" : "No Link";
-		var build_url_html = $("#build_name_hidden").lenght > 0 ? "<a href='" + DOMAIN_URL + $("#build_name_hidden").val() + "/" + BUILD_NUMBER + "'>" + BUILD_NUMBER + "</a>" : "No Link";
+		var job_url_html = $("#build_name_hidden").length > 0 ? "<a href='" + DOMAIN_URL + $("#build_name_hidden").val() + "'>" + $("#build_name_hidden").val() + "</a>" : "No Link";
+		var build_url_html = $("#build_name_hidden").length > 0 ? "<a href='" + DOMAIN_URL + $("#build_name_hidden").val() + "/" + BUILD_NUMBER + "'>" + BUILD_NUMBER + "</a>" : "No Link";
 		$(".automation_summary").append("<div><span class='tag_data'><strong>Build Number</strong> Job [ " + job_url_html + " ] Build [ " + build_url_html + " ]</span></div>");
 		$(".automation_summary").append("<div><span class='tag_data'><strong>Test Run ID</strong> [ " + $("#test_run_hidden").val() + " ]</span></div>");
 
@@ -480,6 +486,9 @@ function ShowPanel(panel_name) {
 		case "Warnings":
 			panel = $("#warnings_panel");
 			break;
+		case "Exceptions":
+			panel = $("#exceptions_panel");
+			break;
 	}
 	panel.show(400);
 	$(".background_transparency").show(400);
@@ -799,6 +808,16 @@ function ShowScreenshot(errorName, literal, isGallery) {
 
 }
 
+function BuildExceptionPanel() {
+
+  	var exceptions_panel = $("#exceptions_panel");
+ 	var exceptions_json = JSON.parse($("#exceptions_hidden").val());
+ 	for(var x = 0; x < exceptions_json.length; x++) {
+ 		exceptions_panel.append("<div class='exception_data'><div class='exception_screenshot'><a onclick='ShowScreenshot(\"" + exceptions_json[x].screenshot_name + "\", true)'>Screenshot</a><a onclick='CopyToClipBoard($(this).parent().next().next());'>Copy Error</a></div><div class='exception_message' onmouseover='$(this).next().show(150);' onmouseout='$(this).next().hide(150);' style='cursor:pointer;'>" + exceptions_json[x].error + "...</div><div class='tooltip_expander' style='max-width: 1000px; white-space: pre-wrap; display: none;'>" + exceptions_json[x].error_details + "</div></div>");
+ 	}
+
+}
+
 function BuildCommunicationHistory() {
 
 	var message_exchange_list = $("#communications_panel").find(".message_exchange_list")
@@ -1035,11 +1054,47 @@ function NotImplemented(message) {
 
 }
 
+function CopyToClipBoard(textContainer) {
+
+	var browser = "";
+	if(navigator.userAgent.search("MSIE") >= 0) {
+        browser = "IE";
+    } else if(navigator.userAgent.search("Chrome") >= 0) {
+        browser = "Chrome";
+    } else if(navigator.userAgent.search("Firefox") >= 0) {
+        browser = "FF";
+    } else if(navigator.userAgent.search("Safari") >= 0 && navigator.userAgent.search("Chrome") < 0) {
+        browser = "Safari";
+    } else if(navigator.userAgent.search("Opera") >= 0) {
+        browser = "Opera";
+    }
+
+    textContainer.show(200);
+    var text = textContainer[0];
+    if(browser == "IE") {
+        var range = document.body.createTextRange();
+        range.moveToElementText(text);
+        range.select();
+    } else if(browser == "FF" || browser == "Opera") {
+        var selection = window.getSelection();
+        var range = document.createRange();
+        range.selectNodeContents(text);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    } else if(browser == "Chrome" || browser == "Safari") {
+        var selection = window.getSelection();
+        selection.setBaseAndExtent(text, 0, text, 1);
+    }
+  	document.execCommand("Copy");
+  	textContainer.hide(200);
+
+}
+
 $(document).click(function(event) { 
 
 	if(!is_screenshot_report) {
 
-	  if(!$("#screenshot_panel").is(":visible")) {
+	    if(!$("#screenshot_panel").is(":visible")) {
 		  if(!$(event.target).closest('#show_results').length) {
 		        if($('#show_results').is(":visible")) {
 		        	if(!opening){
@@ -1053,7 +1108,7 @@ $(document).click(function(event) {
 		   if($('#screenshot_panel').is(":visible")) {
 		      if(!openingScreenshotPanel){
 		      	$(".screenshot_open").css("background-color", "#0290dd");
-		          $("#screenshot_panel").hide(400);
+		        $("#screenshot_panel").hide(400);
 		      }
 		   }
 	    } 

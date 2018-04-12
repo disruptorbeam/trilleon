@@ -29,12 +29,17 @@ using System.Text;
 
 namespace TrilleonAutomation {
 
+	/* 
+	 * CUSTOMIZE:
+	 * IMPORTANT! While the Arbiter class is very customizable, you should not change logic used in the HandleMessage() method unless you are A) Adding new commands, or B) Know exactly what you are doing.
+	 * The existing commands are critical for proper functionality between a CI server and the client application. Some commands are even required for non-server (ex: local editor) automation test runs.
+	*/
 	public class Arbiter : MonoBehaviour {  
 
 		//For security (especially if using these keys for game code as well), it is a good idea to store these keys on your game server, with your clients requesting to send messages (sending and receiving through game server rather than directly).
-		public const string PUBSUB_CHANNEL = "My_QA_Auto"; //TODO: Customize as you choose.
-		public const string PUBLISH_KEY = ""; //TODO: Add your own PubNub key here. 
-		public const string SUBSCRIBE_KEY = ""; //TODO: Add your own PubNub key here.
+		public const string PUBSUB_CHANNEL = "My_QA_Auto"; //CUSTOMIZE: The name of pubsub channel that hosts this app's automation.
+		public const string PUBLISH_KEY = ""; //CUSTOMIZE: Add your own PubNub key here. 
+		public const string SUBSCRIBE_KEY = ""; //CUSTOMIZE: Add your own PubNub key here.
 		public const string DEVICE_IDENTIFIER_PREFIX = "Trilleon-Automation-";
 		public const int MAX_PUBSUB_MESSAGE_LENGTH = 4000; //The maximum number of characters (32KB)that can successfully go in a single Pubnub (pubsub) message.
 		const int SubscribeTimeout = 310;
@@ -55,7 +60,7 @@ namespace TrilleonAutomation {
 
 			GridIdentity = GetDeviceChannelName();
 
-			/* TODO: This can't work until you add a valid publish and subscribe key above!
+			/* CUSTOMIZE: This can't work until you add a valid publish and subscribe key above!
 			pubnub = new Pubnub(PUBLISH_KEY, SUBSCRIBE_KEY);
 			pubnub.Subscribe<string>(
 				PUBSUB_CHANNEL, 
@@ -142,6 +147,9 @@ namespace TrilleonAutomation {
 
 		}
 
+		/// <summary>
+		/// Handles incoming pubsub messages. Expects JSON format.
+		/// </summary>
 		IEnumerator HandleMessage(string result, bool isLocalLaunch = false) {
 
 			//Ignore duplicate or empty messages. Ignore messages not meant for this client.
@@ -429,7 +437,7 @@ namespace TrilleonAutomation {
 
 		public void ReturnMessage(string result) {
 
-			return; //Do nothing.
+			return; //This is a success-type message. It's a required implementation, but is of no use outside of debugging; so do nothing.
 
 		}
 
@@ -439,6 +447,11 @@ namespace TrilleonAutomation {
 
 		}
 
+		/*
+		 * CUSTOMIZE: Generates a reasonably predictable name for devices that will be unique as long as multiple devices of the same exact model and software version are utilized at the same time by server automation runs.
+		 * IMPORTANT! If you need a unique identifier under the above circumstances, you will need to customize this logic. Recommend you do NOT use SystemInfo.deviceUniqueIdentifier, as this will force your Android apps
+		 * to request permission for the app to access phone calls and personal data, which is a scary permission check that should be avoided if not absolutely necessary.
+		*/
 		private string GetDeviceChannelName(){
 
 			string[] stringSeparators = new string[] {" OS X ", " OS "};
@@ -467,6 +480,10 @@ namespace TrilleonAutomation {
 
 		}
 
+		/// <summary>
+		/// Basic deserializer of JSON messages. Designed to avoid extra third party dependencies that weren't ideal to include in the framework.
+		/// Also allows for certain cusomizations specific to Trilleon.
+		/// </summary>
 		public static List<KeyValuePair<string,string>> DeserializeJsonString(string jsonString) {
 
 			string trimmedResult = jsonString.Substring(0, jsonString.LastIndexOf("}")); //Remove trailing details tacked onto the JSON by Pubsub.

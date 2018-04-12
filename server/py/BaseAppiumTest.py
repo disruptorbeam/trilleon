@@ -1,3 +1,22 @@
+'''
++   This file is part of Trilleon.  Trilleon is a client automation framework.
++
++   Copyright (C) 2017 Disruptor Beam
++
++   Trilleon is free software: you can redistribute it and/or modify
++   it under the terms of the GNU Lesser General Public License as published by
++   the Free Software Foundation, either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import os
 import os.path
 import sys
@@ -569,30 +588,31 @@ class BaseAppiumTest(unittest.TestCase):
 
     def find_json_for_performance_attribute(self, delimiter):
         recent_posts = self.get_communication_history()
-        delimiter = "|"
+        endDelimiter = "|"
         json = ""
         index = 0
-        partialInitialDelimiter = delimiter + "_MULTI_PART|"
-        rawAll = recent_posts.split(partialInitialDelimiter)
+        fullInitialDelimiter = delimiter + "_MULTI_PART|"
+        rawAll = recent_posts.split(fullInitialDelimiter)
+        piecesFinal = ["" for x in range(len(rawAll) - 1)]
+        log("Finding " + delimiter)
         for x in rawAll:
             if index > 0 and len(x) > 0:
                 # Handle test results reporting that was too large to send in a single message, requiring several parts of a single result report.
-                rawPartials = x.split(partialInitialDelimiter) # All partial message pieces
-                indexPartial = 0
-                piecesFinal = ["" for x in range(len(rawPartials))]
+                rawPartials = x.split(fullInitialDelimiter) # All partial message pieces
                 for z in rawPartials:
-                    if indexPartial == 0:
-                        json += rawPartials[0].split(delimiter)[0] # First, record the test that preceded the partial test details report.
-                    else:
-                        piecesPartial = z.split(self.partialDataDelimiter)
-                        piecesFinal[int(piecesPartial[0])] = piecesPartial[1].split(delimiter)[0] # The first piece after splicing is the index/order of this piece. Set that piece equal to the actual message data.
-                    indexPartial += 1
-                for f in piecesFinal:
-                    json += f # Should piece together valid json in correct order if previous for loop correctly handled ordering.
+                    piecesPartial = z.split(self.partialDataDelimiter)
+                    if index - 1 == int(piecesPartial[0]):
+                        piecesFinal[int(piecesPartial[0])] = piecesPartial[1].split(endDelimiter)[0] # The first piece after splicing is the index/order of this piece. Set that piece equal to the actual message data.
+                        break
             index += 1
+        for f in piecesFinal:
+            json += f # Should piece together valid json in correct order if previous for loop correctly handled ordering.
 
         # "@APOS@" token is a special encoding of double qoutes to prevent issues with PubNub message encoding and proper formatting of JSON
-        return json.replace("@APOS@", "\"").replace("}{", "},{")
+        json = json.replace("@APOS@", "\"").replace("}{", "},{")
+        if not json.endswith("]"):
+          json += "]"
+        return json
 
     # Check if specific messages have been communicated over PubNub and extract relevant details.
     def check_for_client_responses(self, command, postAllParsed):
@@ -613,6 +633,12 @@ class BaseAppiumTest(unittest.TestCase):
             log("Collecting FPS Json")
             fileWrite = open("FpsJson.txt", "w")
             fileWrite.write(self.find_json_for_performance_attribute("FPS_JSON"))
+            fileWrite.close()
+            return True
+        if command == "exceptions_data":
+            log("Collecting Exceptions Values")
+            fileWrite = open("ExceptionsJson.txt", "w")
+            fileWrite.write(self.find_json_for_performance_attribute("EXCEPTION_DATA"))
             fileWrite.close()
             return True
         if command == "garbage_collection":

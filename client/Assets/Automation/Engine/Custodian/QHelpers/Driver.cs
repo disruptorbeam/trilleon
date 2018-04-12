@@ -34,8 +34,7 @@ namespace TrilleonAutomation {
 
 	public class Driver : MonoBehaviour {
 
-		public const float TIME_PER_KEY_TO_SEND = 0.075f; //Default amount of time added to total SendKeys time for each key requested.
-		public const int MAX_NUMBER_OF_KEYS_TO_TYPE = 20; //The maximum number of keys to type at a normal pace. Otherwise, set text equal to value all at once.
+		public const float BASE_TIME_PER_KEY_TO_SEND = 1f; //Default amount of time added to total SendKeys time for each key requested.
 		public const float TIMEOUT_DEFAULT = 20f; //Default timeout for Do-type events.
 		public const float TRY_TIMEOUT_DEFAULT = 10f; //Default timeout for Try-type events.
 		public const float INTERLOOP_WAIT_TIME = 1f; //Dictates the time between loop executions for wait functions.
@@ -140,40 +139,27 @@ namespace TrilleonAutomation {
 					field.text = string.Empty;
 
 				}
-				if(keysToSend.Length > MAX_NUMBER_OF_KEYS_TO_TYPE) {
 
-					field.text = keysToSend;
-					if(isTry) {
+				char[] keys = keysToSend.ToCharArray();
+				float waitTimeBetweenKeyPresses = BASE_TIME_PER_KEY_TO_SEND * keys.Length; //The wait between key presses reduces dramatically as the text to input increases.
+				waitTimeBetweenKeyPresses = waitTimeBetweenKeyPresses > 0.1f ? 0.1f : waitTimeBetweenKeyPresses;
+				for(int x = 0; x < keys.Length; x++) {
 
-						yield return StartCoroutine(Q.assert.Try.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend.Substring(0, MAX_NUMBER_OF_KEYS_TO_TYPE), field.gameObject.name)));
-
-					} else {
-
-						yield return StartCoroutine(Q.assert.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend.Substring(0, MAX_NUMBER_OF_KEYS_TO_TYPE), field.gameObject.name)));
-
-					}
-
-				} else {
-					
-					char[] keys = keysToSend.ToCharArray();
-					for(int x = 0; x < keys.Length; x++) {
-
-						field.text = string.Format("{0}{1}", field.text, keys[x]);
-						yield return StartCoroutine(WaitRealTime(TIME_PER_KEY_TO_SEND));
-
-					}
-
-					if(isTry) {
-
-						yield return StartCoroutine(Q.assert.Try.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
-
-					} else {
-
-						yield return StartCoroutine(Q.assert.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
-
-					}
+					field.text = string.Format("{0}{1}", field.text, keys[x]);
+					yield return StartCoroutine(WaitRealTime(waitTimeBetweenKeyPresses));
 
 				}
+
+				if(isTry) {
+
+					yield return StartCoroutine(Q.assert.Try.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
+
+				} else {
+
+					yield return StartCoroutine(Q.assert.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
+
+				}
+
 				Click(field.gameObject.transform.parent.gameObject); //Remove focus from input.
 
 			} else {

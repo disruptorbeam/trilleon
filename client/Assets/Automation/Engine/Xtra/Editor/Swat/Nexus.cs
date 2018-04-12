@@ -41,7 +41,7 @@ namespace TrilleonAutomation {
 					} else {
 						_self = (Nexus)Overseer.nexus;
 					}
-					_self.Initialize();
+					_self.Initialize(PlayModeStateChange.EnteredEditMode);
 				}
 				return _self;
 			}

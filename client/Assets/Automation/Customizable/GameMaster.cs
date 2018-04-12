@@ -39,7 +39,7 @@ namespace TrilleonAutomation {
 
 		public static bool Enabled {
 			get {
-				//TODO: WHAT ACTIVATES OR NEUTERS THE FRAMEWORK?
+				//CUSTOMIZE: WHAT ACTIVATES OR NEUTERS THE FRAMEWORK?
 				return true;
 			}
 		}
@@ -67,7 +67,7 @@ namespace TrilleonAutomation {
 		public static string BasicBuddyInformation() {
 
 			string information = string.Empty;
-			//TODO: information += string.Format("PLAYER_ID={0}", PLAYER_ID.ToString());
+			//CUSTOMIZE: information += string.Format("PLAYER_ID={0}", PLAYER_ID.ToString());
 			return information;
 
 		}
@@ -75,7 +75,7 @@ namespace TrilleonAutomation {
 		//Put any game-specific methods of determining an objects visibility to a user here.
 		public static bool GameSpecificVisibilityChecks(GameObject g) {
 
-			//return g.IsVisibleInHierarchy() && g.alpha > 0 : true;
+			//CUSTOMIZE: return g.IsVisibleInHierarchy() && g.alpha > 0 : true;
 			return true;
 
 		}
@@ -167,7 +167,7 @@ namespace TrilleonAutomation {
 		}
 		private static string _Platform;
 
-		//TODO
+		//CUSTOMIZE
 		private static AssetVariant GetAssetVariant() {
 			/*
 			switch (AssetBundleManager.variantLevel)
@@ -229,34 +229,38 @@ namespace TrilleonAutomation {
 			}
 			IgnoreWaitForNoLoadingIndicators = true;
 
-			//TODO: Fill out this logic - add checks and waits for the disappearance of visible loading indicators custom to your game.
+			//CUSTOMIZE: Your code here.
 
 			IgnoreWaitForNoLoadingIndicators = false;
-			yield return StartCoroutine(Q.driver.WaitRealTime(1));
+			yield return StartCoroutine(Q.driver.WaitRealTime(0.1f));
 
 		}
 
 		public IEnumerator WaitForGameLoadingComplete() {
 
-			//TODO: Add custom logic to wait for your game to finish its initial load.
+			//CUSTOMIZE: Your code here.
 			yield return null;
 
 		}
 
+		//Try to Dismiss an error popup that is encountered during test execution. Called by AutomationMaster when game-specific errors are found in the GameAssert.cs extender "AssertNoErrorPopups".
 		public IEnumerator TryDismissErrors() {
 
+			//CUSTOMIZE: Your code here.
 			yield return null;
 
 		}
 
-		public IEnumerator PreTestLaunch() {
+		public IEnumerator PreTestRunLaunch() {
 
+			//CUSTOMIZE: Your code here.
 			yield return null;
 
 		}
 
 		public IEnumerator GlobalSetUpTest() {
 
+			//CUSTOMIZE: Your code here.
 			RunnerFlagTests.SetUpGlobalRun = true;
 			yield return null;
 
@@ -264,6 +268,7 @@ namespace TrilleonAutomation {
 
 		public IEnumerator GlobalSetUpClass() {
 
+			//CUSTOMIZE: Your code here.
 			RunnerFlagTests.SetUpClassGlobalRun = true; //Debug test value.
 			yield return null;
 
@@ -271,6 +276,7 @@ namespace TrilleonAutomation {
 
 		public IEnumerator GlobalTearDownClass() {
 
+			//CUSTOMIZE: Your code here.
 			RunnerFlagTests.TearDownClassGlobalRun = true; //Debug test value.
 			yield return null;
 
@@ -278,6 +284,7 @@ namespace TrilleonAutomation {
 
 		public IEnumerator GlobalTearDownTest() {
 
+			//CUSTOMIZE: Your code here.
 			RunnerFlagTests.TearDownGlobalRun = true;
 			yield return null;
 

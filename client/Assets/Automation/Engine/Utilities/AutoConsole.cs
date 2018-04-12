@@ -255,12 +255,13 @@ namespace TrilleonAutomation {
 
 		//Record logs from Unity console.
 		public static void GetLog(string message, string stackTrace, LogType type) {
-			
-			Logs.Add(new Log() {
+
+			Log newLog = new Log() {
 				message = message,
 				stackTrace = stackTrace,
 				type = type,
-			});
+			};
+			Logs.Add(newLog);
 			//If we exceed the maximum storage space.
 			if(Logs.Count >= MAX_LOG_COUNT_HISTORY) {
 				
@@ -276,7 +277,7 @@ namespace TrilleonAutomation {
 				#endif
 
 				//If this error occurred directly in the Trilleon Framework (not editor), then stop all tests and report on the exception.
-				if(AutomationMaster.Initialized && stackTrace.Contains("TrilleonAutomation.") && !stackTrace.Contains("/Editor/") && !ReportOnce) {
+				if(AutomationMaster.Busy &&  AutomationMaster.Initialized && stackTrace.Contains("TrilleonAutomation.") && !stackTrace.Contains("/Editor/") && !ReportOnce) {
 
 					ReportOnce = true;
 					AutomationMaster.Arbiter.SendCommunication("An unhandled exception occurred in the Trilleon Framework, disrupting the test run execution");
@@ -309,12 +310,11 @@ namespace TrilleonAutomation {
 					AutomationMaster.StaticSelfComponent.ResetTestRunner();
 					AutoConsole.PostMessage("Exception in framework killed TestRunner. Framework reset and ready for new commands.", MessageLevel.Abridged);
 
-				} else if(AutomationMaster.Initialized) {
+				} else if(AutomationMaster.Busy && AutomationMaster.Initialized && !stackTrace.Contains("/Editor/")) {
 
-					AutomationMaster.TestRunContext.Exceptions.Add(message, stackTrace);
+					AutomationMaster.TestRunContext.Exceptions.Add(newLog);
 
 				}
-
 
 				#if UNITY_EDITOR
 				if(!AutomationMaster.Initialized && stackTrace.Contains("TrilleonAutomation.") && message.ToLower().Contains("object reference")) {
