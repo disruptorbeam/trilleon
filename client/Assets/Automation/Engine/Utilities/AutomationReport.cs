@@ -680,11 +680,18 @@ namespace TrilleonAutomation {
 				html.Append("<div id='test_results_table_panel'>");
 				html.Append(string.Format("<div class='critical_error_detected status_critical_error_show'>{0}</div>", fatalInternalError ? "Fatal Exception Encountered; Test Run Aborted!" : "Secondary Circular Dependency Failure Encountered!"));
 				if(string.IsNullOrEmpty(filterSingleTest)) {
+					
 					html.Append("<br/>");
 					html.Append("<div style='display:inline-block; margin-right:10px;'><strong>Info Panels:</strong></div>");
 					html.Append("<div id='gallery_button' class='button screenshots_button' type='button' onClick='ShowPanel(\"Gallery\");'>Screenshots</div>");
 					html.Append("<div id='warnings_button' class='button_toggle button warnings_button' type='button' onClick='ShowPanel(\"Warnings\");'>Warnings</div>");
+					if(AutomationMaster.TestRunContext.Exceptions.Reported.Count > 0) {
+
+						html.Append("<div id='exceptions_button' class='button_toggle button warnings_button' type='button' onClick='ShowPanel(\"Exceptions\");'>Exceptions</div>");
+
+					}
 					html.Append("<br/>");
+
 				}
 				html.Append("<div style='display:inline-block; margin-right:10px;'><strong>Show/Hide:</strong> </div>");
 				html.Append("<div class='button_toggle button status_success_show' type='button' onClick='ToggleVisibility(\"Success\");'>Success</div>");
@@ -716,11 +723,9 @@ namespace TrilleonAutomation {
 				html.Append("<div id='corner_tab' class='corner_tab'><div id='corner_tab_arrow' onClick='ToggleFooterPanel($(this));' class='corner_tab_arrow corner_tab_open'>&#10095;</div></div>");
 				html.Append("<div class='notice-popup display_panel'><div class='close' onclick='$(this).parent().hide(400); $(\".background_transparency\").hide(400);'>X</div><div class='message'></div></div>");
 				html.Append("<div id='bottom_panel' class='bottom_panel'>");
-				html.Append("<div class='additional_tools_div'><a class='additional_tools' onClick='NotImplemented(\"When implemented, this will link to any launching cloud-based test run.\");' target='_blank' style='margin-left: 200px;'>Cloud Run</a></div>");
+				html.Append("<div class='additional_tools_div'><a class='additional_tools' href='www.trilleonautomation.wiki' target='_blank'>About This Report</a></div>");
 				html.Append("<div class='link_separator'>&#9679;</div>");
-				html.Append("<div class='additional_tools_div'><a class='additional_tools' onClick='NotImplemented(\"When implemented, this will link to the Jenkins Build for this test run.\");' target='_blank'>About This Report</a></div>");
-				html.Append("<div class='link_separator'>&#9679;</div>");
-				html.Append("<div class='additional_tools_div'><a class='additional_tools' href=\"www.trilleonautomation.com\" target='_blank'>About Trilleon</a></div>");
+				html.Append("<div class='additional_tools_div'><a class='additional_tools' href='www.trilleonautomation.wiki' target='_blank'>About Trilleon</a></div>");
 				html.Append("</div>");
 				html.Append("<div id='screenshot_panel' class='display_panel'><div class='close' onclick='$(this).parent().hide(400); CloseTransparencyLayer();'>X</div><div class='screenshot_image'></div></div>");
 				html.Append("<div id='communications_panel' class='display_panel'><div class='close' onclick='$(this).parent().hide(400); CloseTransparencyLayer();'>X</div><h2 style='margin-top: 10px;'>Communications</h2>");
@@ -728,8 +733,26 @@ namespace TrilleonAutomation {
 				html.Append("<div class='message_exchange_list'></div></div>");
 				html.Append("<div id='warnings_panel' class='display_panel'><div class='close' onclick='$(this).parent().hide(400); CloseTransparencyLayer();'>X</div><h2 style='margin-top: 10px;'>Warnings</h2><div class='warnings_list'></div></div>");
 				html.Append("<div id='gallery_panel' class='display_panel'><div class='close' onclick='$(this).parent().hide(400); CloseTransparencyLayer();'>X</div><h2 style='margin: 10px; margin-bottom: 40px;'>Screenshot Gallery</h2></div>");
+				html.Append("<div id='exceptions_panel' class='display_panel'><div class='close' onclick='$(this).parent().hide(400); CloseTransparencyLayer();'>X</div><h2 style='margin: 10px; margin-bottom: 40px;'>Non-Trilleon Exceptions</h2></div>");
+				if(AutomationMaster.TestRunContext.Exceptions.Reported.Count > 0) {
+					
+					StringBuilder exceptionsData = new StringBuilder();
+					exceptionsData.Append("[");
+					for(int ed = 0; ed < AutomationMaster.TestRunContext.Exceptions.Reported.Count; ed++) {
+
+						exceptionsData.Append(string.Format("{{\"screenshot_name\":\"{0}\",\"error\":\"{1}\",\"error_details\":\"{2}\"}}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].ScreenshotName, AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Length > 75 ? AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Substring(0, 75) : AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, string.Format("{0}: {1}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, AutomationMaster.TestRunContext.Exceptions.Reported[ed].ErrorDetails)));
+						if(ed + 1 != AutomationMaster.TestRunContext.Exceptions.Reported.Count) {
+
+							exceptionsData.Append(",");
+
+						}
+
+					}
+					exceptionsData.Append("]");
+					html.Append(string.Format("<input id='exceptions_hidden' type='hidden' value='{0}'/>", exceptionsData.ToString()));
+
+				}
 				html.Append("<div class='background_transparency'></div>");
-				html.Append(imageCaptureFailures.ToString());
 				html.Append("</body>");
 
 				htmlBody = new StringBuilder();

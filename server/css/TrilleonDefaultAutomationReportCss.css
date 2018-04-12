@@ -8,7 +8,7 @@
  .background_transparency { background-color:black; opacity:.5; width:100%; height:100%; z-index:99; position:fixed; left:0; top:0; display:none; }
  .bottom_panel { width:100%; border:1px solid black; height:120px; background-color:#c9c9c9; bottom:-1px; left:0; position:fixed; z-index:999; } 
  .bottom_panel > a:hover { color:white; }
- .button { max-width:110px; border:1px solid black; border-radius:6px; font-weight:bold; text-align:center; color:white; padding:4px; cursor:pointer; white-space:nowrap; } 
+ .button { max-width:110px; margin-right: 5px; border:1px solid black; border-radius:6px; font-weight:bold; text-align:center; color:white; padding:4px; cursor:pointer; white-space:nowrap; } 
  .button_toggle { margin-top:20px; margin-bottom:20px;padding:5px; display:inline-block; margin-right:5px; width:75px; }
  .chart_image_div { width:45px; height:45px; margin-left:5; }
  .chart_result { margin:10px; }
@@ -29,7 +29,11 @@
  .details_title { font-weight:bold; padding-left:40px; padding-top:20px; padding-bottom:20px; } 
  .display_panel { display:none; width:80%; height:80%; overflow-x:auto; padding:25px; border-radius:6px; border:1px solid black; position:fixed; left:5%; top:0; background:white; margin:5%; z-index:999; }
  .error_button { max-width:110px; border:1px solid black; border-radius:6px; background-color:#ff8080; font-weight:bold; text-align:center; color:white; padding:4px; cursor:pointer; white-space:nowrap; } 
- .error_message_details { padding-left:60px; padding-right:60px; } 
+ .error_message_details { padding-left:60px; padding-right:60px; }
+ .exception_data { border: 2px solid red; border-radius: 6px; white-space: nowrap; margin-top: 5px; padding: 5px; overflow: hidden; } 
+ .exception_message { display: inline-block; padding: 10px; }
+ .exception_screenshot { display: inline-block; }
+ .exception_screenshot > a { display: inline-block; cursor: pointer; margin-right: 5px; text-decoration: none; color: white; padding: 10px; background-color: #5f97c7; border-radius: 6px; }
  .fps_display { position: absolute; margin-top: -22px; z-index: 99; color: white; right: 0; margin-right: 10px; font-size: 0.75em; }
  .gallery_image { cursor:pointer; max-width:100%; max-height:462px; }
  .gallery_image_div { display:inline-block; position:relative; height:100%; margin-top:25px; padding:5px; }

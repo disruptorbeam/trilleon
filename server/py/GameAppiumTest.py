@@ -1,3 +1,22 @@
+'''
++   This file is part of Trilleon.  Trilleon is a client automation framework.
++
++   Copyright (C) 2017 Disruptor Beam
++
++   Trilleon is free software: you can redistribute it and/or modify
++   it under the terms of the GNU Lesser General Public License as published by
++   the Free Software Foundation, either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import os
 import sys
 import unittest
@@ -121,8 +140,9 @@ class GameAppiumTest(BaseAppiumTest):
         garbageCollectionRetrieved = False
         garbageCollectionJSONRetrieved = False
         gameLoadTimeRetrieved = False
+        exceptionsDataRetrieved = False
         log("Waiting for all test results data to be communicated.")
-        while((xmlRetrieved == False or jsonRetrieved == False or fpsRetrieved == False or fpsJSONRetrieved == False or deviceDetailsRetrieved == False or heapSizeRetrieved == False or heapSizeJSONRetrieved == False or garbageCollectionRetrieved == False or garbageCollectionJSONRetrieved == False or gameLoadTimeRetrieved == False) and timeout < self.timeout_default and self.fatalErrorDetected == False):
+        while((xmlRetrieved == False or jsonRetrieved == False or exceptionsDataRetrieved == False or fpsRetrieved == False or fpsJSONRetrieved == False or deviceDetailsRetrieved == False or heapSizeRetrieved == False or heapSizeJSONRetrieved == False or garbageCollectionRetrieved == False or garbageCollectionJSONRetrieved == False or gameLoadTimeRetrieved == False) and timeout < self.timeout_default and self.fatalErrorDetected == False):
             if xmlRetrieved == False:
                 xmlRetrieved = self.get_xml_from_client_run()
             if jsonRetrieved == False:
@@ -143,6 +163,8 @@ class GameAppiumTest(BaseAppiumTest):
                 garbageCollectionJSONRetrieved = self.check_for_client_responses("garbage_collection_json", True)
             if gameLoadTimeRetrieved == False:
                 gameLoadTimeRetrieved = self.check_for_client_responses("game_launch_seconds", True)
+            if exceptionsDataRetrieved == False:
+                exceptionsDataRetrieved = self.check_for_client_responses("exceptions_data", True)
             if is_failure == True:
                 self.get_json_from_client_run(True)
                 return False # If a fatal error occurred, we run this check loop just once and stop execution here.

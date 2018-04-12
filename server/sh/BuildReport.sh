@@ -61,6 +61,7 @@ PUBSUB_HISTORY=$(cat ${DEFAULT_DIRECTORY}/FormattedCommunicationHistory.txt)
 HEAP_JSON=$(cat ${DEFAULT_DIRECTORY}/HeapJson.txt)
 GC_JSON=$(cat ${DEFAULT_DIRECTORY}/GarbageCollectionJson.txt)
 FPS_JSON=$(cat ${DEFAULT_DIRECTORY}/FpsJson.txt)
+EXCEPTIONS_JSON=$(cat ${DEFAULT_DIRECTORY}/ExceptionsJson.txt)
 REPORT_CSS=$(cat ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/css/TrilleonDefaultAutomationReportCss.css)
 GAME_LOAD_TIME=$(cat ${DEFAULT_DIRECTORY}/GameInitializationTime.txt)
 FPS_SCREENSHOT_DATA=$(cat ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}_Screenshots_FPS_data.txt)
@@ -89,7 +90,7 @@ HTML="
        <script type='text/javascript' src='./scripts/jquery.min.js'></script>
        <script type='text/javascript' src='./scripts/jquery.dataTables.min.js'></script>
        <script type='text/javascript' src='./scripts/bootstrap.min.js'></script>
-        <script type='text/javascript' src='./scripts/loader.js'></script>
+       <script type='text/javascript' src='./scripts/loader.js'></script>
        <script type='text/javascript' src='./scripts/TrilleonDefaultAutomationReportDatatable.js'></script>
        <body>
        <div class='container'>
@@ -123,6 +124,7 @@ HTML="
         <input id='test_run_type' type='hidden' value='full'/>
         <input id='domain_url_hidden' type='hidden' value='${DOMAIN_URL}'/>
         <input id='screenshot_file_names' type='hidden' value='${SCREENSHOT_NAMES}'/>
+        <input id='exceptions_hidden' type='hidden' value='${EXCEPTIONS_JSON}'/>
         <input id='memory_usage_rt_hidden' type='hidden' value='${HEAP_JSON}'/>
         <input id='memory_usage_gc_hidden' type='hidden' value='${GC_JSON}'/>
         <input id='performance_fps_hidden' type='hidden' value='${FPS_JSON}'/>
@@ -136,6 +138,7 @@ HTML="
             <div id='gallery_button' class='button screenshots_button' type='button' onClick='ShowPanel(\"Gallery\");'>Screenshots</div>
             <div id='communications_button' class='button_toggle button communications_button' type='button' onClick='ShowPanel(\"Communications\");'>Communications</div>
             <div id='warnings_button' class='button_toggle button warnings_button' type='button' onClick='ShowPanel(\"Warnings\");'>Warnings</div>
+            <div id='exceptions_button' class='button_toggle button warnings_button' type='button' onClick='ShowPanel(\"Exceptions\");'>Exceptions</div>
             <br/>
             <div style='display:inline-block; margin-right:10px;'><strong>Show/Hide:</strong></div>
             <div class='button_toggle button status_success_show' type='button' onClick='ToggleVisibility(\"success\");'>Success</div>
@@ -164,11 +167,11 @@ HTML="
         </div>
         <div id='corner_tab' class='corner_tab'><div id='corner_tab_arrow' onClick='ToggleFooterPanel(\$(this));' class='corner_tab_arrow corner_tab_open'>&#10095;</div></div>
         <div id='bottom_panel' class='bottom_panel'>
-        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='https://stt-jenkins.disruptorbeam.com/job/${JOB_NAME}/${BUILD_NUMBER}' style='margin-left: 200px;'>${JOB_NAME} Build #${BUILD_NUMBER}</a></div>
+        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='https://${COMPANY_JENKINS_BASE_URL}/job/${JOB_NAME}/${BUILD_NUMBER}' style='margin-left: 200px;'>Jenkins Build ${BUILD_NUMBER}</a></div>
         <div class='link_separator'>&#9679;</div>
-        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='https://disruptorbeam.atlassian.net/wiki/display/QA/Test+Results+And+Reporting'>About This Report</a></div>
+        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='www.trilleonautomation.wiki/reports'>About This Report</a></div>
         <div class='link_separator'>&#9679;</div>
-        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='https://disruptorbeam.atlassian.net/wiki/display/QA/Trilleon+QA+Automation+Framework'>About Trilleon</a></div>
+        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='www.trilleonautomation.wiki/reports'>About Trilleon</a></div>
         </div>
         <div id='screenshot_panel' class='display_panel'>
             <div class='close' onclick='\$(this).parent().hide(400); CloseTransparencyLayer();'>X</div>
@@ -189,6 +192,10 @@ HTML="
         <div id='gallery_panel' class='display_panel'>
             <div class='close' onclick='\$(this).parent().hide(400); CloseTransparencyLayer();'>X</div>
             <h2 style='margin: 10px; margin-bottom: 40px;'>Screenshot Gallery</h2>
+        </div>
+        <div id='exceptions_panel' class='display_panel'>
+            <div class='close' onclick='\$(this).parent().hide(400); CloseTransparencyLayer();'>X</div>
+            <h2 style='margin: 10px; margin-bottom: 40px;'>Non-Trilleon Exceptions</h2>
         </div>
         <div class='background_transparency'></div>
         </body>"

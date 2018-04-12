@@ -365,7 +365,7 @@ namespace TrilleonAutomation {
 		}
 
 		bool _initialized = false;
-		public void Initialize() {
+		public void Initialize(PlayModeStateChange p) {
 
 			_initialized = true;
 			if(SelectedTab == null) {
@@ -388,9 +388,9 @@ namespace TrilleonAutomation {
 				popTypes.AddRange(assembliesAll[x].GetTypes().ToList().FindAll(m => m.IsClass && m.GetInterface("SwatPopup") != null));
 
 			}
-			for(int p = 0; p < popTypes.Count; p++) {
+			for(int pt = 0; pt < popTypes.Count; pt++) {
 
-				EditorWindow.GetWindow(popTypes[p], false).Close();
+				EditorWindow.GetWindow(popTypes[pt], false).Close();
 
 			}
 			Errors = new List<SwatControlError>();
@@ -406,7 +406,7 @@ namespace TrilleonAutomation {
 
 			if(SelectedTab == null) {
 
-				Initialize();
+				Initialize(PlayModeStateChange.EnteredEditMode);
 
 			}
 
@@ -478,8 +478,12 @@ namespace TrilleonAutomation {
 			RenderToolTip = false;
 			if(!_initialized) {
 
-				Initialize();
-				EditorApplication.playmodeStateChanged += Initialize; 
+				Initialize(PlayModeStateChange.EnteredEditMode);
+				#if UNITY_2017_2_OR_NEWER
+				EditorApplication.playModeStateChanged += Initialize;
+				#else 
+				EditorApplication.playmodeStateChanged += Initialize;
+				#endif
 
 			}
 
@@ -663,7 +667,11 @@ namespace TrilleonAutomation {
 
 		void CloseSwat() {
 
+			#if UNITY_2017_2_OR_NEWER
+			EditorApplication.playModeStateChanged -= Initialize;
+			#else 
 			EditorApplication.playmodeStateChanged -= Initialize;
+			#endif
 			ClosedWindow = new KeyValuePair<Type,DateTime>(this.GetType(), DateTime.UtcNow);
 			this.Close();
 

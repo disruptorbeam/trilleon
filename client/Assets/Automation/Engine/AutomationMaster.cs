@@ -681,7 +681,7 @@ namespace TrilleonAutomation {
 
 			}
 
-			yield return StartCoroutine(GameMaster.PreTestLaunch()); //Launch any game-specific pretest code.
+			yield return StartCoroutine(GameMaster.PreTestRunLaunch()); //Launch any game-specific pretest code.
 			yield return StartCoroutine(CheckForUnexpectedErrorAlerts());
 			//TODO: StartCoroutine(FindBuddyHandler.Buddy()); //Dynamically find Buddy from active/available devices.
 
@@ -788,6 +788,8 @@ namespace TrilleonAutomation {
 				overseer.Master_Editor_Override = new KeyValuePair<string,string>(); //Reset Editor Launcher
 
 			}
+
+
 			#endif
 
 			//Send details to server.
@@ -817,6 +819,26 @@ namespace TrilleonAutomation {
 			AutomationReport.SendJsonInPieces("GC_JSON", PerformanceTracker.GetGarbageCollectorJsonReportWithReset());
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
 			AutomationReport.SendJsonInPieces("FPS_JSON", PerformanceTracker.GetFpsJsonReportWithReset());
+			yield return StartCoroutine(Q.driver.WaitRealTime(1));
+
+			if(AutomationMaster.TestRunContext.Exceptions.Reported.Count > 0) {
+
+				StringBuilder exceptionsData = new StringBuilder();
+				exceptionsData.Append("[");
+				for(int ed = 0; ed < AutomationMaster.TestRunContext.Exceptions.Reported.Count; ed++) {
+
+					exceptionsData.Append(string.Format("{{\"screenshot_name\":\"{0}\",\"error\":\"{1}\",\"error_details\":\"{2}\",\"occurrences\":\"{3}\"}}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].ScreenshotName, AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Length > 75 ? AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Substring(0, 75) : AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, string.Format("{0}: {1}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, AutomationMaster.TestRunContext.Exceptions.Reported[ed].ErrorDetails), AutomationMaster.TestRunContext.Exceptions.Reported[ed].Occurrences));
+					if(ed + 1 != AutomationMaster.TestRunContext.Exceptions.Reported.Count) {
+						
+						exceptionsData.Append(",");
+
+					}
+
+				}
+				exceptionsData.Append("]");
+				AutomationReport.SendJsonInPieces("EXCEPTION_DATA", exceptionsData.ToString());
+
+			}
 
 			Application.logMessageReceived -= AutoConsole.GetLog; //Clean up delegate.
 			ResetTestRunner();
@@ -3272,6 +3294,12 @@ namespace TrilleonAutomation {
 		}
 
 		#region Automation Server Commands
+
+		public void TakeScreenshotAsync(bool isInterval = false, string overrideName = "") {
+
+			StartCoroutine(TakeScreenshot(isInterval, overrideName));
+
+		}
 
 		/// <summary>
 		/// Tell Appium server driver to take a screenshot of the device. Nothing will happen if there is no Appium server.
