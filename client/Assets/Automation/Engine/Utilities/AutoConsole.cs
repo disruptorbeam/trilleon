@@ -282,16 +282,16 @@ namespace TrilleonAutomation {
 					ReportOnce = true;
 					AutomationMaster.Arbiter.SendCommunication("An unhandled exception occurred in the Trilleon Framework, disrupting the test run execution");
 					string stack = string.Format("The unhandled exception was: {0} {1}", message, stackTrace);
-					if(stack.Length > Arbiter.MAX_PUBSUB_MESSAGE_LENGTH) {
+					if(stack.Length > ConnectionStrategy.MaxMessageLength) {
 						
-						stack = stack.Substring(0, Arbiter.MAX_PUBSUB_MESSAGE_LENGTH - 50);
+						stack = stack.Substring(0, ConnectionStrategy.MaxMessageLength - 50);
 
 					}
 					AutomationMaster.Arbiter.SendCommunication(stack);
 					string assertionData = string.Join("**", AutomationMaster.CurrentTestContext.Assertions.ToArray());
-					if(assertionData.Length > Arbiter.MAX_PUBSUB_MESSAGE_LENGTH) {
+					if(assertionData.Length > ConnectionStrategy.MaxMessageLength) {
 
-						int startingIndex = assertionData.Length - Arbiter.MAX_PUBSUB_MESSAGE_LENGTH - 50;
+						int startingIndex = assertionData.Length - ConnectionStrategy.MaxMessageLength - 50;
 						assertionData = stack.Substring(startingIndex, stack.Length - startingIndex - 1);
 
 					}
@@ -326,6 +326,11 @@ namespace TrilleonAutomation {
 
 				}
 				#endif
+				if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
+
+					AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
+
+				}
 
 			}
 

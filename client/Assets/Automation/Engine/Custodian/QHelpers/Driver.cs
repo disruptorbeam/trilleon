@@ -39,7 +39,7 @@ namespace TrilleonAutomation {
 		public const float TRY_TIMEOUT_DEFAULT = 10f; //Default timeout for Try-type events.
 		public const float INTERLOOP_WAIT_TIME = 1f; //Dictates the time between loop executions for wait functions.
 		public const float UPDATE_DRAG_INTERVAL = 0.1f; //How often the IDragHandler receives position updates when dragging an object.
-		public const float WAIT_AFTER_CLICK = 1f; //Sets the amount of time after event, such as Click, before returning control to the test.
+		public const float WAIT_AFTER_CLICK = 0.1f; //Sets the amount of time after event, such as Click, before returning control to the test.
 		public const string DEFAULT_ERROR_MESSAGE = "Requested object could not be found"; //The default message to be displayed after an error if the call has not provided one.
 
 		/// <summary>
@@ -560,47 +560,43 @@ namespace TrilleonAutomation {
 		/// <summary>
 		/// Methods for finding GameObjects by "Contains Component".
 		/// </summary>
-		/// <returns>The in.</returns>
-		/// <param name="comps">Comps.</param>
-		/// <param name="by">By.</param>
-		/// <param name="val">Value.</param>
-		/// <param name="isContains">If set to <c>true</c> is contains.</param>
-		public GameObject Find<T>() {
+		public T Find<T>() {
 
-			return SceneMaster.GetObjectPool().FindAll(c => c.GetComponent<T>() != null).First();
+			GameObject result = SceneMaster.GetObjectPool().FindAll(c => c.GetComponent<T>() != null).First();
+			return result == null ? default(T) : result.GetComponent<T>();
 
 		}
-		public GameObject FindIn<T>(List<GameObject> findInThese) {
+		public T FindIn<T>(List<GameObject> findInThese) {
 
-			return findInThese.GetChildren().FindAll(c => c.GetComponent<T>() != null).First();
-
-		}
-		public GameObject FindIn<T>(GameObject findInThis) {
-
-			return findInThis.GetChildren().FindAll(c => c.GetComponent<T>() != null).First();
+			GameObject result = findInThese.GetChildren().FindAll(c => c.GetComponent<T>() != null).First();
+			return result == null ? default(T) : result.GetComponent<T>();
 
 		}
-		public List<GameObject> FindAll<T>() {
+		public T FindIn<T>(GameObject findInThis) {
 
-			return SceneMaster.GetObjectPool().FindAll(c => c.GetComponent<T>() != null);
-
-		}
-		public List<GameObject> FindAllIn<T>(GameObject findInThis) {
-
-			return findInThis.GetChildren().FindAll(c => c.GetComponent<T>() != null);
+			GameObject result = findInThis.GetChildren().FindAll(c => c.GetComponent<T>() != null).First();
+			return result == null ? default(T) : result.GetComponent<T>();
 
 		}
-		public List<GameObject> FindAllIn<T>(List<GameObject> findInThese) {
+		public List<T> FindAll<T>() {
 
-			return findInThese.GetChildren().FindAll(c => c.GetComponent<T>() != null);
+			return SceneMaster.GetObjectPool().FindAll(c => c.GetComponent<T>() != null).ToComponenentList<T>();
+
+		}
+		public List<T> FindAllIn<T>(GameObject findInThis) {
+
+			return findInThis.GetChildren().FindAll(c => c.GetComponent<T>() != null).ToComponenentList<T>();
+
+		}
+		public List<T> FindAllIn<T>(List<GameObject> findInThese) {
+
+			return findInThese.GetChildren().FindAll(c => c.GetComponent<T>() != null).ToComponenentList<T>();
 
 		}
 
 		/// <summary>
 		/// Find single object by attribute type and provided value.
 		/// </summary>
-		/// <param name="by">By.</param>
-		/// <param name="val">Value.</param>
 		public GameObject Find(By by, string val, bool isContains = true) {
 
 			PreCommandCheck();

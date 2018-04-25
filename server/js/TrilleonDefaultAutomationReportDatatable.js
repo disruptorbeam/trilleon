@@ -281,7 +281,7 @@ function BuildTable() {
 	             } else {
 	             	className = "error_button";
 	             }
-	             var data = data.replace(/#SKIPPED#/g,"").replace(/#IGNORED#/g,"");
+	             var data = data.replace(/#SKIPPED#/g,"").replace(/#IGNORED#/g,"").replace("^^^","\n");;
 	             return "<div class='" + className + "' type='button' onClick='ShowDetails($(this));'>Details</div><div style='display:none;'>" + data + "</div><div style='display:none;' class='assertions'></div>";
 	          }
             },

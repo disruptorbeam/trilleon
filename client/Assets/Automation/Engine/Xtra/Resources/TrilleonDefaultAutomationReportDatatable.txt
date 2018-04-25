@@ -90,7 +90,7 @@ $(document).ready(function() {
 			BuildCommunicationHistory();
 		}
 
-		if($("#exceptions_hidden").val().length == 0) {
+		if($("#exceptions_hidden").length == 0) {
 			$("#exceptions_button").remove();
 		} else {
 			BuildExceptionPanel();
@@ -281,7 +281,7 @@ function BuildTable() {
 	             } else {
 	             	className = "error_button";
 	             }
-	             var data = data.replace(/#SKIPPED#/g,"").replace(/#IGNORED#/g,"");
+	             var data = data.replace(/#SKIPPED#/g,"").replace(/#IGNORED#/g,"").replace(/\^\^\^/g,"\n");
 	             return "<div class='" + className + "' type='button' onClick='ShowDetails($(this));'>Details</div><div style='display:none;'>" + data + "</div><div style='display:none;' class='assertions'></div>";
 	          }
             },

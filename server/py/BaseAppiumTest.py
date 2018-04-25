@@ -153,8 +153,6 @@ class BaseAppiumTest(unittest.TestCase):
     results = ""
     auto_screenshot_index = 0
     run_command = ""
-    device_height = 0
-    device_width = 0
     test_run_id_internal = ""
 
     def setUp(self, appium_url=None, platform_name=None, bundle_id = None, application_file=None, application_package=None, screenshot_dir=None,
@@ -188,11 +186,6 @@ class BaseAppiumTest(unittest.TestCase):
         
         # Set test run command.
         self.run_command = os.environ.get('RUN_COMMAND')
-        
-        # Buddy test run information.
-        if os.environ.get('DEVICE_PLATFORM') == "ios":
-            self.device_width = int(os.environ.get('DEVICE_WIDTH'))
-            self.device_height = int(os.environ.get('DEVICE_HEIGHT'))
         with open("testresultsjson.txt", "w") as f:
             f.write("[")
 
@@ -329,33 +322,13 @@ class BaseAppiumTest(unittest.TestCase):
                 log("Exception accepting Android alert! " + str(e))
         else:
             log("Attempting to dismiss any iOS device-level alert.")
-            if accept == True:
-                self.driver.switch_to.alert.accept()
-            else:
-                self.driver.switch_to.alert.dismiss()
-            # Workaround for iOS XCTest bug that prevents clicking of device alerts in Landscape mode.
-            middle_width = self.device_width / 2
-            middle_height = self.device_height /2
-            pixel_additive = 0;
-            action = TouchAction(self.driver)
-            action.tap(x=middle_width, y=middle_height).perform() # Exact Center for optionless alerts.
-            while pixel_additive <= 20:
-                try:
-                    # Tap in square of increasing size.
-                    if accept == True:
-                        action.tap(x=middle_width, y=middle_height + pixel_additive).perform()
-                        action.tap(x=middle_width + pixel_additive, y=middle_height).perform()
-                        action.tap(x=middle_width + pixel_additive, y=middle_height + pixel_additive).perform()
-                        action.tap(x=middle_width + pixel_additive, y=middle_height - pixel_additive).perform()
-                    else:
-                        action.tap(x=middle_width, y=middle_height - pixel_additive).perform()
-                        action.tap(x=middle_width - pixel_additive, y=middle_height).perform()
-                        action.tap(x=middle_width - pixel_additive, y=middle_height - pixel_additive).perform()
-                        action.tap(x=middle_width - pixel_additive, y=middle_height + pixel_additive).perform()
-                except Exception as e:
-                    log("Exception accepting iOS alert! " + str(e))
-                pixel_additive += 10
-
+            try:
+                if accept == True:
+                    self.driver.switch_to.alert.accept()
+                else:
+                    self.driver.switch_to.alert.dismiss()
+            except Exception as e:
+                log("Internal Error Accepting iOS Alert (this is not likely a problem, due to interval dismissal logic): " + str(e))
 
     # Write name of self to parent level file that selected Buddy will check to verify both Buddy's have begun their test runs.
     def buddy_check_in(self):

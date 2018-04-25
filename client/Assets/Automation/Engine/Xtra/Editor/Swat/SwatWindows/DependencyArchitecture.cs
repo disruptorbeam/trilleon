@@ -39,7 +39,7 @@ namespace TrilleonAutomation {
 		List<int> FoldoutListMasterIds;
 		List<bool> FoldoutListMasterLessBools;
 		List<string> FoldoutListMasterLessIds;
-		bool _buildingList;
+		bool _buildingList, _errorInDependencyUsage;
 		List<MonoScript> masterlessSriptFiles = new List<MonoScript>();
 
 		public override void Set() {
@@ -271,6 +271,16 @@ namespace TrilleonAutomation {
 
 			}
 
+			if(_errorInDependencyUsage) {
+
+				GUIStyle error = new GUIStyle(GUI.skin.label);
+				error.padding = new RectOffset(10, 0, 0, 0);
+				error.wordWrap = true;
+				error.normal.textColor = Color.red;
+				EditorGUILayout.LabelField("An error has been detect in the framework's usage of dependency attributes. Please run validation tools to identify where the error is located.", error);
+
+			}
+
 			EditorGUILayout.Space();
 			EditorGUILayout.Space();
 
@@ -346,9 +356,66 @@ namespace TrilleonAutomation {
 							DepTestThese.Add(new KeyValuePair<Type,MethodInfo>(allMasterDependencyMethods.FindAll(x => x.Value.Name == nextMethod.First().Name).First().Key, nextMethod.First()));
 						
 						} else {
-							
-							throw new UnityException(string.Format("There should be a DependencyTest of ID {0} under the DependencyClass ( Name: {1} - ID: {2} )", ms + 1, allMasterDependencyMethods.FindAll(x => x.Value.Name == thisDependencyClassIdMethods[ms].Name).First().Key.Name, DepClassThis.Key));
+
+							int duplicateId = 0;
+							List<KeyValuePair<string,int>> ordersFound = new List<KeyValuePair<string,int>>();
+							//Check if there is a duplicate ID, rather than a missing ID.
+							for(int d = 0; d < thisDependencyClassIdMethods.Count; d++) {
+
+								DependencyTest dt = (DependencyTest)Attribute.GetCustomAttribute(thisDependencyClassIdMethods[d], typeof(DependencyTest));
+								if(ordersFound.FindAll(x => x.Value == dt.order).Any()) {
+
+									duplicateId = dt.order;
+									ordersFound.Add(new KeyValuePair<string,int>(thisDependencyClassIdMethods[d].Name, dt.order));
+									break;
+
+								} else {
+
+									ordersFound.Add(new KeyValuePair<string,int>(thisDependencyClassIdMethods[d].Name, dt.order));
+
+								}
+
+							}
+
+							List<Type> allTestClassesThatShareThisMasterId = allMasterDependencyMethods.FindAll(x => { 
+								DependencyClass dc = (DependencyClass)Attribute.GetCustomAttribute(x.Key, typeof(DependencyClass));
+								return dc.order == DepClassThis.Key;
+							}).ExtractListOfKeysFromKeyValList().Distinct();
+							StringBuilder classNameList = new StringBuilder();
+							for(int nl = 0; nl < allTestClassesThatShareThisMasterId.Count; nl++) {
+
+								classNameList.Append(allTestClassesThatShareThisMasterId[nl].Name);
+								if(nl + 1 != allTestClassesThatShareThisMasterId.Count) {
+
+									classNameList.Append(", ");
+
+								}
+
+							}
+
+							if(duplicateId > 0) {
+
+								StringBuilder testNameList = new StringBuilder();
+								for(int nl = 0; nl < ordersFound.Count; nl++) {
+
+									testNameList.Append(ordersFound[nl].Key);
+									if(nl + 1 != ordersFound.Count) {
+										
+										testNameList.Append(", ");
+
+									}
+
+								}
+								_errorInDependencyUsage = true;
+								throw new UnityException(string.Format("There multiple tests with the DependencyTest ID of {0} under the DependencyClass ( Name(s): {1} - DependencyClass ID: {2} ). Tests with duplicate ID ( {3} )", duplicateId, classNameList.ToString(), DepClassThis.Key, testNameList.ToString()));
+
+							} else {
+
+								_errorInDependencyUsage = true;
+								throw new UnityException(string.Format("There should be a DependencyTest of ID {0} under the DependencyClass ( Name(s): {1} - ID: {2} )", ms + 1, classNameList.ToString(), DepClassThis.Key));
 						
+							}
+
 						}
 
 					}
