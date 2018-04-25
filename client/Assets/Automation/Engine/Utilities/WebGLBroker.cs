@@ -54,7 +54,7 @@ namespace TrilleonAutomation {
 		//Incoming call from browser (Sent by "SendMessage()" Unity javascript method that points to this class and method).
 		public void LaunchTest(string test) {
 
-			AutomationMaster.Arbiter.ReceiveMessage(string.Format("{{ \"automation_command\": \"rt *{0}\" }}", test), true);
+			ConnectionStrategy.ReceiveMessage(string.Format("{{ \"automation_command\": \"rt *{0}\" }}", test));
 
 		}
 		public void ScreenshotResponse() {

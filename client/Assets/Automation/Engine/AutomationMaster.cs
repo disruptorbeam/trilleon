@@ -42,6 +42,8 @@ namespace TrilleonAutomation {
 		public const string AUTOMATION_CUSTODIAN_NAME = "AutomationCustodian";
 		public const string WARNING_FLAG = "--WARNING--";
 		public const char DELIMITER = '|';
+		public const string PARTIAL_DELIMITER = "$$$";
+		public const string NEW_LINE_INDICATOR = "^^^";
 		public const int SERVER_HEARTBEAT_TIMEOUT = 60;
 
 		#region Self Data
@@ -88,6 +90,17 @@ namespace TrilleonAutomation {
 			set { _arbiter = value; }
 		}
 		private static Arbiter _arbiter;
+
+		public static ConnectionStrategy ConnectionStrategy {
+			get { 
+				if(_connectionStrategy == null) {
+					_connectionStrategy = StaticSelf.GetComponent<ConnectionStrategy>();
+				}
+				return _connectionStrategy; 
+			}
+			set { _connectionStrategy = value; }
+		}
+		private static ConnectionStrategy _connectionStrategy;
 
 		public static GameMaster GameMaster {
 			get { 
@@ -326,6 +339,7 @@ namespace TrilleonAutomation {
 		List<Type> _classSetUpRan = new List<Type>();
 		List<Type> _classTearDownRan = new List<Type>();
 		List<MethodInfo> _validationOrderRan = new List<MethodInfo>();
+		List<KeyValuePair<string,bool>> _classSupportMethodsHandledTestRun = new List<KeyValuePair<string,bool>>(); //Class name/Setup=true,TearDown=false
 
 		string _lastType = string.Empty;
 		string _launchCommand = string.Empty;
@@ -401,6 +415,11 @@ namespace TrilleonAutomation {
 				//Lock reload assemblies while automation is active and application is running.
 				if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
 
+					if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
+
+						AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
+
+					}
 					EditorApplication.UnlockReloadAssemblies();
 
 				}
@@ -412,6 +431,11 @@ namespace TrilleonAutomation {
 				//Lock reload assemblies while automation is active and application is running.
 				if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
 
+					if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
+
+						AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
+
+					}
 					EditorApplication.UnlockReloadAssemblies();
 
 				}
@@ -435,7 +459,7 @@ namespace TrilleonAutomation {
 
 			//Attach dependencies to Automation Custodian game object.
 			gameObject.AddComponent<ConsoleCommands>(); //Command Console support.
-			gameObject.AddComponent<Arbiter>(); //Validate and react to incoming commands.
+			gameObject.AddComponent<ConnectionStrategy>(); //Communication hub.
 			gameObject.AddComponent<GameAssert>(); //Assert conditions.
 			gameObject.AddComponent<GameDriver>(); //Main test driver.
 			gameObject.AddComponent<GameMaster>(); //Game master logic.
@@ -446,6 +470,7 @@ namespace TrilleonAutomation {
 			gameObject.AddComponent<BuddyHandler>(); //BuddyHandler.Buddy handling logic.
 			gameObject.AddComponent<PerformanceTracker>(); //Track memory usage.
 			gameObject.AddComponent<AutomationReport>(); //Report on test run.
+			gameObject.AddComponent<Arbiter>(); //Validate and react to incoming commands.
 			#if UNITY_WEBGL || UNITY_EDITOR
 			gameObject.AddComponent<WebGLBroker>(); //WebGL interactions
 			#endif
@@ -477,12 +502,14 @@ namespace TrilleonAutomation {
 						DisregardDependencies = launchCommands[1] == "test" ? true: false;
 						string command = string.Format("[{{\"automation_command\":\"rt {0}{1}\"}}]", launchCommands[1] == "test" ? "*" : string.Empty, launchCommands[0]);
 						overseer.Master_Editor_Override = new KeyValuePair<string,string>(launchCommands[0], launchCommands[1]);
-						if(launchCommands.Length == 3) {
+						if(launchCommands.Length > 3) {
 
-							Arbiter.ReceiveMessage(string.Format("[{{\"loop_tests\":\"{0}\"}}]", launchCommands[2]), true);
+							Arbiter.LocalRunLaunch = true;
+							ConnectionStrategy.ReceiveMessage(string.Format("[{{\"loop_tests\":\"{0}\"}}]", launchCommands[2]));
 
 						}
-						Arbiter.ReceiveMessage(command, true);
+						Arbiter.LocalRunLaunch = true;
+						ConnectionStrategy.ReceiveMessage(command);
 						EditorBasedLaunch = true;
 						FileBroker.SaveNonUnityTextResource(FileResource.LaunchInstructions, string.Empty);
 
@@ -841,7 +868,12 @@ namespace TrilleonAutomation {
 			}
 
 			Application.logMessageReceived -= AutoConsole.GetLog; //Clean up delegate.
-			ResetTestRunner();
+			ResetTestRunner();			
+			if(!Application.isEditor && ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
+
+				AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
+
+			}
 			yield return StartCoroutine(Q.driver.WaitRealTime(1f));
 
 		}
@@ -1605,7 +1637,7 @@ namespace TrilleonAutomation {
 			int missingIndex = 0;
 			for(int x = 0; x < masterDependencies.Count; x++) {
 
-				List<Type> matchingOrder =  masterDependencies.FindAll(d => { 
+				List<Type> matchingOrder = masterDependencies.FindAll(d => { 
 					DependencyClass dc = ((DependencyClass[])d.GetCustomAttributes(typeof(DependencyClass), false)).ToList().First();
 					return dc.order == x;
 				});
@@ -1625,6 +1657,7 @@ namespace TrilleonAutomation {
 					}
 
 				}
+
 				if(!matchingOrder.Any()) {
 
 					//If we have handled all of the DependencyClass classes, then this will not be used. If there is a discrepency, then it is the first, or the only, missing DependcyClass order index.
@@ -1635,7 +1668,6 @@ namespace TrilleonAutomation {
 				handled.AddRange(matchingOrder);
 
 			}
-
 			if(handled.Count != masterDependencies.Count) {
 
 				errors.Add(string.Format("{0}: A missing DependencyClass order was encountered. DependencyClass architecture requires a continous incremental order. For example: If one class has order 1, and another class has order 3, there must be a class with order 2. Missing order index is \"{1}\"", errorPrefix, missingIndex.ToString()));
@@ -1643,7 +1675,6 @@ namespace TrilleonAutomation {
 			}
 
 			//Now validate that methods under DependencyClasses have a valid DependencyTest order.
-			List<MethodInfo> handledMethods = new List<MethodInfo>();
 			missingIndex = 0;
 			for(int x = 0; x < masterDependencies.Count; x++) {
 
@@ -1655,7 +1686,11 @@ namespace TrilleonAutomation {
 				for(int m = 0; m < matchingOrder.Count; m++) {
 
 					//Get all methods that have a DependencyTest attribute.
-					methods.AddRange(matchingOrder[m].GetType().GetMethods().ToList().FindAll(d => d.GetCustomAttributes(typeof(DependencyTest), false).Length > 0));
+					methods.AddRange(matchingOrder[m].GetMethods().ToList().FindAll(d => {				
+						//Return all methods that have a DependencyTest attribute.
+						DependencyTest dt = (DependencyTest)Attribute.GetCustomAttribute(d, typeof(DependencyTest));
+						return dt != null;
+					}));
 
 				}
 
@@ -1666,24 +1701,40 @@ namespace TrilleonAutomation {
 						return dt.order == v + 1;
 					});
 
-					if(match.Any()) {
+					if(match.Count < 1) {
 
 						missingIndex = x;
+						errors.Add(string.Format("{0}: The DependencyTest attribute ordering under DependencyClass ( Name(s): {1} - DependencyClass ID: {2} ) is invalid. A DependencyTest ID of {3} is expected and could not be found.", errorPrefix, masterDependencies[x].Name, x, missingIndex.ToString()));
 						break;
 
 					} else if(match.Count > 1) {
 
-						errors.Add(string.Format("{0}: More than one DependencyTest was found to share the same order ID ({1}) under test class \"{2}\".", errorPrefix, v + 1, masterDependencies[x].Name));
+						StringBuilder matches = new StringBuilder();
+						for(int m = 0; m < match.Count; m++) {
+
+							matches.Append(match[m].Name);
+							if(m + 1 != match.Count) {
+
+								matches.Append(", ");
+
+							}
+
+						}
+						StringBuilder classNames = new StringBuilder();
+						for(int m = 0; m < matchingOrder.Count; m++) {
+
+							classNames.Append(matchingOrder[m].Name);
+							if(m + 1 != matchingOrder.Count) {
+
+								classNames.Append(", ");
+
+							}
+
+						}
+						errors.Add(string.Format("{0}: There are multiple tests with the DependencyTest ID of {1} under the DependencyClass ( Name(s): {2} - DependencyClass ID: {3} ). Tests with duplicate ID ( {4} )", errorPrefix, v + 1, classNames.ToString(), x, matches.ToString()));
 
 					}
-					handledMethods.AddRange(match);
-
-				}
-
-				if(handledMethods.Count != methods.Count) {
-
-					errors.Add(string.Format("{0}: The DependencyTest attribute ordering under test class \"{1}\" is invalid. A DependencyTest ID of {2} is expected and could not be found.", errorPrefix, masterDependencies[x].Name, missingIndex.ToString()));
-
+						
 				}
 
 			}
@@ -1841,6 +1892,8 @@ namespace TrilleonAutomation {
 				supportMethods.AddRange(AllAutomationClasses[c].GetMethods());
 
 			}
+
+			//Are tagged support methods IEnumerators?
 			supportMethods = supportMethods.FindAll(s => s.GetCustomAttributes(typeof(Automation), false).Length > 0 || s.GetCustomAttributes(typeof(SetUp), false).Length > 0 || s.GetCustomAttributes(typeof(SetUpClass), false).Length > 0 || s.GetCustomAttributes(typeof(TearDown), false).Length > 0 ||  s.GetCustomAttributes(typeof(TearDownClass), false).Length > 0);
 			for(int s = 0; s < supportMethods.Count; s++) {
 
@@ -1848,6 +1901,36 @@ namespace TrilleonAutomation {
 
 					errors.Add(string.Format("{0}: Class \"{1}\" Method \"{2}\" is not an IEnumerator. All test/support methods must be an IEnumerator.", errorPrefix, supportMethods[s].ReflectedType.Name, supportMethods[s].Name));
 					continue;
+
+				}
+
+			}
+
+			//Are tagged support methods unique within the context of this test class (There cannot be two SetUpClass methods, for example)?
+			List<Type> classesWithSupportMethods = AllAutomationClasses.FindAll(ac => ac.GetMethods().ToList().FindAll(s => s.GetCustomAttributes(typeof(SetUp), false).Length > 0 || s.GetCustomAttributes(typeof(SetUpClass), false).Length > 0 || s.GetCustomAttributes(typeof(TearDown), false).Length > 0 ||  s.GetCustomAttributes(typeof(TearDownClass), false).Length > 0).Any());
+			for(int s = 0; s < classesWithSupportMethods.Count; s++) {
+
+				if(classesWithSupportMethods[s].GetMethods().ToList().FindAll(m => m.GetCustomAttributes(typeof(SetUp), false).Length > 0).Count > 1) {
+
+					errors.Add(string.Format("{0}: Class \"{1}\" has more than one method marked as SetUp. This support method must be unique within the context of each test class.", errorPrefix, classesWithSupportMethods[s].Name));
+
+				}
+
+				if(classesWithSupportMethods[s].GetMethods().ToList().FindAll(m => m.GetCustomAttributes(typeof(SetUpClass), false).Length > 0).Count > 1) {
+
+					errors.Add(string.Format("{0}: Class \"{1}\" has more than one method marked as SetUpClass. This support method must be unique within the context of each test class.", errorPrefix, classesWithSupportMethods[s].Name));
+
+				}
+
+				if(classesWithSupportMethods[s].GetMethods().ToList().FindAll(m => m.GetCustomAttributes(typeof(TearDown), false).Length > 0).Count > 1) {
+
+					errors.Add(string.Format("{0}: Class \"{1}\" has more than one method marked as TearDown. This support method must be unique within the context of each test class.", errorPrefix, classesWithSupportMethods[s].Name));
+
+				}
+
+				if(classesWithSupportMethods[s].GetMethods().ToList().FindAll(m => m.GetCustomAttributes(typeof(TearDownClass), false).Length > 0).Count > 1) {
+
+					errors.Add(string.Format("{0}: Class \"{1}\" has more than one method marked as TearDownClass. This support method must be unique within the context of each test class.", errorPrefix, classesWithSupportMethods[s].Name));
 
 				}
 
@@ -3143,10 +3226,15 @@ namespace TrilleonAutomation {
 			List<MethodInfo> result = new List<MethodInfo>();
 			switch(supportAttributeName.ToLower()) {
 				case "setupclass":
+					if(_classSupportMethodsHandledTestRun.FindAll(s => s.Key == type.Name && s.Value).Any()) {
+
+						break; //This can only be run once in a test run, even if a test is deferred, and thus the last test run was a different class.
+
+					}
 					ExecutionContext = CurrentExecutionContext.SetUpClass;
 					message = string.Format("Set Up Class: {0}", type.Name);
 					result = GetClassSetup(type);
-					//Check whether or not this class SetUp has run before, which potentially occurs for deferred tests in the test run.
+						//Check whether or not this class SetUp has run before, which potentially occurs for deferred tests in the test run.
 					if(result.Any() && _classSetUpRan.Contains(type)) {
 						SetUpClass setUpClass = (SetUpClass)result.First().GetCustomAttributes(typeof(SetUpClass), false).First();
 						if(setUpClass != null) {
@@ -3156,6 +3244,7 @@ namespace TrilleonAutomation {
 						}
 					}
 					_classSetUpRan.Add(type);
+					_classSupportMethodsHandledTestRun.Add(new KeyValuePair<string,bool>(type.Name, true));
 					break;
 				case "setupclasstest":
 					ExecutionContext = CurrentExecutionContext.SetUp;
@@ -3163,6 +3252,11 @@ namespace TrilleonAutomation {
 					result = GetClassTestSetup(type);
 					break;
 				case "teardownclass":
+					if(_classSupportMethodsHandledTestRun.FindAll(s => s.Key == type.Name && !s.Value).Any()) {
+
+						break; //This can only be run once in a test run, even if a test is deferred, and thus the last test run was a different class.
+
+					}
 					ExecutionContext = CurrentExecutionContext.TearDownClass;
 					message = string.Format("Tear Down Class: {0}", type.Name);
 					result = GetClassTearDown(type);
@@ -3182,6 +3276,7 @@ namespace TrilleonAutomation {
 
 					}
 					_classTearDownRan.Add(type);
+					_classSupportMethodsHandledTestRun.Add(new KeyValuePair<string,bool>(type.Name, true));
 					break;
 				case "teardownclasstest":
 					ExecutionContext = CurrentExecutionContext.TearDown;

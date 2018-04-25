@@ -38,7 +38,7 @@ namespace TrilleonAutomation {
 		static StringBuilder xmlBody;
 		static StringBuilder htmlBody;
 		static StringBuilder jsonBody;
-		static StringBuilder imageCaptureFailures;
+		//static StringBuilder imageCaptureFailures;
 		static StringBuilder fileText;
 
 		public static bool IgnoreTestRailsReporting = false;
@@ -66,7 +66,7 @@ namespace TrilleonAutomation {
 			xmlBody = new StringBuilder();
 			htmlBody = new StringBuilder();
 			jsonBody = new StringBuilder();
-			imageCaptureFailures = new StringBuilder();
+			//imageCaptureFailures = new StringBuilder();
 			orderIndex = SkipFailCount = 0;
 			TestSuiteRunTime = 0d;
 
@@ -306,7 +306,7 @@ namespace TrilleonAutomation {
 				orderIndex, status, AutomationMaster.CurrentTestContext.TestName, AutomationMaster.CurrentTestContext.ClassName, string.Join(", ", AutomationMaster.CurrentTestContext.Categories.ToArray()), 
 				error_details, assertionsJson.ToString());
 
-			if(json.Length > Arbiter.MAX_PUBSUB_MESSAGE_LENGTH) {
+			if(json.Length > ConnectionStrategy.MaxMessageLength) {
 
 				SendJsonInPieces("SINGLE_TEST_RESULTS_JSON", json);
 				jsonBody.Append(json);
@@ -332,10 +332,10 @@ namespace TrilleonAutomation {
 
 			while(charPos < json.Length) {
 
-				if(charPos + Arbiter.MAX_PUBSUB_MESSAGE_LENGTH <= json.Length) {
+				if(charPos + ConnectionStrategy.MaxMessageLength <= json.Length) {
 
-					pieces.Add(json.Substring(charPos, Arbiter.MAX_PUBSUB_MESSAGE_LENGTH));
-					charPos += Arbiter.MAX_PUBSUB_MESSAGE_LENGTH;
+					pieces.Add(json.Substring(charPos, ConnectionStrategy.MaxMessageLength));
+					charPos += ConnectionStrategy.MaxMessageLength;
 
 				} else {
 
@@ -348,7 +348,7 @@ namespace TrilleonAutomation {
 
 			for(int x = 0; x < pieces.Count; x++) {
 
-				AutoConsole.PostMessage(string.Format("{0}_MULTI_PART|{1}$$${2}|", jsonAttributePrefix, x, pieces[x]), MessageLevel.Abridged);
+				AutoConsole.PostMessage(string.Format("{0}_MULTI_PART|{1}{2}{3}|", jsonAttributePrefix, x, AutomationMaster.PARTIAL_DELIMITER, pieces[x]), MessageLevel.Abridged);
 
 			}
 
@@ -502,7 +502,7 @@ namespace TrilleonAutomation {
 			//Send XML results.
 			int finalXmlLength = allXml.ToString().Length;
 			int handledCharactersIndex = 0;
-			int subStringLength = Arbiter.MAX_PUBSUB_MESSAGE_LENGTH;
+			int subStringLength = ConnectionStrategy.MaxMessageLength;
 			int iterationIndex = 0;
 			bool complete = false;
 

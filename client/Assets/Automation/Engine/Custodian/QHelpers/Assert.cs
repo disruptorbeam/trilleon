@@ -153,7 +153,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		//Under rare circumstances, it may be necessary to detect a game state that you do not want to report as a full failure, instead opting to automatically skip the current test immediately.
+		//Under certain circumstances, it may be necessary to detect a game state that you do not want to report as a full failure, instead opting to automatically skip the current test immediately.
 		public IEnumerator Skip(string message, params int[] testRailsIds) {
 
 			yield return StartCoroutine(Unifier(false, false, message, FailureContext.Skipped, testRailsIds));
@@ -369,6 +369,7 @@ namespace TrilleonAutomation {
 				AutomationMaster.CurrentTestContext.IsSuccess = false;
 				AutomationMaster.CurrentTestContext.AddAssertion(message);
 				AutomationMaster.CurrentTestContext.ErrorDetails += string.Format("Error Message [{0}] : Test Line [{1}] : Debug Logs [{2}] ", message, string.Format("Line [{0}] Call [{1}]", lineNumber, lineCall), (recordLogDetails ? recentLogs : string.Format("#SKIPPED#{0}", message)));
+				AutomationMaster.CurrentTestContext.ErrorDetails += string.Format(" FULL STACK: [{0}]", Environment.StackTrace.Replace(" at", string.Format(" {0} at", AutomationMaster.NEW_LINE_INDICATOR)));
 				if(failureContext != FailureContext.Skipped) {
 
 					//Take screenshot if a failure is not a "Skip" failure (In which case a test does not run at all, and there is no value in taking a screenshot as the current screen has no relevance to the reason it failed).
@@ -409,14 +410,18 @@ namespace TrilleonAutomation {
 				#endif
 
 				//Any FailureContext beyond TestMethod will not have an instantiated test method.
-				if(!isSoft && AutomationMaster.OverrideContinueOnFailureAfterTooManyConcurrentFailures ||(!AutomationMaster.TryContinueOnFailure && !MideExecution_MarkTestToTryContinueAfterFail && (_failureContext == FailureContext.TestMethod || _failureContext == FailureContext.Default))) {
+				if(!AutomationMaster.TryContinueOnFailure) {
+					
+					if((!isSoft && AutomationMaster.OverrideContinueOnFailureAfterTooManyConcurrentFailures) || (!MideExecution_MarkTestToTryContinueAfterFail && (_failureContext == FailureContext.TestMethod || _failureContext == FailureContext.Default) && failureContext != FailureContext.Skipped)) {
 
-					try {
+						try {
 
-						AutomationMaster.CurrentTestMethod.Stop(); //Kill current test, only if the currently queued test has been initialized.
+							AutomationMaster.CurrentTestMethod.Stop(); //Kill current test, only if the currently queued test has been initialized.
 
-					} catch { }
-					yield return new WaitForEndOfFrame(); //Allow all Coroutines to be stopped before returning control. In reality, the coroutine calling this will be stopped, so control will never be returned anyway.
+						} catch { }
+						yield return new WaitForEndOfFrame(); //Allow all Coroutines to be stopped before returning control. In reality, the coroutine calling this will be stopped, so control will never be returned anyway.
+
+					}
 
 				}
 

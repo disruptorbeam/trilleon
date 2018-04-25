@@ -1,4 +1,4 @@
-﻿/* 
+/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -15,15 +15,13 @@
 +
 +   You should have received a copy of the GNU Lesser General Public License
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
+*/
 
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Text.RegularExpressions;
 using System.Collections;
 using System.Collections.Generic;
-using PubNubMessaging.Core;
-using MiniJSON;
 using Object = UnityEngine.Object;
 using System.Text;
 
@@ -36,17 +34,9 @@ namespace TrilleonAutomation {
 	*/
 	public class Arbiter : MonoBehaviour {  
 
-		//For security (especially if using these keys for game code as well), it is a good idea to store these keys on your game server, with your clients requesting to send messages (sending and receiving through game server rather than directly).
-		public const string PUBSUB_CHANNEL = "My_QA_Auto"; //CUSTOMIZE: The name of pubsub channel that hosts this app's automation.
-		public const string PUBLISH_KEY = ""; //CUSTOMIZE: Add your own PubNub key here. 
-		public const string SUBSCRIBE_KEY = ""; //CUSTOMIZE: Add your own PubNub key here.
 		public const string DEVICE_IDENTIFIER_PREFIX = "Trilleon-Automation-";
-		public const int MAX_PUBSUB_MESSAGE_LENGTH = 4000; //The maximum number of characters (32KB)that can successfully go in a single Pubnub (pubsub) message.
-		const int SubscribeTimeout = 310;
-		const int NonSubscribeTimeout = 45;
-		const int MaxRetries = 5;
-		const int RetryInterval = 30;
-		const int maxHistoryStale = 600;
+		public static bool LocalRunLaunch { get; set; }
+
 		string lastMessageReceived = string.Empty;
 
 		public string GridIdentity { get; set; }
@@ -54,35 +44,25 @@ namespace TrilleonAutomation {
 		public string TestRunId { get; set; }
 		public string DeviceUdid { get; set; }
 		public DateTime LastMessage { get; set; }
-		Pubnub pubnub { get; set; }
 
 		void Start() {
 
 			GridIdentity = GetDeviceChannelName();
-
-			/* CUSTOMIZE: This can't work until you add a valid publish and subscribe key above!
-			pubnub = new Pubnub(PUBLISH_KEY, SUBSCRIBE_KEY);
-			pubnub.Subscribe<string>(
-				PUBSUB_CHANNEL, 
-				ReceiveMessagePubsub, 
-				ReturnMessage, 
-				Error); 
-			*/
-
-			#if !UNITY_EDITOR
-			SendCommunication("checking_in", GridIdentity);
-			SendCommunication("PLAYER_ID", string.Format("PLAYER_ID||{0}||", GameMaster.PLAYER_ID));
-			#endif
 			TestRunId = string.Empty;
 			DeviceUdid = string.Empty; //CANNOT USE: SystemInfo.deviceUniqueIdentifier - Causes requirement for new device permission. Find alternative.
 			LastMessage = DateTime.Now;
+
+			//#if !UNITY_EDITOR
+			SendCommunication("checking_in", GridIdentity);
+			SendCommunication("PLAYER_ID", string.Format("PLAYER_ID||{0}||", GameMaster.PLAYER_ID));
+			//#endif
 
 		}
 
 		public string ReturnDetails() {
 
-			return string.Format("Grid Identity: {0} \nBuddy Identity: {1} \nDeviceUDID: {2} \nTestRunID: {3} \nProjectID: {4}\nAutomation_Running: {5}",
-				GridIdentity, BuddyIdentity, DeviceUdid, TestRunId, AutomationMaster.Busy ? "True" : "False");
+			return string.Format("Grid Identity: {0} \nBuddy Identity: {1} \nDeviceUDID: {2} \nTestRunID: {3} \nProject: {4}\nAutomation_Running: {5}",
+				GridIdentity, BuddyIdentity, DeviceUdid, TestRunId, GameMaster.GAME_NAME, AutomationMaster.Busy ? "True" : "False");
 
 		}
 
@@ -108,9 +88,10 @@ namespace TrilleonAutomation {
 
 		}
 
-		private void SendCommunicationActual(List<KeyValuePair<string,string>> parameters) {
+		void SendCommunicationActual(List<KeyValuePair<string,string>> parameters) {
 
-			#if !UNITY_EDITOR
+			//Generally no need to communicate with a server if we are in the Editor. Else, just comment out.
+			//#if !UNITY_EDITOR
 			StringBuilder json = new StringBuilder();
 			json.Append("[");
 
@@ -135,22 +116,16 @@ namespace TrilleonAutomation {
 
 			}
 			json.Append("]");
-
-			pubnub.Publish<string>(
-				PUBSUB_CHANNEL, 
-				json.ToString(), 
-				ReturnMessage, 
-				Error); 
-
+			ConnectionStrategy.SendCommunication(json.ToString());
 			AutoConsole.PostMessage(json.ToString(), ConsoleMessageType.Pubsub);
-			#endif
+			//#endif
 
 		}
 
 		/// <summary>
 		/// Handles incoming pubsub messages. Expects JSON format.
 		/// </summary>
-		IEnumerator HandleMessage(string result, bool isLocalLaunch = false) {
+		public IEnumerator HandleMessage(string result) {
 
 			//Ignore duplicate or empty messages. Ignore messages not meant for this client.
 			if(lastMessageReceived == result || string.IsNullOrEmpty(result.Trim())) {
@@ -163,7 +138,7 @@ namespace TrilleonAutomation {
 
 			List<KeyValuePair<string,string>> parameters = DeserializeJsonString(result);
 
-			if(!isLocalLaunch) {
+			if(!LocalRunLaunch) {
 
 				//If no context or identity is provided, then this is not a valid command. If the DeviceUdid is not valid, then ignore the command.
 				if(!parameters.FindAll(x => x.Key.ToLower() == "grid_source").Any() || !parameters.FindAll(x => x.Key.ToLower() == "grid_identity").Any()) {
@@ -185,13 +160,13 @@ namespace TrilleonAutomation {
 				bool isBuddyMessage = source != "server" && parameters.FindAll(x => x.Key.StartsWith("buddy_")).Any() && buddy == GridIdentity && identity == BuddyHandler.BuddyName;
 
 				//If this message is meant for a different client, or is an echo from the current client, simply ignore the message.
-				if(!isBuddyMessage && (isChatter || isEcho || isInvalid)) {
+				if(!isBuddyMessage &&(isChatter || isEcho || isInvalid)) {
 
 					yield break;
 
 				}
 
-			} else if(Application.isEditor && (parameters.FindAll(x => x.Key.ToLower() == "grid_identity").Any() ? parameters.Find(x => x.Key == "grid_identity").Value != GridIdentity : false)) {
+			} else if(!LocalRunLaunch && parameters.FindAll(x => x.Key.ToLower() == "grid_identity").Any() ? parameters.Find(x => x.Key == "grid_identity").Value != GridIdentity : false) {
 
 				yield break;
 
@@ -355,7 +330,7 @@ namespace TrilleonAutomation {
 							}
 							SendCommunication("Notification", "Beginning pre-run checks.");
 
-							if(!isLocalLaunch && parameters.Find(x => x.Key == "grid_source").Value == "server") {
+							if(parameters.Find(x => x.Key == "grid_source").Value == "server") {
 
 								AutomationMaster.IsServerListening = true;
 
@@ -381,7 +356,7 @@ namespace TrilleonAutomation {
 								message = message.Replace("*", string.Empty);
 								AutomationMaster.LaunchType = LaunchType.MethodName;
 
-							} else if (message.StartsWith("&&")) {
+							} else if(message.StartsWith("&&")) {
 
 								message = message.Replace("&&", string.Empty);
 								AutomationMaster.LaunchType = LaunchType.Mix;
@@ -404,13 +379,14 @@ namespace TrilleonAutomation {
 						case "buddy_secondary_test_complete":
 						case "buddy_requesting_value_ready":
 						case "buddy_setting_ready_to":
-							//Commands that do not require any action, but should be considered valid for logging purposes.
+							//Commands that do not require any action, but should be considered valid for logging purposes (isRecognizedCommand).
 							break;
 						default:
 							isRecognizedCommand = false;
 							break;
 					}
 
+					Arbiter.LocalRunLaunch = false;
 					if(isRecognizedCommand && !string.IsNullOrEmpty(message)) {
 
 						AutoConsole.PostMessage(string.Format("SENDER [{0}] - COMMAND [{1}] - MESSAGE [{2}]", parameters.Find(x => x.Key == "grid_identity").Value, command, message), ConsoleMessageType.Pubsub);
@@ -420,30 +396,6 @@ namespace TrilleonAutomation {
 				}
 
 			}
-
-		}
-
-		public void ReceiveMessagePubsub(string result) {
-
-			StartCoroutine(HandleMessage(result, false));
-
-		}
-
-		public void ReceiveMessage(string result, bool isLocalLaunch = false) {
-
-			StartCoroutine(HandleMessage(result, isLocalLaunch));
-
-		}
-
-		public void ReturnMessage(string result) {
-
-			return; //This is a success-type message. It's a required implementation, but is of no use outside of debugging; so do nothing.
-
-		}
-
-		private void Error(PubnubClientError pubnubError) {
-
-			AutoConsole.PostMessage(pubnubError.Description, MessageLevel.Verbose);
 
 		}
 
@@ -457,12 +409,17 @@ namespace TrilleonAutomation {
 			string[] stringSeparators = new string[] {" OS X ", " OS "};
 			string os = SystemInfo.operatingSystem;
 			if(string.IsNullOrEmpty(os)) {
+				
 				return "NO_DEVICE_NAME";
+
 			}
 			if(os.ToLower().Contains("windows ")) {
+				
 				string raw = os.Split('(')[1];
 				os = raw.Split(')')[0];
+
 			} else if(os.ToLower().Replace(" ", string.Empty).Contains("androidos")) {
+				
 				string model = SystemInfo.deviceModel.Replace(" ", string.Empty);
 				os = os.Replace(" ", string.Empty);
 				os = os.ToLower().Replace("androidos", string.Empty);
@@ -470,10 +427,13 @@ namespace TrilleonAutomation {
 				return string.Format("{0}{1}{2}", DEVICE_IDENTIFIER_PREFIX, Q.help.ReturnStringAsAlphaNumericWithExceptions(model), Q.help.ReturnStringAsAlphaNumericWithExceptions(os)).Replace(",", ".");
 
 			} else {
+				
 				string[] split = os.Split(stringSeparators, StringSplitOptions.None);
 				if(split.Length > 1) {
+					
 					os = split[1];
 				} 
+
 			}
 
 			return string.Format("{0}{1}{2}", DEVICE_IDENTIFIER_PREFIX, Q.help.ReturnStringAsAlphaNumericWithExceptions(SystemInfo.deviceName), Q.help.ReturnStringAsAlphaNumericWithExceptions(os));
@@ -502,7 +462,6 @@ namespace TrilleonAutomation {
 			return results;
 
 		}
-
 
 	}
 

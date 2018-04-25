@@ -69,7 +69,8 @@ namespace TrilleonAutomation {
 
 		static string LaunchTrilleonFrameworkValidation(List<string> args) {
 
-			AutomationMaster.Arbiter.ReceiveMessage("[{\"automation_command\": \"rt Trilleon/Validation\"}]", true);
+			Arbiter.LocalRunLaunch = true;
+			ConnectionStrategy.ReceiveMessage("[{\"automation_command\": \"rt Trilleon/Validation\"}]");
 			return "Validation Started; Request logs to view ongoing results.";
 
 		}
@@ -82,7 +83,8 @@ namespace TrilleonAutomation {
 
 		static string RunTests(List<string> args) {
 
-			AutomationMaster.Arbiter.ReceiveMessage(string.Format("{{ \"automation_command\": \"rt {0}\" }}", string.Join(string.Empty, args.ToArray())), true);
+			Arbiter.LocalRunLaunch = true;
+			ConnectionStrategy.ReceiveMessage(string.Format("{{ \"automation_command\": \"rt {0}\" }}", string.Join(string.Empty, args.ToArray())));
 			return "Test run command received. Please view the Nexus AutoConsole for further logging updates.";
 
 		}

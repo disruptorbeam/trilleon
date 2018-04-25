@@ -1534,7 +1534,8 @@ namespace TrilleonAutomation {
 				//Since editor is in play mode, simply send command for test launch.
 				FileBroker.SaveNonUnityTextResource(FileResource.LaunchInstructions, string.Empty);
 				AssetDatabase.Refresh();
-				AutomationMaster.Arbiter.ReceiveMessage(string.Format("[{{\"automation_command\": \"rt {0}\"}}{1}]", launchLine, loopModeActive ? string.Format(",{{\"loop_tests\": \"{0}@{1}\"}}", name, loopCounter) : string.Empty), true);
+				Arbiter.LocalRunLaunch = true;
+				ConnectionStrategy.ReceiveMessage(string.Format("[{{\"automation_command\": \"rt {0}\"}}{1}]", launchLine, loopModeActive ? string.Format(",{{\"loop_tests\": \"{0}@{1}\"}}", name, loopCounter) : string.Empty));
 
 			}
 
