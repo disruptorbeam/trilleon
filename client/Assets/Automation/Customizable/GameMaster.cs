@@ -60,9 +60,26 @@ namespace TrilleonAutomation {
 		}
 		private Commands _commands;
 
-		public static List<Type> AdditionalTextAssets = new List<Type>(); //new List<Type>(){ typeof(TextMeshProUGUI) };
-		public static List<KeyValuePair<Type,ActableTypes>> AdditionalAssetsAll = new List<KeyValuePair<Type,ActableTypes>> { }; //new KeyValuePair<Type,ActableTypes>( typeof(MyCustomInputField), ActableTypes.Input)
-		public static List<KeyValuePair<string,string>> SpecialAssetsAndTheirPrefixesForAssistantWindowCodeGeneration = new List<KeyValuePair<string,string>> { }; //new KeyValuePair<string,string> ("MyCustomInputField", "input")
+		//CUSTOMIZE: These values are used to attach listeners to your custom inputs/buttons/etc, generate code in Record and Playback, and various other places by the framework so that it includes non-base Unity components in Trilleon logic.
+		#region Customize With Company And Project-specific Interactable Components
+
+		public static List<Type> AdditionalTextAssets = new List<Type>(); //ex: new List<Type>(){ typeof(TextMeshProUGUI) };
+		public static List<KeyValuePair<Type,ActableTypes>> AdditionalAssetsAll = new List<KeyValuePair<Type,ActableTypes>>(); //ex: new List<KeyValuePair<Type,ActableTypes>> { new KeyValuePair<Type,ActableTypes>(typeof(MyGame.MyCustomInputField), ActableTypes.Input) };
+		public static List<KeyValuePair<string,string>> SpecialAssetsAndTheirPrefixesForAssistantWindowCodeGeneration = new List<KeyValuePair<string,string>>(); //ex: new List<KeyValuePair<string,string>> { new KeyValuePair<string,string>("MyCustomToggle", "toggle"), new KeyValuePair<string,string>("MyCustomInput", "input") };
+		public static List<Type> ExpectedTopLevelMasterScripts = new List<Type>(); //ex: new List<Type> { typeof(MyGame.MyBaseGuiWindowScript), typeof(MyGame.MyBaseCharacterScript) };
+
+		public static string GetReturnStatementForType(string type, string name) {
+			switch(type.ToLower()){
+			/* TODO: EXAMPLE
+            	case "screenview":
+					return string.Format("Q.help.GetView<{0}>();", name);
+			*/
+			default:
+				return "TYPE NOT IMPLEMENTED IN GAMEMASTER";
+			}
+		} 
+
+		#endregion
 
 		public static string BasicBuddyInformation() {
 
@@ -79,23 +96,6 @@ namespace TrilleonAutomation {
 			return true;
 
 		}
-
-		#if UNITY_EDITOR
-		public static List<KeyValuePair<Type,ActableTypes>> GameSpecificActableTypesForRecordAndPlayback = new List<KeyValuePair<Type,ActableTypes>>(); //new KeyValuePair<Type,ActableTypes>(typeof(BuyButton), ActableTypes.Clickable) 
-		#endif
-
-		public static List<Type> ExpectedTopLevelMasterScripts = new List<Type>() { }; //typeof(UIPanel)
-
-		public static string GetReturnStatementForType(string type, string name) {
-			switch(type.ToLower()){
-			/* TODO: EXAMPLE
-            	case "screenview":
-					return string.Format("Q.help.GetView<{0}>();", name);
-			*/
-			default:
-				return "TYPE NOT IMPLEMENTED IN GAMEMASTER";
-			}
-		} 
 
 		public static AssetVariant Asset_Variant {
 			get{ 

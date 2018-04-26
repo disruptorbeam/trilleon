@@ -33,6 +33,10 @@ namespace TrilleonAutomation {
 
 	#if UNITY_EDITOR
 
+	/// <summary>
+	/// Enables interactable objects to be assigned a listener that captures and records activity in the game.
+	/// NOTE: Gameobjects stripped from a destroyed scene and existing solely int DontDestroyOnLoad cannot be assigned listeners, and will not be interactable using Record & Playback.
+	/// </summary>
 	public class AutomationRecorder : MonoBehaviour {
 
 		const float UPDATE_COOLDOWN = 5f;
@@ -77,7 +81,7 @@ namespace TrilleonAutomation {
 
 		public static List<KeyValuePair<Type, ActableTypes>> GameSpecificActableTypes {
 			get{ 
-				return GameMaster.GameSpecificActableTypesForRecordAndPlayback;
+				return GameMaster.AdditionalAssetsAll;
 			}
 		}
 
