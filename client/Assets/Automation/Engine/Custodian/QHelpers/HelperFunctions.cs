@@ -246,8 +246,6 @@ namespace TrilleonAutomation {
 		/// <summary>
 		/// Removes all non alpha numeric characters except for periods and dashes.
 		/// </summary>
-		/// <returns>The string as alpha numeric.</returns>
-		/// <param name="rawString">Raw string.</param>
 		public string ReturnStringAsAlphaNumericWithExceptions(string rawString) {
 
 			char[] arr = rawString.ToCharArray();

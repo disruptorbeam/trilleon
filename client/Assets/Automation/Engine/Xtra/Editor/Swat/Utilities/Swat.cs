@@ -424,7 +424,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		//TODO: Fix it not being called.
+		/*TODO: Fix it not being called.
 		void OnGUI() {
 			
 			bool active = false;
@@ -468,7 +468,7 @@ namespace TrilleonAutomation {
 
 			}
 
-		}
+		}*/
 
 		/// <summary>
 		/// Render all tabs and selected SWAT window.

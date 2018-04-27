@@ -366,6 +366,7 @@ namespace TrilleonAutomation {
 					});
 
 				}
+
 				AutomationMaster.CurrentTestContext.IsSuccess = false;
 				AutomationMaster.CurrentTestContext.AddAssertion(message);
 				AutomationMaster.CurrentTestContext.ErrorDetails += string.Format("Error Message [{0}] : Test Line [{1}] : Debug Logs [{2}] ", message, string.Format("Line [{0}] Call [{1}]", lineNumber, lineCall), (recordLogDetails ? recentLogs : string.Format("#SKIPPED#{0}", message)));
@@ -387,7 +388,7 @@ namespace TrilleonAutomation {
 						AutomationMaster.AutoSkips.Add(new KeyValuePair<string[], string>(new string[] { "test" , AutomationMaster.CurrentTestContext.TestName}, string.Format("FAILURE OCCURRED IN SETUP:", message)) );
 						break;
 					case AutomationMaster.CurrentExecutionContext.TearDownClass:
-						yield return StartCoroutine(Q.assert.Warn("A failure occurred in the TearDownClass logic for  the test \"{0}.{1}\". This fails the last-run test, and may cause other undesirable behavior for downstream test execution."));
+					yield return StartCoroutine(Q.assert.Warn(string.Format("A failure occurred in the TearDownClass logic for  the test \"{0}.{1}\". This fails the last-run test, and may cause other undesirable behavior for downstream test execution.", AutomationMaster.CurrentTestContext.ClassName, AutomationMaster.CurrentTestContext.TestName)));
 						//Will automatically handle the failure of this test.
 						break;
 					case AutomationMaster.CurrentExecutionContext.TearDown:
@@ -413,16 +414,16 @@ namespace TrilleonAutomation {
 				if(!AutomationMaster.TryContinueOnFailure) {
 					
 					if((!isSoft && AutomationMaster.OverrideContinueOnFailureAfterTooManyConcurrentFailures) || (!MideExecution_MarkTestToTryContinueAfterFail && (_failureContext == FailureContext.TestMethod || _failureContext == FailureContext.Default) && failureContext != FailureContext.Skipped)) {
-
+						
 						try {
-
+							
 							AutomationMaster.CurrentTestMethod.Stop(); //Kill current test, only if the currently queued test has been initialized.
-
+							
 						} catch { }
 						yield return new WaitForEndOfFrame(); //Allow all Coroutines to be stopped before returning control. In reality, the coroutine calling this will be stopped, so control will never be returned anyway.
-
+						
 					}
-
+					
 				}
 
 				if(!isSoft && (AutomationMaster.TryContinueOnFailure || MideExecution_MarkTestToTryContinueAfterFail)) {

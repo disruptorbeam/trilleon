@@ -435,7 +435,11 @@ namespace TrilleonAutomation {
 
 			}
 
-			EventSystem.current.SetSelectedGameObject(consoleInput.gameObject, null); //Auto focus into input on show.
+			if(EventSystem.current != null) {
+				
+				EventSystem.current.SetSelectedGameObject(consoleInput.gameObject, null); //Auto focus into input on show.
+
+			}
 			consoleInput.OnPointerClick(new PointerEventData(EventSystem.current));
 
 		}

@@ -102,8 +102,7 @@ namespace TrilleonAutomation {
 
 					}
 
-					metaData.Add(new KeyValuePair<string,List<KeyValuePair<string,string>>>(all[m].Split(new string[] { string.Format("{0}/", GameMaster.GAME_NAME) }, StringSplitOptions.None)[1].Replace("/report.meta", ".html"), values));
-
+					metaData.Add(new KeyValuePair<string,List<KeyValuePair<string,string>>>(all[m].Split(new string[] { string.Format("{0}{1}", GameMaster.GAME_NAME, FileBroker.FILE_PATH_SPLIT) }, StringSplitOptions.None)[1].Replace(string.Format("{0}report.meta", FileBroker.FILE_PATH_SPLIT), ".html"), values));
 				}
 
 				automationReports.Reverse();

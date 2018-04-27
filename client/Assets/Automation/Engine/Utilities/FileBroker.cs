@@ -66,7 +66,7 @@ namespace TrilleonAutomation {
 				FILE_PATH_SPLIT = "/";
 
 			}
-			BASE_RESOURCE_PATH = string.Format("{0}{1}Automation{1}Engine{1}Xtra{1}Resources{1}", Application.dataPath, FILE_PATH_SPLIT);
+			BASE_RESOURCE_PATH = string.Format("{0}{1}Automation{1}Engine{1}Xtra{1}Resources{1}", Application.dataPath.Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
 
 			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.TrilleonConfig, "TrilleonConfig"));
 			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.ReportJavascript, ConfigReader.GetString("AUTOMATION_RESULTS_REPORT_JAVASCRIPT_USE").Replace("/", FILE_PATH_SPLIT)));
@@ -183,7 +183,7 @@ namespace TrilleonAutomation {
 
 			if(!Exists(copyThis)) {
 				
-				AutoConsole.PostMessage(string.Format("Could not copy \"{0}\" to \"{1}\". File to copy does not currently exist.", copyThis, destination), MessageLevel.Abridged);
+				AutoConsole.PostMessage(string.Format("Could not copy \"{0}\" to \"{1}\". File to copy does not currently exist.", copyThis.Replace("/", FILE_PATH_SPLIT), destination.Replace("/", FILE_PATH_SPLIT)), MessageLevel.Abridged);
 
 			}
 			if(Exists(destination)) {
@@ -206,7 +206,7 @@ namespace TrilleonAutomation {
 
 			#if UNITY_EDITOR
 
-			string directory = fileNameWithPath.Contains(BASE_NON_UNITY_PATH) ? fileNameWithPath : BASE_NON_UNITY_PATH + fileNameWithPath;
+			string directory = fileNameWithPath.Replace("/", FILE_PATH_SPLIT).Contains(BASE_NON_UNITY_PATH) ? fileNameWithPath.Replace("/", FILE_PATH_SPLIT) : BASE_NON_UNITY_PATH + fileNameWithPath.Replace("/", FILE_PATH_SPLIT);
 			string path = directory.Substring(0, directory.LastIndexOf(FILE_PATH_SPLIT));
 			if(!Directory.Exists(path)) {
 
@@ -215,14 +215,14 @@ namespace TrilleonAutomation {
 
 			}
 
-			if(overwrite || !Exists(fileNameWithPath)) {
+			if(overwrite || !Exists(fileNameWithPath.Replace("/", FILE_PATH_SPLIT))) {
 
 				Set();
-				File.WriteAllText(fileNameWithPath, contents);
+				File.WriteAllText(fileNameWithPath.Replace("/", FILE_PATH_SPLIT), contents);
 
 			} else {
 				
-				File.AppendAllText(fileNameWithPath, contents);
+				File.AppendAllText(fileNameWithPath.Replace("/", FILE_PATH_SPLIT), contents);
 
 			}
 
@@ -240,7 +240,7 @@ namespace TrilleonAutomation {
 
 			#if UNITY_EDITOR
 
-			string fileNameComplete = string.Format("{0}{1}{2}", CONSOLE_LOG_DIRECTORY, FILE_PATH_SPLIT, fileNameWithPath);
+			string fileNameComplete = string.Format("{0}{1}{2}", CONSOLE_LOG_DIRECTORY, FILE_PATH_SPLIT, fileNameWithPath.Replace("/", FILE_PATH_SPLIT));
 			SaveUnboundFile(fileNameComplete, contents, overwrite);
 
 			#endif
@@ -255,9 +255,9 @@ namespace TrilleonAutomation {
 
 			}
 
-			if(Exists(directoryWithFileName)) {
+			if(Exists(directoryWithFileName.Replace("/", FILE_PATH_SPLIT))) {
 				
-				return File.ReadAllLines(directoryWithFileName);
+				return File.ReadAllLines(directoryWithFileName.Replace("/", FILE_PATH_SPLIT));
 
 			}
 			return new string[] {};
@@ -482,7 +482,7 @@ namespace TrilleonAutomation {
 
 		public static bool Exists(string path) {
 
-			return File.Exists(path);
+			return File.Exists(path.Replace("/", FILE_PATH_SPLIT));
 
 		}
 
@@ -495,9 +495,9 @@ namespace TrilleonAutomation {
 			}
 
 			#if UNITY_EDITOR
-			if(Exists(fileName)) {
+			if(Exists(fileName.Replace("/", FILE_PATH_SPLIT))) {
 
-				File.Delete(fileName);
+				File.Delete(fileName.Replace("/", FILE_PATH_SPLIT));
 
 			}
 			#endif
@@ -513,9 +513,9 @@ namespace TrilleonAutomation {
 			}
 
 			#if UNITY_EDITOR
-			if(Directory.Exists(directory)) {
+			if(Directory.Exists(directory.Replace("/", FILE_PATH_SPLIT))) {
 
-				Directory.Delete(directory, true);
+				Directory.Delete(directory.Replace("/", FILE_PATH_SPLIT), true);
 
 			}
 			#endif
