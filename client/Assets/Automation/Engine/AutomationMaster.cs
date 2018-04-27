@@ -2179,7 +2179,7 @@ namespace TrilleonAutomation {
 			}
 			if(!RunnerFlagTests.TryCompleteAfterFailToken) {
 
-				errors.Add("The logic for attribute usage [TestRunnerFlag(TestFlag.TryCompleteAfterFail)] failed validation. The test logic should be all be attempted after a failure occurs when this flag is applied.");
+				errors.Add("The logic for attribute usage [TestRunnerFlag(TestFlag.TryCompleteAfterFail)] failed validation. The test logic should be attempted after a failure occurs when this flag is applied.");
 
 			}
 			if(_validationOrderRan.FindAll(x => x.Name == "Flags_OnlyLaunchWhenExplicitlyCalled").Any()) {
