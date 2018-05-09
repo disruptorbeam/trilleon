@@ -23,12 +23,12 @@ namespace TrilleonAutomation {
 
 		/* Console Test Commands:
 		   brew install netcat
-		   echo "[{"automation_command":"rt all"}]" | netcat localhost 9090
+		   echo "[{"automation_command":"rt all"}]" | netcat localhost 9595
 		*/
 
-		public const int MASTER_TRILLEON_PUBSUB_PORT = 9595; //Should remain identical to the port used by pubsub master scripts.
-		public const int MAX_MESSAGE_LENGTH = 9999; //For sake of performance.
-		public const string TRILLEON_SOCKET_IP = "127.0.0.1"; //Localhost
+		public static int MASTER_TRILLEON_PUBSUB_PORT { get; private set; } //CUSTOMIZE: Change this value in TrilleonConfig.txt. Should remain identical to the port used by pubsub master scripts.
+		public static int MAX_MESSAGE_LENGTH { get; private set; } //CUSTOMIZE: Change this value in TrilleonConfig.txt. Keep reasonably small for sake of performance.
+		public static string TRILLEON_SOCKET_IP { get; private set; } //CUSTOMIZE: Change this value in TrilleonConfig.txt. Default is Localhost.
 		Socket listener;
 
 		class StateObject {
@@ -41,6 +41,10 @@ namespace TrilleonAutomation {
 		}
 
 		void Start() {
+
+			MASTER_TRILLEON_PUBSUB_PORT = ConfigReader.GetInt("SOCKET_MASTER_PUBSUB_PORT");
+			MAX_MESSAGE_LENGTH = ConfigReader.GetInt("SOCKET_MAX_MESSAGE_LENGTH");
+			TRILLEON_SOCKET_IP = ConfigReader.GetString("SOCKET_IP_ADDRESS");
 
 			IPAddress ipAddress = IPAddress.Parse(TRILLEON_SOCKET_IP);  
 			IPEndPoint localEndPoint = new IPEndPoint(ipAddress, MASTER_TRILLEON_PUBSUB_PORT);  

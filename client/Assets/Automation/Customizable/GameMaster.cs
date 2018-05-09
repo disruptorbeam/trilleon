@@ -236,56 +236,56 @@ namespace TrilleonAutomation {
 
 		}
 
+		//CUSTOMIZE: Your code here.
 		public IEnumerator WaitForGameLoadingComplete() {
 
-			//CUSTOMIZE: Your code here.
 			yield return null;
 
 		}
 
+		//CUSTOMIZE: Your code here.
 		//Try to Dismiss an error popup that is encountered during test execution. Called by AutomationMaster when game-specific errors are found in the GameAssert.cs extender "AssertNoErrorPopups".
 		public IEnumerator TryDismissErrors() {
 
-			//CUSTOMIZE: Your code here.
 			yield return null;
 
 		}
 
+		//CUSTOMIZE: Your code here.
 		public IEnumerator PreTestRunLaunch() {
 
-			//CUSTOMIZE: Your code here.
 			yield return null;
 
 		}
 
+		//CUSTOMIZE: Your code here.
 		public IEnumerator GlobalSetUpTest() {
 
-			//CUSTOMIZE: Your code here.
-			RunnerFlagTests.SetUpGlobalRun = true;
+			RunnerFlagTests.SetUpGlobalRun = AutomationMaster.CurrentTestContext.ClassName == "RunnerFlagTests" ? true : RunnerFlagTests.SetUpGlobalRun; //Required! Debug test value.
 			yield return null;
 
 		}
 
+		//CUSTOMIZE: Your code here.
 		public IEnumerator GlobalSetUpClass() {
 
-			//CUSTOMIZE: Your code here.
-			RunnerFlagTests.SetUpClassGlobalRun = true; //Debug test value.
+			RunnerFlagTests.SetUpClassGlobalRun = AutomationMaster.CurrentTestContext.ClassName == "RunnerFlagTests" ? true : RunnerFlagTests.SetUpClassGlobalRun; //Required! Debug test value.
 			yield return null;
 
 		}
 
+		//CUSTOMIZE: Your code here.
 		public IEnumerator GlobalTearDownClass() {
 
-			//CUSTOMIZE: Your code here.
-			RunnerFlagTests.TearDownClassGlobalRun = true; //Debug test value.
+			RunnerFlagTests.TearDownClassGlobalRun = AutomationMaster.CurrentTestContext.ClassName == "RunnerFlagTests" ? true : RunnerFlagTests.TearDownClassGlobalRun; //Required! Debug test value.
 			yield return null;
 
 		}
 
+		//CUSTOMIZE: Your code here.
 		public IEnumerator GlobalTearDownTest() {
 
-			//CUSTOMIZE: Your code here.
-			RunnerFlagTests.TearDownGlobalRun = true;
+			RunnerFlagTests.TearDownGlobalRun = AutomationMaster.CurrentTestContext.ClassName == "RunnerFlagTests" ? true : RunnerFlagTests.TearDownGlobalRun; //Required! Debug test value.
 			yield return null;
 
 		}

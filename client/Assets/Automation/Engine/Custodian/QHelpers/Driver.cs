@@ -39,7 +39,7 @@ namespace TrilleonAutomation {
 		public const float TRY_TIMEOUT_DEFAULT = 10f; //Default timeout for Try-type events.
 		public const float INTERLOOP_WAIT_TIME = 1f; //Dictates the time between loop executions for wait functions.
 		public const float UPDATE_DRAG_INTERVAL = 0.1f; //How often the IDragHandler receives position updates when dragging an object.
-		public const float WAIT_AFTER_CLICK = 0.1f; //Sets the amount of time after event, such as Click, before returning control to the test.
+		public const float WAIT_AFTER_CLICK = 1f; //Sets the amount of time after event, such as Click, before returning control to the test.
 		public const string DEFAULT_ERROR_MESSAGE = "Requested object could not be found"; //The default message to be displayed after an error if the call has not provided one.
 
 		/// <summary>
