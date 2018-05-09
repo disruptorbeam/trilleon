@@ -18,10 +18,10 @@ namespace TrilleonAutomation {
 			get { 
 				switch(ConfigReader.GetString("CONNECTION_STRATEGY").ToLower()) {
 					case "pubnub":
-						return SocketConnectionStrategy.MAX_MESSAGE_LENGTH;
+						return PubnubConnectionStrategy.MAX_MESSAGE_LENGTH;
 					case "socket":
 					default:
-						return PubnubConnectionStrategy.MAX_MESSAGE_LENGTH;
+						return SocketConnectionStrategy.MAX_MESSAGE_LENGTH;
 				}
 			}
 		}
@@ -53,7 +53,6 @@ namespace TrilleonAutomation {
 			}
 
 		}
-
 
 		void Update() {
 

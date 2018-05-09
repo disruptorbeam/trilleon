@@ -740,7 +740,7 @@ namespace TrilleonAutomation {
 					exceptionsData.Append("[");
 					for(int ed = 0; ed < AutomationMaster.TestRunContext.Exceptions.Reported.Count; ed++) {
 
-						exceptionsData.Append(string.Format("{{\"screenshot_name\":\"{0}\",\"error\":\"{1}\",\"error_details\":\"{2}\"}}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].ScreenshotName, AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Length > 75 ? AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Substring(0, 75) : AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, string.Format("{0}: {1}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, AutomationMaster.TestRunContext.Exceptions.Reported[ed].ErrorDetails)));
+						exceptionsData.Append(string.Format("{{\"screenshot_name\":\"{0}\",\"error\":\"{1}\",\"error_details\":\"{2}\"}}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].ScreenshotName, AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Length > 200 ? AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Substring(0, 200) : AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, string.Format("{0}: {1}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, AutomationMaster.TestRunContext.Exceptions.Reported[ed].ErrorDetails)));
 						if(ed + 1 != AutomationMaster.TestRunContext.Exceptions.Reported.Count) {
 
 							exceptionsData.Append(",");

@@ -31,7 +31,7 @@ namespace TrilleonAutomation {
 	public static class FileBroker {
 
 		const string TOP_LEVEL_FOLDER_NAME = "Trilleon";
-		public static string BASE_RESOURCE_PATH = string.Empty;
+		public static string BASE_UNITY_PATH = string.Empty;
 		public static string BASE_NON_UNITY_PATH = string.Empty;
 		public static string FILE_PATH_SPLIT = string.Empty;
 
@@ -66,7 +66,6 @@ namespace TrilleonAutomation {
 				FILE_PATH_SPLIT = "/";
 
 			}
-			BASE_RESOURCE_PATH = string.Format("{0}{1}Automation{1}Engine{1}Xtra{1}Resources{1}", Application.dataPath.Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
 
 			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.TrilleonConfig, "TrilleonConfig"));
 			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.ReportJavascript, ConfigReader.GetString("AUTOMATION_RESULTS_REPORT_JAVASCRIPT_USE").Replace("/", FILE_PATH_SPLIT)));
@@ -132,16 +131,6 @@ namespace TrilleonAutomation {
 				Directory.CreateDirectory(Path.GetDirectoryName(SCREENSHOTS_DIRECTORY));
 
 			}
-
-			string file = string.Format("{0}TrilleonConfig.txt", BASE_RESOURCE_PATH);
-			FileInfo fileInfo = new FileInfo(file);
-			fileInfo.IsReadOnly = false;
-			file = string.Format("{0}{1}.txt",  BASE_RESOURCE_PATH, ConfigReader.GetString("AUTOMATION_RESULTS_REPORT_JAVASCRIPT_USE").Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
-			fileInfo = new FileInfo(file);
-			fileInfo.IsReadOnly = false;
-			file = string.Format("{0}{1}.txt", BASE_RESOURCE_PATH, ConfigReader.GetString("AUTOMATION_RESULTS_REPORT_CSS_USE").Replace("/", FILE_PATH_SPLIT));
-			fileInfo = new FileInfo(file);
-			fileInfo.IsReadOnly = false;
 
 			//Create any missing required files.
 			for(int k = 0; k < knownEditorResourceFiles.Count; k++) {
@@ -330,14 +319,12 @@ namespace TrilleonAutomation {
 			if(!Directory.Exists(Path.GetDirectoryName(directory))) {
 				
 				Set();
-				Directory.CreateDirectory(Path.GetDirectoryName(directory));
 
 			}
 
 			if(!Exists(directory)) {
 
 				Set();
-				Directory.CreateDirectory(Path.GetDirectoryName(directory));
 
 			}
 
@@ -379,7 +366,7 @@ namespace TrilleonAutomation {
 			}
 
 			if(!knownEditorResourceFiles.FindAll(x => x.Key == file && (file == FileResource.ExtendableResource ? x.Value == extendableResourceName : true)).Any()) {
-				Debug.Log("The supplied file could not be found. Make sure you are referencing a file stored outside of the Unity project."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
+				Debug.Log("The supplied file is not an expected Trilleon resource. Make sure you are referencing a file declared in the FileBroker.cs Set() logic."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
 			}
 
 			string directory = string.Format("{0}{1}{2}", RESOURCES_DIRECTORY, FILE_PATH_SPLIT, knownEditorResourceFiles.Find(x => x.Key == file).Value);
@@ -387,7 +374,6 @@ namespace TrilleonAutomation {
 			if(!Exists(directory)) {
 
 				Set();
-				File.Create(directory);
 
 			} 
 			fileText = File.ReadAllText(directory);
@@ -410,7 +396,7 @@ namespace TrilleonAutomation {
 
 			if(!knownTrilleonResourceFiles.FindAll(x => x.Key == file).Any()) {
 				
-				Debug.Log("The supplied file could not be found. Make sure you are referencing a file stored outside of the Unity project."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
+				Debug.Log("The supplied file is not an expected Trilleon resource. Make sure you are referencing a file declared in the FileBroker.cs Set() logic."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
 			
 			}
 
@@ -443,7 +429,7 @@ namespace TrilleonAutomation {
 			
 			}
 
-			string filePath = string.Format("{0}{1}.txt", BASE_RESOURCE_PATH, knownTrilleonResourceFiles.Find(x => x.Key == file).Value);
+			string filePath = string.Format("{0}{1}{2}.txt", Application.dataPath.Replace("/", FILE_PATH_SPLIT), ConfigReader.GetString("UNITY_RESOURCES_FILE_PATH").Replace("/", FILE_PATH_SPLIT), knownTrilleonResourceFiles.Find(x => x.Key == file).Value);
 			File.WriteAllText(filePath, value);
 
 			AssetDatabase.Refresh();

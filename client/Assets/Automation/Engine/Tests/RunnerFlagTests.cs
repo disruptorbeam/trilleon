@@ -26,7 +26,6 @@ namespace TrilleonAutomation {
 
 	[AutomationClass]
 	[DebugClass]
-	[Deferr]
 	[TestRunnerFlags(TestFlag.DisregardSetUpClassGlobal, TestFlag.DisregardTearDownClassGlobal)]
 	public class RunnerFlagTests : MonoBehaviour {
 
