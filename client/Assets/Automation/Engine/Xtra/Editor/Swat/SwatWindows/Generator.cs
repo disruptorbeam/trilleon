@@ -972,10 +972,10 @@ namespace TrilleonAutomation {
 			Nexus.Overseer.textType = containsText ? "Text" : string.Empty;
 			if(!containsText) {
 				for(int a = 0; a < GameMaster.AdditionalTextAssets.Count; a++) {
-					if(inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]) != null) {
-						Type type = inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]).GetType();
+					if(inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a].Key) != null) {
+						Type type = inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a].Key).GetType();
 						if(type != null) {
-							Nexus.Overseer.textVal = type.GetProperty("text").GetValue(inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a]), null).ToString();
+							Nexus.Overseer.textVal = type.GetProperty(GameMaster.AdditionalTextAssets[a].Value).GetValue(inspectedObject.GetComponent(GameMaster.AdditionalTextAssets[a].Key), null).ToString();
 							if(!string.IsNullOrEmpty(Nexus.Overseer.textVal)) {
 								Nexus.Overseer.textType = type.Name;
 								break;

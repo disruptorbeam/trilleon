@@ -353,7 +353,7 @@ namespace TrilleonAutomation {
 
 			//Clear cached data toolbar button.
 			toolBarButtons.normal.textColor = Color.black; 
-			toolBarButtons.fontSize = 20;
+			toolBarButtons.fontSize = 19;
 			toolBarButtons.padding = new RectOffset(0, 4, 2, 0);
 			Nexus.Self.Button(CLEARCACHE, "Clears cached data, excluding test reports and last results data.", 
 				new Nexus.SwatDelegate(delegate() {   
@@ -1240,7 +1240,7 @@ namespace TrilleonAutomation {
 					EditorGUILayout.LabelField("Loop Times", new GUILayoutOption[] { GUILayout.MaxWidth(60) });
 					GUIStyle loopCountField = new GUIStyle(GUI.skin.textField);
 					loopCountField.fixedWidth = 20;
-					EditorGUILayout.IntField(loopCounter, loopCountField);
+					loopCounter = EditorGUILayout.IntField(loopCounter, loopCountField);
 					GUIStyle notice = new GUIStyle(GUI.skin.label);
 					notice.normal.textColor = Color.magenta;
 					notice.margin = new RectOffset(-5, 0, 0, 0);

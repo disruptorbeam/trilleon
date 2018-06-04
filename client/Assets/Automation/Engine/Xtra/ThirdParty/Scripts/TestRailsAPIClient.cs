@@ -54,7 +54,7 @@ namespace TrilleonAutomation {
 			
 			if(UnityEngine.Application.isEditor && !ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
 				
-				return "POST updates not sent to TestRails when tests are run in Unity Editor. This can be overridden in Trilleon settings.";
+				return "Test Rails Deactivated! This can be changed in Trilleon settings.";
 
 			} else {
 				
@@ -65,28 +65,44 @@ namespace TrilleonAutomation {
 		}
 
 		public string SendGet(string uri) {
-			
-			return SendRequest("GET", uri, "[{}]");
+
+			if(!UnityEngine.Application.isEditor && !ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
+				
+				return "Test Rails Deactivated! This can be changed in Trilleon settings.";
+
+			} else {
+
+				return SendRequest("GET", uri, "[{}]");
+
+			}
 
 		}
 
 		public string GetTestName(int idTest) {
 
-			string error = "**Error retrieving this test's name through TestRails api**";
-			string result = SendRequest("GET", string.Format("get_test/{0}", idTest), string.Empty);
-			string[] split = new string[] { "\"title\":\"" };
-			string[] splitResult = result.Split(split, StringSplitOptions.None);
-			if(splitResult.Length < 2) {
-				return string.Format("{0} Returned status: ", error);
-			}
-			result = splitResult[1];
-			split = new string[] { "\",\"" }; 
-			splitResult = result.Split(split, StringSplitOptions.None);
-			if(splitResult.Length < 2) {
-				return string.Format("{0} Returned status: ", error);
-			}
+			if(UnityEngine.Application.isEditor && !ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
+				
+				return "Test Rails Deactivated! This can be changed in Trilleon settings.";
 
-			return splitResult[0].Replace("\\", string.Empty);
+			} else {
+
+				string error = "**Error retrieving this test's name through TestRails api**";
+				string result = SendRequest("GET", string.Format("get_test/{0}", idTest), string.Empty);
+				string[] split = new string[] { "\"title\":\"" };
+				string[] splitResult = result.Split(split, StringSplitOptions.None);
+				if(splitResult.Length < 2) {
+					return string.Format("{0} Returned status: ", error);
+				}
+				result = splitResult[1];
+				split = new string[] { "\",\"" }; 
+				splitResult = result.Split(split, StringSplitOptions.None);
+				if(splitResult.Length < 2) {
+					return string.Format("{0} Returned status: ", error);
+				}
+
+				return splitResult[0].Replace("\\", string.Empty);
+
+			}
 
 		}
 

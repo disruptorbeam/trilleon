@@ -53,6 +53,10 @@ namespace TrilleonAutomation {
 				}, "L", "Logs"),
 			new Command("Returns automation details relevant to test run context and device identification.", ReturnDetails, 
 				new List<KeyValuePair<string,string>>(), "AD", "Details"),
+			new Command("Change identity that this client responds to in any communications.", ChangeIdentity, 
+				new List<KeyValuePair<string,string>> { 
+					new KeyValuePair<string,string>("NewIdentity", "The new idendity for this client.")
+				}, "CI", "ChangeIdentity"),
 			new Command("Returns simplified results of tests already run in the current test run (if test run is active).", CurrentTestRunResults, 
 				new List<KeyValuePair<string,string>>(), "TR", "Results"),
 			new Command("Resets all tests as Untested in the provided TestRails test run.", ResetTestRailsTestStatuses, 
@@ -66,6 +70,13 @@ namespace TrilleonAutomation {
 		};
 
 		#region Console Command delegates
+
+		static string ChangeIdentity(List<string> args) {
+
+			AutomationMaster.Arbiter.GridIdentity = args.First();
+			return string.Format("Grid Identity changed to \"{0}\"", AutomationMaster.Arbiter.GridIdentity);
+
+		}
 
 		static string LaunchTrilleonFrameworkValidation(List<string> args) {
 
@@ -349,7 +360,7 @@ namespace TrilleonAutomation {
 
 			}
 
-			List<string> arguments = raw.Split(' ').ToList();
+			List<string> arguments = raw.Trim().Split(' ').ToList();
 			string command = arguments.First().ToLower();
 			arguments.RemoveAt(0);
 
@@ -504,7 +515,7 @@ namespace TrilleonAutomation {
 			transitionComplete = true;
 			rememberedCommands = new List<string>();
 			lastScroll = DateTime.UtcNow;
-			UpdateCommandConsoleOutput("TRILLEON COMMAND CONSOLE: Enter Command To Begin\n");
+			UpdateCommandConsoleOutput(string.Format("TRILLEON COMMAND CONSOLE: Enter Command To Begin\n{0}", TOGGLE_CONSOLE_VISIBLE ==  KeyCode.BackQuote ? "Select tilde key ( ` ) to open in game view." : string.Empty));
 
 		}
 

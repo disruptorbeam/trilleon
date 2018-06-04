@@ -1282,7 +1282,7 @@ namespace TrilleonAutomation {
 
 			string textValLower = textVal.ToLower();
 			List<GameObject> matches = new List<GameObject>();
-			findInObjs = findInObjs == null ? new List<GameObject>() : findInObjs;
+			findInObjs = findInObjs == null ? SceneMaster.GetObjectPool() : findInObjs;
 
 			for(int fio = 0; fio < findInObjs.Count; fio++) {
 
@@ -1312,13 +1312,14 @@ namespace TrilleonAutomation {
 				} else {
 					
 					for(int a = 0; a < GameMaster.AdditionalTextAssets.Count; a++) {
-						
-						if(findInObjs[fio].GetComponent(GameMaster.AdditionalTextAssets[a]) != null) {
+
+						KeyValuePair<Type,string> asset = GameMaster.AdditionalTextAssets[a];
+						if(findInObjs[fio].GetComponent(asset.Key) != null) {
 							
-							Type type = findInObjs[fio].GetComponent(GameMaster.AdditionalTextAssets[a]).GetType();
+							Type type = findInObjs[fio].GetComponent(GameMaster.AdditionalTextAssets[a].Key).GetType();
 							if(type != null) {
 								
-								string textContent = type.GetProperty("text").GetValue(findInObjs[fio].GetComponent(GameMaster.AdditionalTextAssets[a]), null).ToString();
+								string textContent = type.GetProperty(asset.Value).GetValue(findInObjs[fio].GetComponent(GameMaster.AdditionalTextAssets[a].Key), null).ToString();
 								if(isContains) {
 									
 									if(textContent.ToLower().Contains(textValLower)) {

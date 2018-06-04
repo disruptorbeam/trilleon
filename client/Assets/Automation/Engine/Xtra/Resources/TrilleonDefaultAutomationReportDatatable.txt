@@ -813,7 +813,7 @@ function BuildExceptionPanel() {
   	var exceptions_panel = $("#exceptions_panel");
  	var exceptions_json = JSON.parse($("#exceptions_hidden").val());
  	for(var x = 0; x < exceptions_json.length; x++) {
- 		exceptions_panel.append("<div class='exception_data'><div class='exception_screenshot'><a onclick='ShowScreenshot(\"" + exceptions_json[x].screenshot_name + "\", true)'>Screenshot</a><a onclick='CopyToClipBoard($(this).parent().next().next());'>Copy Error</a></div><div class='exception_message' onmouseover='$(this).next().show(150);' onmouseout='$(this).next().hide(150);' style='cursor:pointer;'>" + exceptions_json[x].error + "...</div><div class='tooltip_expander' style='max-width: 1000px; white-space: pre-wrap; display: none;'>" + exceptions_json[x].error_details + "</div></div>");
+ 		exceptions_panel.append("<div class='exception_data'><div class='exception_screenshot'><a onclick='ShowScreenshot(\"" + exceptions_json[x].screenshot_name + "\", true)'>Screenshot</a><a onclick='CopyToClipBoard($(this).parent().next().next());'>Copy Error</a></div><div class='exception_message' onmouseover='$(\".tooltip_expander\").hide(150);$(this).next().show(150);' style='cursor:pointer;'>" + exceptions_json[x].error + "...</div><div class='tooltip_expander' onmouseout='$(\".tooltip_expander\").hide(150);' style='max-width: 1000px; white-space: pre-wrap; display: none;'>" + exceptions_json[x].error_details + "</div></div>");
  	}
 
 }

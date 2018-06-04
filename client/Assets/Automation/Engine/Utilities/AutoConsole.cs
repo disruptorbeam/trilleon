@@ -310,6 +310,9 @@ namespace TrilleonAutomation {
 					AutomationMaster.StaticSelfComponent.ResetTestRunner();
 					AutoConsole.PostMessage("Exception in framework killed TestRunner. Framework reset and ready for new commands.", MessageLevel.Abridged);
 
+					AutomationMaster.StaticSelfComponent.StartCoroutine(AutomationMaster.StaticSelfComponent.TakeScreenshot(false, "FATAL_EXCEPTION"));
+					AutomationMaster.StaticSelfComponent.StartCoroutine(AutomationMaster.StaticSelfComponent.ShutDownApplicationAfterFatalException());
+
 				} else if(AutomationMaster.Busy && AutomationMaster.Initialized && !stackTrace.Contains("/Editor/")) {
 
 					AutomationMaster.TestRunContext.Exceptions.Add(newLog);

@@ -308,7 +308,7 @@ namespace TrilleonAutomation {
 
 			if(json.Length > ConnectionStrategy.MaxMessageLength) {
 
-				SendJsonInPieces("SINGLE_TEST_RESULTS_JSON", json);
+				SendJsonInPieces("SINGLE_TEST_RESULTS_JSON", json, orderIndex);
 				jsonBody.Append(json);
 
 			} else {
@@ -324,7 +324,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		public static void SendJsonInPieces(string jsonAttributePrefix, string json) {
+		public static void SendJsonInPieces(string jsonAttributePrefix, string json, int orderRan = -1) {
 
 			//Break this message into pieces.
 			List<string> pieces = new List<string>();
@@ -348,7 +348,15 @@ namespace TrilleonAutomation {
 
 			for(int x = 0; x < pieces.Count; x++) {
 
-				AutoConsole.PostMessage(string.Format("{0}_MULTI_PART|{1}{2}{3}|", jsonAttributePrefix, x, AutomationMaster.PARTIAL_DELIMITER, pieces[x]), MessageLevel.Abridged);
+				if(orderRan >= 0) {
+					
+					AutoConsole.PostMessage(string.Format("{5}_MULTI_PART|{1}{0}{2}{0}{3}{0}{4}|", AutomationMaster.PARTIAL_DELIMITER, x, pieces.Count, orderIndex, pieces[x], jsonAttributePrefix), MessageLevel.Abridged);
+
+				} else {
+
+					AutoConsole.PostMessage(string.Format("{0}_MULTI_PART|{1}{2}{3}|", jsonAttributePrefix, x, AutomationMaster.PARTIAL_DELIMITER, pieces[x]), MessageLevel.Abridged);
+
+				}
 
 			}
 

@@ -63,7 +63,9 @@ namespace TrilleonAutomation {
 		//CUSTOMIZE: These values are used to attach listeners to your custom inputs/buttons/etc, generate code in Record and Playback, and various other places by the framework so that it includes non-base Unity components in Trilleon logic.
 		#region Customize With Company And Project-specific Interactable Components
 
-		public static List<Type> AdditionalTextAssets = new List<Type>(); //ex: new List<Type>(){ typeof(TextMeshProUGUI) };
+		//Type if your custom type. The string is the field that your custom text asset uses to store the text we are searching for.
+		public static List<KeyValuePair<Type,string>> AdditionalTextAssets = new List<KeyValuePair<Type,string>>(); //ex: new List<KeyValuePair<Type,string>>(){ new KeyValuePair<Type,string>(typeof(TextMeshProUGUI),"text") };
+
 		public static List<KeyValuePair<Type,ActableTypes>> AdditionalAssetsAll = new List<KeyValuePair<Type,ActableTypes>>(); //ex: new List<KeyValuePair<Type,ActableTypes>> { new KeyValuePair<Type,ActableTypes>(typeof(MyGame.MyCustomInputField), ActableTypes.Input) };
 		public static List<KeyValuePair<string,string>> SpecialAssetsAndTheirPrefixesForAssistantWindowCodeGeneration = new List<KeyValuePair<string,string>>(); //ex: new List<KeyValuePair<string,string>> { new KeyValuePair<string,string>("MyCustomToggle", "toggle"), new KeyValuePair<string,string>("MyCustomInput", "input") };
 		public static List<Type> ExpectedTopLevelMasterScripts = new List<Type>(); //ex: new List<Type> { typeof(MyGame.MyBaseGuiWindowScript), typeof(MyGame.MyBaseCharacterScript) };
