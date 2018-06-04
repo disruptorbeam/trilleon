@@ -114,19 +114,28 @@ namespace TrilleonAutomation {
 
 		#region Assert Future Test Failure
 
-		public IEnumerator MarkTestForAutomaticFailure(FailType failType, Type name, string message) {
+		public IEnumerator MarkTestOrClassForFailure(bool isClassType, Type name, string message) {
 
-			string realName = failType == FailType.Class ? name.Name : name.Name.Split('<', '>')[1];
-			if(failType == FailType.Test) {
+			string realName = isClassType ? name.Name : name.Name.Split('<', '>')[1];
+			AutomationMaster.AutoFails.Add(new KeyValuePair<string[], string>(new string[] { isClassType ? "class" : "test" , realName}, message) );
+			if(!isClassType && AutomationMaster.TestRunContext.CompletedTests.Contains(realName)){
 
-				if(AutomationMaster.TestRunContext.CompletedTests.Contains(realName)){
-
-					yield return StartCoroutine(Q.assert.Fail(string.Format("The test, \"{0}\", was marked for failure using an assertion - but the test was already run!", realName)));
-
-				}
+				yield return StartCoroutine(Q.assert.Fail(string.Format("The test, \"{0}\", was marked for failure using an assertion - but the test was already run!", realName)));
 
 			}
-			AutomationMaster.AutoSkips.Add(new KeyValuePair<string[], string>(new string[] { failType == FailType.Class ? "class" : "test" , realName}, message) );
+			yield return null;
+
+		}
+
+		public IEnumerator MarkTestOrClassForSkip(bool isClassType, Type name, string message) {
+
+			string realName = isClassType ? name.Name : name.Name.Split('<', '>')[1];
+			AutomationMaster.AutoSkips.Add(new KeyValuePair<string[], string>(new string[] { isClassType ? "class" : "test" , realName}, message) );
+			if(!isClassType && AutomationMaster.TestRunContext.CompletedTests.Contains(realName)){
+
+				yield return StartCoroutine(Q.assert.Fail(string.Format("The test, \"{0}\", was marked to be skipped using an assertion - but the test was already run!", realName)));
+
+			}
 			yield return null;
 
 		}
@@ -411,9 +420,9 @@ namespace TrilleonAutomation {
 				#endif
 
 				//Any FailureContext beyond TestMethod will not have an instantiated test method.
-				if(!AutomationMaster.TryContinueOnFailure) {
+				if(!AutomationMaster.TryContinueOnFailure || failureContext == FailureContext.Skipped) {
 					
-					if((!isSoft && AutomationMaster.OverrideContinueOnFailureAfterTooManyConcurrentFailures) || (!MideExecution_MarkTestToTryContinueAfterFail && (_failureContext == FailureContext.TestMethod || _failureContext == FailureContext.Default) && failureContext != FailureContext.Skipped)) {
+					if((!isSoft && AutomationMaster.OverrideContinueOnFailureAfterTooManyConcurrentFailures) || (!MideExecution_MarkTestToTryContinueAfterFail && (_failureContext == FailureContext.TestMethod || _failureContext == FailureContext.Default) || failureContext == FailureContext.Skipped)) {
 						
 						try {
 							

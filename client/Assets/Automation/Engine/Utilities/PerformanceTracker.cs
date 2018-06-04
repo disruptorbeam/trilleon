@@ -127,6 +127,12 @@ namespace TrilleonAutomation{
 			}
 			GCEntries.Add(new KeyValuePair<string[],double>(new string[] { key, now }, thisGCMemory));
 
+			if(!key.ToLower().ContainsOrEquals("interval")) {
+				
+				AutomationMaster.Arbiter.SendCommunication("memory_snapshot", string.Format("{0} : {1}", key, now));
+
+			}
+
 			long allMemory = 0; //TODO: GET THE HEAP SIZE? Profiler.usedHeapSize;
 
 			//Asset Memory Usage.

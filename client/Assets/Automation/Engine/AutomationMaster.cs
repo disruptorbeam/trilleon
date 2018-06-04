@@ -160,7 +160,7 @@ namespace TrilleonAutomation {
 
 		public static DateTime LastUseTimer { get; set; } //Used to detect stall in current test execution.
 		#if !UNITY_EDITOR
-		private static int _maxLastUseLimit = 30; //Used to detect stall in current test execution.
+		private static int _maxLastUseLimit = 60; //Used to detect stall in current test execution.
 		#endif
 
 		public static int SessionRunCount { get; set; }
@@ -259,6 +259,12 @@ namespace TrilleonAutomation {
 			set { busy = value; }
 		}
 		private static bool busy;
+
+		public static List<KeyValuePair<string[], string>> AutoFails {
+			get { return _autoFails; }
+			private set { _autoFails = value; }
+		}
+		private static List<KeyValuePair<string[], string>> _autoFails = new List<KeyValuePair<string[], string>>();
 
 		public static List<KeyValuePair<string[], string>> AutoSkips {
 			get { return _autoSkips; }
@@ -538,6 +544,7 @@ namespace TrilleonAutomation {
 		/// </summary>
 		public void ResetTestRunner() {
 
+			LoopTests = new List<KeyValuePair<string, int>>();
 			AutoSkips = new List<KeyValuePair<string[], string>>();
 			Methods = Deferred = FloatingDependencies = MasterlessDependencies = MasterDependencies = new List<KeyValuePair<string, MethodInfo>>();
 			LaunchTime = _runTime = _lastDeferred = buddyCount = CurrentMethodsHandledCount = TestRunMethodCount = HeartBeatIndex = 0;
@@ -1019,20 +1026,7 @@ namespace TrilleonAutomation {
 				_flags.AddRange(DisregardFlagOnClass.Flags);
 
 			}
-
-			//Special "Dependency" case handling for explicit skips/fails.
-			if(AutoSkips.FindAll(ask => ask.Key.Last().ContainsOrEquals(thisType.Name)).Any()) {
-
-				string errorMessage = string.Format("Dependency Architecture Failure! Test {0} was explicitly marked for automatic failure earlier in the test run.", CurrentTestContext.TestName);
-				CurrentTestContext.ErrorDetails = errorMessage;
-				yield return StartCoroutine(Q.assert.Fail(errorMessage, FailureContext.Skipped));
-				AutomationReport.AddToReport(false, 0, true); //Save results to test run's XML file.
-				ReportOnTest();
-				yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
-				yield break;
-
-			}
-
+				
 			if(dependenciesWebList != null || dependencyWebOnClass != null) {
 
 				//Handle Dependency Web relationships and skip or defer this test if necessary.
@@ -1081,7 +1075,7 @@ namespace TrilleonAutomation {
 
 						string errorMessage = string.Format("Dependency Architecture Failure! Test {0} was a dependency for the current method {1} and failed. Skipping test.", dependencies[t], CurrentTestContext.TestName);
 						CurrentTestContext.ErrorDetails = errorMessage;
-						yield return StartCoroutine(Q.assert.Fail(errorMessage, FailureContext.Skipped));
+						yield return StartCoroutine(Q.assert.Skip(errorMessage));
 						AutomationReport.AddToReport(false, 0, true); //Save results to test run's XML file.
 						ReportOnTest();
 						yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
@@ -1098,7 +1092,7 @@ namespace TrilleonAutomation {
 
 						string errorMessage = string.Format("Dependency Architecture Failure! Test {0} was a dependency for the current method {1} and is set to be Ignored. Skipping test.", dependencies[t], CurrentTestContext.TestName);
 						CurrentTestContext.ErrorDetails = errorMessage;
-						yield return StartCoroutine(Q.assert.Fail(errorMessage, FailureContext.Skipped));
+						yield return StartCoroutine(Q.assert.Skip(errorMessage));
 						AutomationReport.AddToReport(false, 0, true); //Save results to test run's XML file.
 						ReportOnTest();
 						yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
@@ -1128,7 +1122,7 @@ namespace TrilleonAutomation {
 
 						string errorMessage = string.Format("Dependency Architecture Failure! Test {0} was a dependency for the current method {1} and is set to be Ignored. Skipping test.", LastTestContext.Method.Name, CurrentTestContext.TestName);
 						CurrentTestContext.ErrorDetails = errorMessage;
-						yield return StartCoroutine(Q.assert.Fail(errorMessage, FailureContext.Skipped));
+						yield return StartCoroutine(Q.assert.Skip(errorMessage));
 						AutomationReport.AddToReport(false, 0, true); //Save results to test run's XML file.
 						ReportOnTest();
 						yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
@@ -1242,7 +1236,7 @@ namespace TrilleonAutomation {
 			if(runClassInit && !BuddyHandler.BuddySystemHandlingStarted) {
 				
 				//Launch global test class setup.
-				if(!_flags.Contains(TestFlag.DisregardSetUpClassGlobal) && CurrentTestContext.IsSuccess) {
+				if(!UnitTestMode && !_flags.Contains(TestFlag.DisregardSetUpClassGlobal) && CurrentTestContext.IsSuccess) {
 					
 					yield return StartCoroutine(Q.game.GlobalSetUpClass());
 					_failureContext = !CurrentTestContext.IsSuccess ? FailureContext.SetUpClassGlobal : FailureContext.Unbound;
@@ -1263,7 +1257,7 @@ namespace TrilleonAutomation {
 				_failureContext = !CurrentTestContext.IsSuccess ? FailureContext.SetUp : FailureContext.Unbound;
 
 			}
-			if(!_flags.Contains(TestFlag.DisregardSetUpGlobal) && CurrentTestContext.IsSuccess) {
+			if(!UnitTestMode && !_flags.Contains(TestFlag.DisregardSetUpGlobal) && CurrentTestContext.IsSuccess) {
 				
 				yield return StartCoroutine(Q.game.GlobalSetUpTest()); //Global SetUp dictated by game specific functionality.
 				_failureContext = !CurrentTestContext.IsSuccess ? FailureContext.SetUpGlobal : FailureContext.Unbound;
@@ -1309,16 +1303,9 @@ namespace TrilleonAutomation {
 				yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
 				yield break;
 
-				//TODO: Remove if provides better information on point of failure.
-				//if(Assert.fFailureContext != FailureContext.TestMethod) {
-					
-					//AutoSkips.Add(new KeyValuePair<string[], string>(new string[] { "class", CurrentTestContext.ClassName }, string.Format("An exception occurred in the {0} method for class {1}. Skipping {2}.", Enum.GetName(typeof(FailureContext), Assert.fFailureContext), CurrentTestContext.ClassName, CurrentTestContext.TestName)));
-				
-				//}
-
 			}
 
-			//Check if this test method, or its class, appears in the list of tests marked for failure.
+			//Special "Dependency" case handling for explicit skips.
 			for(int af = 0; af < AutoSkips.Count; af++) {
 
 				string[] key = AutoSkips[af].Key;
@@ -1326,7 +1313,7 @@ namespace TrilleonAutomation {
 
 					if(CurrentTestContext.ClassName == key[1]) {
 
-						yield return StartCoroutine(Q.assert.Fail(string.Format("AutoFail: Test Class {0} was marked as an auto fail with this message: {1}", CurrentTestContext.ClassName, AutoSkips[af].Value), FailureContext.Skipped));
+						yield return StartCoroutine(Q.assert.Skip(string.Format("AutoSkip: Test Class {0} was marked as an auto skip with this message: {1}", CurrentTestContext.ClassName, AutoSkips[af].Value)));
 						AutomationReport.AddToReport(false, 0, true); //Save results to test run's XML file.
 						ReportOnTest();
 						yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
@@ -1338,8 +1325,40 @@ namespace TrilleonAutomation {
 
 					if(CurrentTestContext.TestName == key[1]) {
 
-						yield return StartCoroutine(Q.assert.Fail(string.Format("AutoFail: Test Method {0} was marked as an auto fail with this message: {1}", CurrentTestContext.TestName, AutoSkips[af].Value), FailureContext.Skipped));
+						yield return StartCoroutine(Q.assert.Skip(string.Format("AutoSkip: Test Method {0} was marked as an auto skip with this message: {1}", CurrentTestContext.TestName, AutoSkips[af].Value)));
 						AutomationReport.AddToReport(false, 0, true); //Save results to test run's XML file.
+						ReportOnTest();
+						yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
+						yield break;
+
+					}
+
+				}
+
+			}
+
+			//Special "Dependency" case handling for explicit fails.
+			for(int af = 0; af < AutoFails.Count; af++) {
+
+				string[] key = AutoFails[af].Key;
+				if(key[0] == "class") {
+
+					if(CurrentTestContext.ClassName == key[1]) {
+
+						yield return StartCoroutine(Q.assert.Fail(string.Format("AutoFail: Test Class {0} was marked as an auto fail with this message: {1}", CurrentTestContext.ClassName, AutoFails[af].Value)));
+						AutomationReport.AddToReport(false, 0); //Save results to test run's XML file.
+						ReportOnTest();
+						yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
+						yield break;
+
+					}
+
+				} else {
+
+					if(CurrentTestContext.TestName == key[1]) {
+
+						yield return StartCoroutine(Q.assert.Fail(string.Format("AutoFail: Test Method {0} was marked as an auto fail with this message: {1}", CurrentTestContext.TestName, AutoFails[af].Value)));
+						AutomationReport.AddToReport(false, 0); //Save results to test run's XML file.
 						ReportOnTest();
 						yield return StartCoroutine(SingleTestLaunchCleanup(method.Value.Name, thisType, initialized, m));
 						yield break;
@@ -1442,7 +1461,14 @@ namespace TrilleonAutomation {
 
 				yield return StartCoroutine(LaunchSupportMethod(thisType, "teardownclass"));
 
-				if(!_flags.Contains(TestFlag.DisregardTearDownClassGlobal) && CurrentTestContext.IsSuccess) {
+				if(!UnitTestMode && !_flags.Contains(TestFlag.DisregardTearDownGlobal) && CurrentTestContext.IsSuccess) {
+
+					yield return StartCoroutine(Q.game.GlobalTearDownTest()); //Global TearDown dictated by game specific functionality.
+					_failureContext = !CurrentTestContext.IsSuccess ? FailureContext.TearDownGlobal : FailureContext.Unbound;
+
+				}
+
+				if(!UnitTestMode && !_flags.Contains(TestFlag.DisregardTearDownClassGlobal) && CurrentTestContext.IsSuccess) {
 					
 					yield return StartCoroutine(Q.game.GlobalTearDownClass());
 					_failureContext = !CurrentTestContext.IsSuccess ? FailureContext.TearDownClass : FailureContext.Unbound;
@@ -1458,17 +1484,10 @@ namespace TrilleonAutomation {
 
 			}
 
-			if(!_flags.Contains(TestFlag.DisregardTearDownGlobal) && CurrentTestContext.IsSuccess) {
+			if(!UnitTestMode && !_flags.Contains(TestFlag.DisregardTearDownGlobal) && CurrentTestContext.IsSuccess) {
 				
 				yield return StartCoroutine(Q.game.GlobalTearDownTest()); //Global TearDown dictated by game specific functionality.
 				_failureContext = !CurrentTestContext.IsSuccess ? FailureContext.TearDownGlobal : FailureContext.Unbound;
-
-			}
-
-			if(!_flags.Contains(TestFlag.DisregardTearDownClassGlobal) && CurrentTestContext.IsSuccess) {
-
-				yield return StartCoroutine(Q.game.GlobalTearDownClass()); //Global TearDown Class dictated by game specific functionality.
-				_failureContext = !CurrentTestContext.IsSuccess ? FailureContext.TearDownClassGlobal : FailureContext.Unbound;
 
 			}
 
@@ -2267,6 +2286,7 @@ namespace TrilleonAutomation {
 			AutoConsole.PostMessage("TestRunnerMonitor Launching", MessageLevel.Abridged);
 			Arbiter.LastMessage = DateTime.Now; //Set baseline.
 
+			int intervalCheck = 0;
 			while(Busy) {
 
             	//If it has been over 10 minutes since the last server message, stop this coroutine.
@@ -2279,12 +2299,14 @@ namespace TrilleonAutomation {
 
 				}
 
-				yield return StartCoroutine(Q.driver.WaitRealTime(2));
-				if(!IgnoreMemoryTracking) {
+				yield return StartCoroutine(Q.driver.WaitRealTime(7.5f));
+
+				if(!IgnoreMemoryTracking && intervalCheck == 0) {
 
 					StartCoroutine(MemoryTracker.TrackMemory(string.Format("Interval Check {0}", DateTime.UtcNow.ToLongTimeString())));
 
 				}
+				intervalCheck = intervalCheck == 4 ? 0 : intervalCheck + 1;
 
 				#if !UNITY_EDITOR
 				CheckServerHeartbeat();
@@ -2292,12 +2314,12 @@ namespace TrilleonAutomation {
 				double timediff = DateTime.Now.Subtract(_lastScreenshot).TotalSeconds;
 				if(IsServerListening && Math.Abs(timediff) > PerformanceTracker.Screenshot_Interval) {
 
-				_lastScreenshot = DateTime.Now;
-				if(!NoIntervalScreenshots) {
+					_lastScreenshot = DateTime.Now;
+					if(!NoIntervalScreenshots) {
 
-				yield return StartCoroutine(TakeScreenshot(true));
+						yield return StartCoroutine(TakeScreenshot(true));
 
-				}
+					}
 
 				}
 
@@ -2305,18 +2327,18 @@ namespace TrilleonAutomation {
 				double timeSinceLastDriverCall = DateTime.UtcNow.Subtract(LastUseTimer).TotalSeconds;
 				if(timeSinceLastDriverCall > _maxLastUseLimit) {
 
-				//Only kill test method if current method started before the last driver call.
-				if(DateTime.UtcNow.Subtract(CurrentTestContext.StartTime).TotalSeconds > timeSinceLastDriverCall) {
+					//Only kill test method if current method started before the last driver call.
+					if(DateTime.UtcNow.Subtract(CurrentTestContext.StartTime).TotalSeconds > timeSinceLastDriverCall) {
 
-				//If current method has failed to stop after a failure, ensure it is killed.
-				try {
+						//If current method has failed to stop after a failure, ensure it is killed.
+						try {
 
-				AutoConsole.PostMessage("Stall detected. Killing test from TestRunnerMonitor.", MessageLevel.Abridged);
-				CurrentTestMethod.Stop(); //Kill current test, only if the currently queued test has been initialized.
+						AutoConsole.PostMessage("Stall detected. Killing test from TestRunnerMonitor.", MessageLevel.Abridged);
+						CurrentTestMethod.Stop(); //Kill current test, only if the currently queued test has been initialized.
 
-				} catch { }
+						} catch { }
 
-				}
+					}
 
 				}
 
@@ -3158,7 +3180,7 @@ namespace TrilleonAutomation {
 				newResults.AddRange(results);
 				results = newResults;
 			}
-			results = results.RemoveNulls();
+			results = results.FindAll(n => n.Value != null && n.Key != null);
 
 			//While Buddy System tests are removed from the main method list after this point, the current method count should equal the initial count.
 			if(intialMethodCount != results.Count) {
@@ -3393,6 +3415,19 @@ namespace TrilleonAutomation {
 		public void TakeScreenshotAsync(bool isInterval = false, string overrideName = "") {
 
 			StartCoroutine(TakeScreenshot(isInterval, overrideName));
+
+		}
+
+		public IEnumerator ShutDownApplicationAfterFatalException() {
+
+			if(!Application.isEditor && IsServerListening) {
+
+				AutoConsole.PostMessage("Application is not running in editor, and a server is listening; auto shut down activated. Shutting down application in 20 seconds.", MessageLevel.Abridged);
+				yield return StartCoroutine(Q.driver.WaitRealTime(20f));
+				Application.Quit();
+
+			}
+			yield return null;
 
 		}
 

@@ -13,10 +13,10 @@ namespace TrilleonAutomation {
 		public static ConnectionStrategyType TrilleonConnectionStrategy;
 		public static List<string> IncomingCommandQueue = new List<string>();
 		public static List<string> OutgoingCommandQueue = new List<string>();
-
+		public static string Strategy { get; set; }
 		public static int MaxMessageLength {
 			get { 
-				switch(ConfigReader.GetString("CONNECTION_STRATEGY").ToLower()) {
+				switch(Strategy) {
 					case "pubnub":
 						return PubnubConnectionStrategy.MAX_MESSAGE_LENGTH;
 					case "socket":
@@ -25,32 +25,15 @@ namespace TrilleonAutomation {
 				}
 			}
 		}
-
-		public SocketConnectionStrategy SocketConnectionStrategy {
-			get { 
-				return AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>();
-			}
-		}
-
-		public PubnubConnectionStrategy PubnubConnectionStrategy {
-			get { 
-				return AutomationMaster.StaticSelf.GetComponent<PubnubConnectionStrategy>();
-			}
-		}
+	
+		//Don't forget to update all locations that consider strategies with any custom-created ones.
+		public static SocketConnectionStrategy SocketConnectionStrategy { get; private set; }
+		public static PubnubConnectionStrategy PubnubConnectionStrategy { get; private set; }
 
 		void Start () {
 
-			switch(ConfigReader.GetString("CONNECTION_STRATEGY").ToLower()) {
-				case "pubnub":
-					TrilleonConnectionStrategy = ConnectionStrategyType.Pubnub;
-					gameObject.AddComponent<PubnubConnectionStrategy>();
-					break;
-				case "socket":
-				default:
-					TrilleonConnectionStrategy = ConnectionStrategyType.Socket;
-					gameObject.AddComponent<SocketConnectionStrategy>();
-					break;
-			}
+			Strategy = string.Empty;
+ 			ChangeConnectionStrategy(ConfigReader.GetString("CONNECTION_STRATEGY").ToLower());
 
 		}
 
@@ -70,6 +53,51 @@ namespace TrilleonAutomation {
 
 			} 
 				
+		}
+
+		public void ChangeConnectionStrategy(string newStrategy) {
+
+			if(newStrategy == Strategy) {
+
+				return;
+
+			}
+
+			switch(Strategy.ToLower()) {
+				case "pubnub":
+				Destroy(PubnubConnectionStrategy);
+					break;
+				case "socket":
+				default:
+					Destroy(SocketConnectionStrategy);
+					break;
+			}
+
+			Strategy = newStrategy;
+			switch(Strategy.ToLower()) {
+				case "pubnub":
+					TrilleonConnectionStrategy = ConnectionStrategyType.Pubnub;
+					PubnubConnectionStrategy = gameObject.AddComponent<PubnubConnectionStrategy>();
+					break;
+				case "socket":
+				default:
+					TrilleonConnectionStrategy = ConnectionStrategyType.Socket;
+					SocketConnectionStrategy = gameObject.AddComponent<SocketConnectionStrategy>();
+					break;
+			}
+
+		}
+
+		public void UpdateChannelIdentity(string identity) {
+
+			switch(Strategy) {
+				case "pubnub":
+					PubnubConnectionStrategy.Unsubscribe();
+					PubnubConnectionStrategy.Subscribe(identity);
+					AutomationMaster.Arbiter.SendCommunication("checking_in", AutomationMaster.Arbiter.GridIdentity);
+					break;
+			}
+
 		}
 
 		public static void SendCommunication(string json) {

@@ -87,6 +87,12 @@ namespace TrilleonAutomation {
 
 		#endregion
 
+		public static void SendConsoleCommand(string command) {
+			
+			CommandConsoleBroker.SendCommand(command);
+
+		}
+
 		#region Game Instance Library
 
 		/// <summary>

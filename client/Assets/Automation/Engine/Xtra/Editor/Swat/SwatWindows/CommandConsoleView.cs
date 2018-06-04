@@ -164,7 +164,7 @@ namespace TrilleonAutomation {
 
 					} else {
 						
-						ConsoleCommands.SendCommand(string.Format("{0} {1}", longestAlias, VariableInputFields[x]));
+						ConsoleCommands.SendCommand(string.Format("{0} {1}", longestAlias, VariableInputFields[inputFieldId - 1])); //Minus one because we are handling and incrementing this input before this onClick is implemented.
 						showCommandLog = true;
 
 					}
