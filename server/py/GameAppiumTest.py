@@ -81,7 +81,9 @@ class GameAppiumTest(BaseAppiumTest):
         else:
             command_json += "{\"" + self.buddyCommandName + "\":\"" + self.buddyName + "\"}"
             log("Running Buddy tests.")
-
+        
+        if self.additionalCommands != None and len(self.additionalCommands) > 1:
+            command_json += "," + self.additionalCommands
         self.postMessage(command_json)
         
         timeout = 0
@@ -108,6 +110,7 @@ class GameAppiumTest(BaseAppiumTest):
                 self.buddy_check() #Check if Buddy has declared itself ready now. If not, send command to ignore buddy tests.
             self.check_for_client_requests("handle_client_commands")
             self.check_for_client_requests("screenshot")
+            self.handle_device_alert(True)
             hasHeartbeat = self.has_heartbeat()
             isReady = self.check_for_client_responses("complete", False)
             self.check_for_client_responses("fatal_error_check", False)
@@ -146,7 +149,7 @@ class GameAppiumTest(BaseAppiumTest):
             if xmlRetrieved == False:
                 xmlRetrieved = self.get_xml_from_client_run()
             if jsonRetrieved == False:
-                jsonRetrieved = self.get_json_from_client_run(False)
+                jsonRetrieved = self.format_json_from_client_run(False)
             if deviceDetailsRetrieved == False:
                 deviceDetailsRetrieved = self.check_for_client_responses("device_details_html", True)
             if heapSizeRetrieved == False:

@@ -223,6 +223,13 @@ else
     echo "WARNING: No GameInitializationTime.txt found!"
 fi
 
+if [ -f ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/ExceptionsJson.txt ]; then
+    echo "ExceptionsJson.txt found and copied to ${DEFAULT_DIRECTORY}/ExceptionsJson.txt"
+    cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/ExceptionsJson.txt ${DEFAULT_DIRECTORY}/ExceptionsJson.txt
+else
+    echo "WARNING: No ExceptionsJson.txt found!"
+fi
+
 echo "Copying appium log to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/Appium/appium.log"
 cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/appium.log ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/appium.log
 
