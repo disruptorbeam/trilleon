@@ -29,18 +29,21 @@ import tempfile
 import uuid
 import urllib
 import requests
+import socket
 from datetime import datetime
 from pubnub import Pubnub
 
 test_run_id = ""
 heartbeats = ""
+test_json = []
 def error(message):
-    log("PubNub Erred: " + message)
+    log("PubNub Erred: %s" % (message))
 
 def _callback(message):
     log("")
 
 def callback(message, channel):
+    global test_json
     global heartbeats
     # Differentiate intended client messages from its Buddy's messages.
     caller = message.split("grid_identity_buddy")
@@ -105,6 +108,34 @@ def callback(message, channel):
             elif "@APOS@Failed@APOS@" in message:
                 with open("pass_fail_count.txt", "a") as f:
                     f.write("F|")
+        if "SINGLE_TEST_RESULTS_JSON|" in message:
+            initialDelimiter = "SINGLE_TEST_RESULTS_JSON|"
+            finalDelimiter = "|"
+            raw = message.split(initialDelimiter)[1]
+            json = raw.split(finalDelimiter)[0]
+            with open("testresultsjson.txt", "a") as f:
+                f.write(json)
+        if "SINGLE_TEST_RESULTS_JSON_MULTI_PART|" in message:
+            initialDelimiter = "SINGLE_TEST_RESULTS_JSON_MULTI_PART|"
+            finalDelimiter = "|"
+            raw = message.split(initialDelimiter)[1]
+            jsonPiece = raw.split(finalDelimiter)[0]
+            metaData = jsonPiece.split("$$$")
+            pieceId = metaData[0]
+            pieceTotal = metaData[1]
+            #testId = metaData[2] #TODO: Make it test specific so that two tests in a row dont cross contaminate. Insanely unlikely, but possible.
+            actualJson = metaData[3]
+            if len(test_json) == 0:
+                test_json = ["" for x in range(int(pieceTotal))]
+                test_json[int(pieceId)] = actualJson
+            else:
+                test_json[int(pieceId)] = actualJson
+                if "" not in test_json:
+                    test_json[int(pieceId)] = actualJson
+                    with open("testresultsjson.txt", "a") as f:
+                        for x in test_json:
+                            f.write(x)
+                    test_json = []
 
 def log(msg):
     header = ''
@@ -119,6 +150,12 @@ def log(msg):
 
 class BaseAppiumTest(unittest.TestCase):
     
+    #These should match with the ports provided in GameMaster.cs
+    master_android_port = 9191
+    master_ios_port = 9292
+    master_webgl_port = 9393
+    assigned_port_instance = 0
+    
     driver = None
     screenshot_count = 0
     screenshot_dir = None
@@ -132,6 +169,7 @@ class BaseAppiumTest(unittest.TestCase):
     DBID = ""
     project_id = ""
     gridIdentity = ""
+    additionalCommands = ""
     buddyIdentity = ""
     pubnub = None
     jsonGridPrefix = ""
@@ -188,7 +226,8 @@ class BaseAppiumTest(unittest.TestCase):
         self.run_command = os.environ.get('RUN_COMMAND')
         with open("testresultsjson.txt", "w") as f:
             f.write("[")
-
+        self.additionalCommands = os.environ.get('ADDITIONAL_COMMANDS')
+        
         # Set up driver
         if os.environ['DEVICE_PLATFORM'] == "ios":
             self.desired_capabilities_cloud["showXcodeLog"] = True
@@ -209,7 +248,10 @@ class BaseAppiumTest(unittest.TestCase):
         self.desired_capabilities_cloud["launchTimeout"] = 99999
         time.sleep(5)
         #try:
-        self.driver = webdriver.Remote("http://" + os.environ['HOST'] + ":" + os.environ['UNIQUE_PORT'] + "/wd/hub", self.desired_capabilities_cloud)
+        log("Starting driver on " + "http://" + os.environ['HOST'] + ":" + os.environ['UNIQUE_PORT'] + "/wd/hub")
+        log("Starting driver on " + "http://localhost:" + os.environ['UNIQUE_PORT'] + "/wd/hub")
+        self.driver = webdriver.Remote("http://localhost:" + os.environ['UNIQUE_PORT'] + "/wd/hub", self.desired_capabilities_cloud)
+        # self.driver = webdriver.Remote("http://" + os.environ['HOST'] + ":" + os.environ['UNIQUE_PORT'] + "/wd/hub", self.desired_capabilities_cloud)
         #except Exception as e:
         #log("Error Instantiating Driver [" + str(e) + "]. Attempting to continue anyway.")
         time.sleep(10)
@@ -225,6 +267,44 @@ class BaseAppiumTest(unittest.TestCase):
         self.gridIdentity = "Trilleon-Automation-" + os.environ['GRID_IDENTITY_PREFIX']
         self.jsonGridPrefix = "{\"test_run_id\":\"" + test_run_id + "\"},{\"grid_identity\":\"" + self.gridIdentity + "\"},{\"grid_source\":\"server\"},{\"grid_context\":\"StandardAlert\"},"
         self.jsonBuddyGridPrefix = "{\"test_run_id\":\"" + test_run_id + "\"},{\"grid_identity\":\"" + self.buddyName + "\"},{\"grid_source\":\"server\"},{\"grid_context\":\"BuddyMessage\"},"
+
+    # Determine the port assigned to this client/server relationship.
+    def GetAssignedPort(self):
+        #TODO: This is a server connection. We need a client-only connection for this. Also make the master server py script that listens and assigns.
+        host = '127.0.0.1'
+        if os.environ['DEVICE_PLATFORM'] == "ios":
+            port = master_ios_port
+        if os.environ['DEVICE_PLATFORM'] == "android":
+            port = master_android_port
+        if os.environ['DEVICE_PLATFORM'] == "webgl":
+            port = master_webgl_port
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind((host, port))
+        s.listen(100)
+        conn, addr = s.accept()
+        while True:
+            try:
+                data = conn.recv(1024)
+                if not data: break
+                if "checking_in" in data:
+                    conn.sendall("Request_Port:" + os.environ['DEVICE_UDID'])
+            except socket.error:
+                print "Master Socket Error Occured: " + socket.error
+                break
+        conn.close()
+            
+    # Determine the port assigned to this client/server relationship.
+    def BeginListenOnAssignedPort(self):
+        host = '127.0.0.1'
+        port = 9595
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.settimeout(10)
+        s.bind((host, port))
+        s.settimeout(None)
+        s.listen(100)
+        conn, addr = s.accept()
 
     # Close down the driver, call XML and JSON finalizer, close PubNub connection, and handle any fatal execution error.
     def tearDown(self):
@@ -303,7 +383,7 @@ class BaseAppiumTest(unittest.TestCase):
         except Exception as e:
             log("Exception! " + str(e))
 
-    def handle_device_alert(accept):
+    def handle_device_alert(self, accept):
         if os.environ['DEVICE_PLATFORM'] == "android":
             # Try to dismiss any Android account alerts.
             try:
@@ -321,15 +401,15 @@ class BaseAppiumTest(unittest.TestCase):
             except Exception as e:
                 log("Exception accepting Android alert! " + str(e))
         else:
-            log("Attempting to dismiss any iOS device-level alert.")
             try:
+                log("Attempting to dismiss any iOS device-level alert.")
                 if accept == True:
                     self.driver.switch_to.alert.accept()
                 else:
                     self.driver.switch_to.alert.dismiss()
             except Exception as e:
-                log("Internal Error Accepting iOS Alert (this is not likely a problem, due to interval dismissal logic): " + str(e))
-
+                log("Exception accepting iOS alert! " + str(e))
+                    
     # Write name of self to parent level file that selected Buddy will check to verify both Buddy's have begun their test runs.
     def buddy_check_in(self):
         #directoryPieces = os.getcwd().split("/")
@@ -408,37 +488,13 @@ class BaseAppiumTest(unittest.TestCase):
         return True
             
     # Find, extract, format, and save all single-test JSON results for server HTML report
-    def get_json_from_client_run(self, force):
+    def format_json_from_client_run(self, force):
         log("Command Recieved: [Get JSON]")
+        json = ""
         recent_posts = self.get_communication_history()
+        with open("testresultsjson.txt", "r") as f:
+            json = f.read()
         if "completed_automation" in recent_posts or force == True:
-            log("Generating JSON.")
-            initialDelimiter = "SINGLE_TEST_RESULTS_JSON|"
-            delimiter = "|"
-            rawAll = recent_posts.split(initialDelimiter)
-            json = ""
-            index = 0
-            partialInitialDelimiter = "SINGLE_TEST_RESULTS_JSON_MULTI_PART|"
-            for x in rawAll:
-                if index > 0 and len(x) > 0:
-                    # Handle test results reporting that was too large to send in a single message, requiring several parts of a single result report.
-                    if partialInitialDelimiter in x:
-                        rawPartials = x.split(partialInitialDelimiter) # All partial message pieces
-                        indexPartial = 0
-                        piecesFinal = ["" for x in range(len(rawPartials))]
-                        for z in rawPartials:
-                            if indexPartial == 0:
-                                json += rawPartials[0].split(delimiter)[0] # First, record the test that preceded the partial test details report.
-                            else:
-                                piecesPartial = z.split(self.partialDataDelimiter)
-                                piecesFinal[int(piecesPartial[0])] = piecesPartial[1].split(delimiter)[0] # The first piece after splicing is the index/order of this piece. Set that piece equal to the actual message data.
-                            indexPartial += 1
-                        for f in piecesFinal:
-                            json += f # Should piece together valid json in correct order if previous for loop correctly handled ordering.
-                    else:
-                        json += x.split(delimiter)[0]
-                index += 1
-            
             # "@APOS@" token is a special encoding of double qoutes to prevent issues with PubNub message encoding and proper formatting of JSON
             json = json.replace("@APOS@", "\"").replace("}{", "},{")
             if not json.endswith("]"):
@@ -446,17 +502,9 @@ class BaseAppiumTest(unittest.TestCase):
                     json = json[:-1] + "]"
                 else:
                     json += "]"
-            fileContent = ""
-            with open("testresultsjson.txt", "r") as f:
-                fileContent = f.read()
             log("JSON FINAL LENGTH [" + str(len(json)) + "]")
-            try:
-                log("JSON FINAL ACTUAL [" + json + "]")
-            except Exception as e:
-                log("Failed to parse final json [" + str(e) + "]")
-            if json not in fileContent:
-                with open("testresultsjson.txt", "a") as f:
-                    f.write(json)
+            with open("testresultsjson.txt", "w") as f:
+                f.write(json)
             return True
         else:
             return False

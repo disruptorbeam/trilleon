@@ -34,7 +34,7 @@
  .exception_message { display: inline-block; padding: 10px; }
  .exception_screenshot { display: inline-block; }
  .exception_screenshot > a { display: inline-block; cursor: pointer; margin-right: 5px; text-decoration: none; color: white; padding: 10px; background-color: #5f97c7; border-radius: 6px; }
- .fps_display { position: absolute; margin-top: -22px; z-index: 99; color: white; right: 0; margin-right: 10px; font-size: 0.75em; }
+ .fps_display { position: absolute; margin-top: -22px; z-index: 99; color: white; right: 0; margin-right: 4%; font-size: 0.75em; }
  .gallery_image { cursor:pointer; max-width:100%; max-height:462px; }
  .gallery_image_div { display:inline-block; position:relative; height:100%; margin-top:25px; padding:5px; }
  .gallery_image_title { text-align:center; width:97%; position:absolute; margin-top:-28px; background-color:#29aeff; border:1px solid #29aeff; border-radius:6px; color:white; padding:2px; }
@@ -81,7 +81,7 @@
  .tab_toggle { display:inline-block; width:150px; max-width:150px; height:40px; margin-top:25px; margin-bottom:25px; }
  .tab_toggle_name { margin-top:5px; }
  .tab_toggle_right_end { display:inline-block;border-radius:0 6px 6px 0; }
- .tab_toggle_inner { display:inline-block; border-radius:0; margin-left: -5px; margin-right: -5px; }
+ .tab_toggle_inner { display:inline-block; border-radius:0; margin-left: -10px; margin-right: -5px; }
  .tab_toggle_left_end { display:inline-block; border-radius:6px 0 0 6px; }
  .tag_data { margin-right:20px; } 
  .table { border-radius:6px; } 
