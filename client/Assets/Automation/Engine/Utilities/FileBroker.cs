@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -68,20 +68,20 @@ namespace TrilleonAutomation {
 			}
 
 			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.TrilleonConfig, "TrilleonConfig"));
-			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.ReportJavascript, ConfigReader.GetString("AUTOMATION_RESULTS_REPORT_JAVASCRIPT_USE").Replace("/", FILE_PATH_SPLIT)));
-			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.ReportCss, ConfigReader.GetString("AUTOMATION_RESULTS_REPORT_CSS_USE").Replace("/", FILE_PATH_SPLIT)));
+			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.ReportJavascript, AutomationMaster.ConfigReader.GetString("AUTOMATION_RESULTS_REPORT_JAVASCRIPT_USE").Replace("/", FILE_PATH_SPLIT)));
+			knownTrilleonResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.ReportCss, AutomationMaster.ConfigReader.GetString("AUTOMATION_RESULTS_REPORT_CSS_USE").Replace("/", FILE_PATH_SPLIT)));
 
 			#if UNITY_EDITOR
 
 			AssetDatabase.Refresh();
 
-			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.LatestTestResults, "nexus_test_manifest_latest_test_results.txt"));
-			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.LaunchInstructions, "nexus_test_manifest_launch_instructions.txt"));
-			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.ManifestGUISettings, "nexus_test_manifest_categories_foldout_bools.txt"));
-			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.BuddyHistory, "nexus_buddy_data_history.txt"));
-			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.NexusTabs, "nexus_tab_preferences.txt"));
-			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.Favorites, "nexus_manifest_favorites.txt"));
-			knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.FavoritesUnit, "nexus_manifest_favorites_unit.txt"));
+            knownEditorResourceFiles.Add(new KeyValuePair<FileResource, string>(FileResource.CustomizationConfig, "nexus_customization.config"));
+            knownEditorResourceFiles.Add(new KeyValuePair<FileResource, string>(FileResource.LatestTestResults, "nexus_test_manifest_latest_test_results.config"));
+            knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.LaunchInstructions, "nexus_test_manifest_launch_instructions.config"));
+            knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.ManifestGUISettings, "nexus_test_manifest_categories_foldout_bools.config"));
+            knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.BuddyHistory, "nexus_buddy_data_history.config"));
+            knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.Favorites, "nexus_manifest_favorites.config"));
+            knownEditorResourceFiles.Add(new KeyValuePair<FileResource,string>(FileResource.FavoritesUnit, "nexus_manifest_favorites_unit.config"));
 
 			BASE_NON_UNITY_PATH = string.Empty;
 			if(Application.platform == RuntimePlatform.WindowsEditor) {
@@ -103,21 +103,21 @@ namespace TrilleonAutomation {
 
 			}
 
-			RESOURCES_DIRECTORY = string.Format("{0}{4}{1}{4}{2}{3}", BASE_NON_UNITY_PATH, TOP_LEVEL_FOLDER_NAME, GameMaster.GAME_NAME, ConfigReader.GetString("EDITOR_RESOURCE_FILES_DIRECTORY").Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
+			RESOURCES_DIRECTORY = string.Format("{0}{4}{1}{4}{2}{3}", BASE_NON_UNITY_PATH, TOP_LEVEL_FOLDER_NAME, GameMaster.GAME_NAME, AutomationMaster.ConfigReader.GetString("EDITOR_RESOURCE_FILES_DIRECTORY").Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
 			if(!Directory.Exists(RESOURCES_DIRECTORY)) {
 				
 				Directory.CreateDirectory(Path.GetDirectoryName(RESOURCES_DIRECTORY));
 
 			}
 
-			CONSOLE_LOG_DIRECTORY = string.Format("{0}{4}{1}{4}{2}{3}", BASE_NON_UNITY_PATH, TOP_LEVEL_FOLDER_NAME, GameMaster.GAME_NAME, ConfigReader.GetString("EDITOR_RESOURCE_CONSOLE_LOG_DIRECTORY").Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
+			CONSOLE_LOG_DIRECTORY = string.Format("{0}{4}{1}{4}{2}{3}", BASE_NON_UNITY_PATH, TOP_LEVEL_FOLDER_NAME, GameMaster.GAME_NAME, AutomationMaster.ConfigReader.GetString("EDITOR_RESOURCE_CONSOLE_LOG_DIRECTORY").Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
 			if(!Directory.Exists(CONSOLE_LOG_DIRECTORY)) {
 				
 				Directory.CreateDirectory(Path.GetDirectoryName(CONSOLE_LOG_DIRECTORY));
 
 			}
 
-			REPORTS_DIRECTORY = string.Format("{0}{4}{1}{4}{2}{3}", BASE_NON_UNITY_PATH, TOP_LEVEL_FOLDER_NAME, GameMaster.GAME_NAME, ConfigReader.GetString("EDITOR_RESOURCE_TEST_REPORTS_DIRECTORY").Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
+			REPORTS_DIRECTORY = string.Format("{0}{4}{1}{4}{2}{3}", BASE_NON_UNITY_PATH, TOP_LEVEL_FOLDER_NAME, GameMaster.GAME_NAME, AutomationMaster.ConfigReader.GetString("EDITOR_RESOURCE_TEST_REPORTS_DIRECTORY").Replace("/", FILE_PATH_SPLIT), FILE_PATH_SPLIT);
 			if(!Directory.Exists(REPORTS_DIRECTORY)) {
 				
 				Directory.CreateDirectory(Path.GetDirectoryName(REPORTS_DIRECTORY));
@@ -290,7 +290,7 @@ namespace TrilleonAutomation {
 			SaveTextResource(FileResource.TrilleonConfig, textInfo.ToString());
 
 			AssetDatabase.Refresh();
-			ConfigReader.Refresh();
+			AutomationMaster.ConfigReader.Refresh();
 			#endif
 
 		}
@@ -429,13 +429,13 @@ namespace TrilleonAutomation {
 			
 			}
 
-			string filePath = string.Format("{0}{1}{2}.txt", Application.dataPath.Replace("/", FILE_PATH_SPLIT), ConfigReader.GetString("UNITY_RESOURCES_FILE_PATH").Replace("/", FILE_PATH_SPLIT), knownTrilleonResourceFiles.Find(x => x.Key == file).Value);
+			string filePath = string.Format("{0}{1}{2}.txt", Application.dataPath.Replace("/", FILE_PATH_SPLIT), AutomationMaster.ConfigReader.GetString("UNITY_RESOURCES_FILE_PATH").Replace("/", FILE_PATH_SPLIT), knownTrilleonResourceFiles.Find(x => x.Key == file).Value);
 			File.WriteAllText(filePath, value);
 
 			AssetDatabase.Refresh();
 			if(file == FileResource.TrilleonConfig) {
 
-				ConfigReader.Refresh();
+				AutomationMaster.ConfigReader.Refresh();
 
 			}
 

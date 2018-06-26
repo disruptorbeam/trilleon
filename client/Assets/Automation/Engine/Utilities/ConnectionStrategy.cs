@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace TrilleonAutomation {
@@ -33,23 +32,28 @@ namespace TrilleonAutomation {
 		void Start () {
 
 			Strategy = string.Empty;
- 			ChangeConnectionStrategy(ConfigReader.GetString("CONNECTION_STRATEGY").ToLower());
+ 			ChangeConnectionStrategy(AutomationMaster.ConfigReader.GetString("CONNECTION_STRATEGY").ToLower());
 
 		}
 
 		void Update() {
-
+            
+            bool success = false;
 			//Listen for commands until coroutine is killed.
 			if(IncomingCommandQueue.Any()) {
 
-				ReceiveMessageActual(IncomingCommandQueue.First());
-				IncomingCommandQueue.RemoveAt(0);
+                ReceiveMessageActual(IncomingCommandQueue.First());
+                IncomingCommandQueue.RemoveAt(0);
 
 			} 
 			if(OutgoingCommandQueue.Any()) {
 
-				SendCommunicationActual(OutgoingCommandQueue.First());
-				OutgoingCommandQueue.RemoveAt(0);
+                success = SendCommunicationActual(OutgoingCommandQueue.First());
+                if(success) {
+                    
+                    OutgoingCommandQueue.RemoveAt(0);
+
+                }
 
 			} 
 				
@@ -65,7 +69,7 @@ namespace TrilleonAutomation {
 
 			switch(Strategy.ToLower()) {
 				case "pubnub":
-				Destroy(PubnubConnectionStrategy);
+				    Destroy(PubnubConnectionStrategy);
 					break;
 				case "socket":
 				default:
@@ -94,11 +98,21 @@ namespace TrilleonAutomation {
 				case "pubnub":
 					PubnubConnectionStrategy.Unsubscribe();
 					PubnubConnectionStrategy.Subscribe(identity);
-					AutomationMaster.Arbiter.SendCommunication("checking_in", AutomationMaster.Arbiter.GridIdentity);
+                    Ready();
 					break;
 			}
 
 		}
+
+        public static void Ready() {
+
+            if(!Application.isEditor || AutomationMaster.ConfigReader.GetBool("SEND_COMMUNICATIONS_IN_EDITOR")) {
+
+                AutomationMaster.Arbiter.SendCommunication("checking_in", AutomationMaster.Arbiter.GridIdentity);
+
+            }
+
+        }
 
 		public static void SendCommunication(string json) {
 
@@ -118,16 +132,24 @@ namespace TrilleonAutomation {
 
 		}
 
-		void SendCommunicationActual(string json) {
+		bool SendCommunicationActual(string json) {
 
+            bool success = false;
 			switch(TrilleonConnectionStrategy) {
 				case ConnectionStrategyType.Pubnub:
-					PubnubConnectionStrategy.SendCommunication(json.ToString());
+					PubnubConnectionStrategy.SendCommunication(json);
+                    success = true;
 					break;
 				case ConnectionStrategyType.Socket:
-					SocketConnectionStrategy.SendCommunication(json.ToString());
+                    if(SocketConnectionStrategy.SubscriptionsComplete) {
+                        
+                        SocketConnectionStrategy.SendCommunication(json);
+                        success = true;
+
+                    }
 					break;
 			}
+            return success;
 
 		}
 	

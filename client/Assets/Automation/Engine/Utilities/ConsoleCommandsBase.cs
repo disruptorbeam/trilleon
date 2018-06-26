@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -64,12 +64,32 @@ namespace TrilleonAutomation {
 					new KeyValuePair<string,string>("TestRunID", "The id of the test run that contains the tests to be reset.")
 				}, "TRRS", "RailsReset"),
 			new Command("Validates Trilleon framework (effectively unit tests).", LaunchTrilleonFrameworkValidation, 
-				new List<KeyValuePair<string,string>>(), "VT", "Validate")
+				new List<KeyValuePair<string,string>>(), "VT", "Validate"),
+            new Command("Get whatever socket ports/channels the device is listening on.", GetSockets,
+                new List<KeyValuePair<string,string>>(), "SC", "Sockets")
 			#endregion
 
 		};
 
+
 		#region Console Command delegates
+
+        static string GetSockets(List<string> args) {
+
+            StringBuilder sockets = new StringBuilder();
+            for(int s = 0; s < SocketConnectionStrategy.Subscriptions.Count; s++) {
+
+                sockets.Append(string.Format("{0}:{1}", SocketConnectionStrategy.Subscriptions[s].Key.Host, SocketConnectionStrategy.Subscriptions[s].Key.Port));
+                if(s + 1 != SocketConnectionStrategy.Subscriptions.Count) {
+                    
+                    sockets.Append(" | ");
+
+                }
+
+            }
+            return string.Format("Sockets connected - ({0} total) - {1}", SocketConnectionStrategy.Subscriptions.Count, sockets.ToString());
+
+        }
 
 		static string ChangeIdentity(List<string> args) {
 
@@ -175,6 +195,13 @@ namespace TrilleonAutomation {
 			if(args.First().ToInt() > 0) {
 
 				TestRailsAPIClient client = new TestRailsAPIClient(GameMaster.BASE_TEST_RAILS_URL);
+                if(client == null) {
+
+                    string message = "COULD NOT RESET RAILS! New API Client could not be instantiated.";
+                    AutoConsole.PostMessage(message, MessageLevel.Abridged);
+                    return message;
+
+                }
 				string json = client.SendGet(string.Format("get_tests/{0}", args.First()));
 				System.Object jsonObj = Json.Deserialize(json);
 				List<System.Object> list = (List<System.Object>)jsonObj;
@@ -235,7 +262,7 @@ namespace TrilleonAutomation {
 
 		protected void ImplementBase() {
 
-			if(ConfigReader.GetBool("AUTO_COMMAND_CONSOLE_ENABLED")) {
+			if(AutomationMaster.ConfigReader.GetBool("AUTO_COMMAND_CONSOLE_ENABLED")) {
 
 				Initialize();
 

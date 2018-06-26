@@ -3,9 +3,6 @@ set -e
 set -x
 TEST=${TEST:="GameAppiumTest.py"} #Name of the test file
 
-virtualenv /tmp/.venv || true
-source /tmp/.venv/bin/activate
-
 echo "Starting Appium ..."
 if [ ${DEVICE_PLATFORM} = "ios" ]; then
     export APPLICATION=~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/application.ipa
@@ -27,7 +24,7 @@ sleep 10 # Wait for appium to fully launch
 ps -ef|grep a[p]pium
 
 echo "Running test ${TEST}"
-python ${TEST}
+python3 ${TEST}
 
 echo "Completed! Reporting results."
 if [ ! -f TEST-all.xml ]; then

@@ -19,10 +19,8 @@
 
 ﻿using UnityEditor;
 using UnityEngine;
-using UnityEditor.AnimatedValues;
 using System.Collections.Generic;
 using System;
-using System.Reflection;
 using System.IO;
 
 namespace TrilleonAutomation {
@@ -31,7 +29,8 @@ namespace TrilleonAutomation {
 
 		DateTime _fileDeletedTime = new DateTime();
 		public bool ReDrawAutomationReports = true;
-		bool _showFileDeletedMessage;
+        bool _showFileDeletedMessage;
+        bool _toggleViewModeDefaultBrowser = true;
 		List<FileInfo> automationReports = new List<FileInfo>();
 		List<KeyValuePair<string,List<KeyValuePair<string,string>>>> metaData = new List<KeyValuePair<string,List<KeyValuePair<string,string>>>>();
 
@@ -53,7 +52,7 @@ namespace TrilleonAutomation {
 
 			if(_showFileDeletedMessage) {
 
-				if(DateTime.Now.Subtract(_fileDeletedTime).TotalSeconds > 5) {
+				if(DateTime.Now.Subtract(_fileDeletedTime).TotalSeconds > 2) {
 
 					_showFileDeletedMessage = false;
 
@@ -87,7 +86,6 @@ namespace TrilleonAutomation {
 
 				//Grab meta files for reports.
 				all = Directory.GetFiles(FileBroker.REPORTS_DIRECTORY, "report.meta", SearchOption.AllDirectories).ToList();
-				//List<FileInfo> automationReportMetaFiles = AutoList.ToList(allfiles).FindAll(x => x.FullName.EndsWith(".meta"));
 				metaData = new List<KeyValuePair<string,List<KeyValuePair<string,string>>>>();
 				for(int m = 0; m < all.Count; m++) {
 
@@ -146,20 +144,28 @@ namespace TrilleonAutomation {
 			deleteAllButton.fontSize = 12;
 			deleteAllButton.normal.textColor = Color.red;
 			deleteAllButton.fontStyle = FontStyle.Bold;
-			deleteAllButton.margin = new RectOffset(0, 25, 0, 0);
+			deleteAllButton.fixedHeight = 38;
+			deleteAllButton.margin = new RectOffset(0, 25, 5, 0);
 			deleteAllButton.normal.background = deleteAllButton.active.background = deleteAllButton.focused.background = Swat.TabButtonBackgroundTexture;
 			deleteAllButton.normal.textColor = Color.red;
 
 			GUILayout.Space(20);
 
-			GUILayout.BeginHorizontal();
+			GUIStyle padding = new GUIStyle();
+			padding.margin = new RectOffset(25, 0, 0, 0);
+			GUILayout.BeginHorizontal(padding);
+			Nexus.Self.ToggleButton(_toggleViewModeDefaultBrowser, "Open In Editor", "Open reports in editor window rather than your default browser.", 
+				new Nexus.SwatDelegate(delegate() {  
+					_toggleViewModeDefaultBrowser = !_toggleViewModeDefaultBrowser;
+				}), buttonWidth: 125);
+			EditorGUILayout.Space();
 			if(_showFileDeletedMessage) {
 
 				GUIStyle deleteFileAlert = new GUIStyle(GUI.skin.label);
 				deleteFileAlert.normal.textColor = Color.red;
 				deleteFileAlert.fontSize = 14;
-				deleteFileAlert.fixedHeight = 25;
-				deleteFileAlert.padding = new RectOffset(30, 0, 10, 0);
+				deleteFileAlert.fixedHeight = 28;
+				deleteFileAlert.padding = new RectOffset(30, 0, 14, 0);
 				EditorGUILayout.LabelField("Deleted!", deleteFileAlert);
 
 			}
@@ -170,8 +176,7 @@ namespace TrilleonAutomation {
 
 			}
 			GUILayout.EndHorizontal();
-
-			EditorGUILayout.Space();
+			GUILayout.Space(20);
 
 			for(int ar = 0; ar < automationReports.Count; ar++) {
 
@@ -225,7 +230,15 @@ namespace TrilleonAutomation {
 
 				if(GUILayout.Button("Open Report", fileNameButton, new GUILayoutOption[] { GUILayout.Height(30), GUILayout.Width(150) })) {
 
-					System.Diagnostics.Process.Start(automationReports[ar].FullName);
+					if(!_toggleViewModeDefaultBrowser) {
+						
+						System.Diagnostics.Process.Start(automationReports[ar].FullName);
+
+					} else {
+						
+						HtmlDisplayPopup.Pop(string.Format("file://{0}", automationReports[ar].FullName));
+
+					}
 
 				}
 				if(GUILayout.Button("X", deleteFileButton, new GUILayoutOption[] { GUILayout.Height(30), GUILayout.Width(30) })) {

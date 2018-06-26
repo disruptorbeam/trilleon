@@ -27,6 +27,11 @@ namespace TrilleonAutomation{
 
 	public class PerformanceTracker : MonoBehaviour {
 
+        public static int GarbageCollectionMemoryLeakMaximumThresholdInMegabytes { get; set; }
+        public static int GarbageCollectionMemoryLeakWarningThreasholdInMegabytes { get; set; }
+        public static double StartingGCValue { get; set; }
+        static int _numberOfSamplesToAverageGCUsage = 10;
+
 		public static double max_fps {
 			get { 
 				return _max_fps;
@@ -106,7 +111,15 @@ namespace TrilleonAutomation{
 		static List<KeyValuePair<string[],double>> HSEntries = new List<KeyValuePair<string[],double>>();
 		static List<KeyValuePair<string[],double>> FPSEntries = new List<KeyValuePair<string[],double>>();
 
-		public IEnumerator TrackMemory(string key) {
+        void Start() {
+            
+            GarbageCollectionMemoryLeakMaximumThresholdInMegabytes = AutomationMaster.ConfigReader.GetInt("GARBAGE_COLLECTION_MEMORY_LEAK_MAXIMUM_THRESHOLD_MB");
+            GarbageCollectionMemoryLeakWarningThreasholdInMegabytes = AutomationMaster.ConfigReader.GetInt("GARBAGE_COLLECTION_MEMORY_LEAK_WARNING_THRESHOLD_MB");
+            StartingGCValue = Math.Round((float)GC.GetTotalMemory(true) / 1000000, 0);
+
+        }
+
+        public IEnumerator TrackMemory(string key) {
 
 			string now = DateTime.UtcNow.ToString();
 
@@ -126,6 +139,44 @@ namespace TrilleonAutomation{
 
 			}
 			GCEntries.Add(new KeyValuePair<string[],double>(new string[] { key, now }, thisGCMemory));
+
+            if(thisGCMemory > StartingGCValue) {
+
+                double averageSample = 0;
+                double averageSum = 0;
+                List<double> samples = GCEntries.ExtractListOfValuesFromKeyValList();
+                samples.Reverse();
+                for(int s = 0; s < _numberOfSamplesToAverageGCUsage; s++) {
+
+                    if(s == samples.Count) {
+
+                        averageSample = averageSum / s;
+                        break;
+
+                    }
+                    averageSum += thisGCMemory;
+                    if(s + 1 == _numberOfSamplesToAverageGCUsage) {
+
+                        averageSample = averageSum / _numberOfSamplesToAverageGCUsage;
+
+                    }
+
+                }
+
+                if(averageSample - StartingGCValue >= GarbageCollectionMemoryLeakMaximumThresholdInMegabytes) {
+
+                    string message = string.Format("Garbage Collection MemoryLeak CRITICAL Threshold Exceeded! Order of execution [{0} > {1}]", string.Join(" > ", AutomationMaster.TestRunContext.CompletedTests.ToArray()), AutomationMaster.CurrentTestMethod);
+                    yield return StartCoroutine(Q.assert.Fail(message));
+                    Q.assert.CriticalTestRunFailure(message);
+
+                } else if(averageSample - StartingGCValue >= GarbageCollectionMemoryLeakWarningThreasholdInMegabytes) {
+
+                    string message = string.Format("Garbage Collection MemoryLeak WARNING Threshold Exceeded! Order of execution [{0}]", string.Join(" > ", AutomationMaster.TestRunContext.CompletedTests.ToArray()), AutomationMaster.CurrentTestMethod);
+                    yield return StartCoroutine(Q.assert.Warn(message));
+
+                }
+
+            }
 
 			if(!key.ToLower().ContainsOrEquals("interval")) {
 				

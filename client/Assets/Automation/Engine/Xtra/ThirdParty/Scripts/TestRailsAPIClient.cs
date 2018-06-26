@@ -1,4 +1,4 @@
-/*
+﻿/*
  * TestRail API binding for .NET (API v2, available since TestRail 3.0)
  *
  * Learn more:
@@ -22,12 +22,12 @@ namespace TrilleonAutomation {
 		public static string TEST_RUN_URL_PATH = "index.php?/tests/view/";
 		private string m_user {
 			get { 
-				return ConfigReader.GetString("TEST_RAILS_USERNAME");
+				return AutomationMaster.ConfigReader.GetString("TEST_RAILS_USERNAME");
 			}
 		}
 		private string m_password {
 			get { 
-				return ConfigReader.GetString("TEST_RAILS_PASSWORD");
+				return AutomationMaster.ConfigReader.GetString("TEST_RAILS_PASSWORD");
 			}
 		}
 		private string m_url;
@@ -52,7 +52,7 @@ namespace TrilleonAutomation {
 
 		public string SendPost(string uri, string json) {
 			
-			if(UnityEngine.Application.isEditor && !ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
+			if(UnityEngine.Application.isEditor && !AutomationMaster.ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
 				
 				return "Test Rails Deactivated! This can be changed in Trilleon settings.";
 
@@ -66,7 +66,7 @@ namespace TrilleonAutomation {
 
 		public string SendGet(string uri) {
 
-			if(!UnityEngine.Application.isEditor && !ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
+			if(!UnityEngine.Application.isEditor && !AutomationMaster.ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
 				
 				return "Test Rails Deactivated! This can be changed in Trilleon settings.";
 
@@ -80,7 +80,7 @@ namespace TrilleonAutomation {
 
 		public string GetTestName(int idTest) {
 
-			if(UnityEngine.Application.isEditor && !ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
+			if(UnityEngine.Application.isEditor && !AutomationMaster.ConfigReader.GetBool("TEST_RAILS_ACTIVATE_WHILE_IN_EDITOR_MODE")) {
 				
 				return "Test Rails Deactivated! This can be changed in Trilleon settings.";
 

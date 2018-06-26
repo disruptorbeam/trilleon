@@ -63,33 +63,6 @@ namespace TrilleonAutomation {
 
 		}
 
-		public GameObject GetDirectParentWithMatchingName(GameObject obj, string parentName) {
-
-			if (obj == null) {
-				
-				return null;
-
-			}
-			GameObject match = null;
-			GameObject currentObjectToInspect = obj.transform.parent != null ? obj.transform.parent.gameObject : null;
-			while (match == null && currentObjectToInspect != null) {
-				
-				if (currentObjectToInspect.name == parentName) {
-					
-					match = currentObjectToInspect;
-					break;
-
-				} else {
-					
-					currentObjectToInspect = currentObjectToInspect.transform.parent != null ? currentObjectToInspect.transform.parent.gameObject : null;
-
-				}
-
-			}
-			return match;
-
-		}
-
 		public bool IsObjectVisibleByCameraUsingMeshRenderer(GameObject obj) {
 
 			MeshRenderer renderer = obj.GetComponent<MeshRenderer> ();

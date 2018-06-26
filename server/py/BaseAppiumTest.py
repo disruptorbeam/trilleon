@@ -28,23 +28,20 @@ import pprint
 import tempfile
 import uuid
 import urllib
-import requests
-import socket
 from datetime import datetime
-from pubnub import Pubnub
+import redis
+from threading import Thread
+from pubnub.callbacks import SubscribeCallback
+from pubnub.enums import PNStatusCategory
+from pubnub.pnconfiguration import PNConfiguration
+from pubnub.pubnub import PubNub
+import Globals
 
-test_run_id = ""
-heartbeats = ""
-test_json = []
-def error(message):
-    log("PubNub Erred: %s" % (message))
-
-def _callback(message):
-    log("")
+class PubnubSubscribeCallback(SubscribeCallback):
+    def message(self, pubnub, message):
+        callback(message.message, "")
 
 def callback(message, channel):
-    global test_json
-    global heartbeats
     # Differentiate intended client messages from its Buddy's messages.
     caller = message.split("grid_identity_buddy")
     identity = ""
@@ -57,12 +54,16 @@ def callback(message, channel):
         isValid = os.environ['GRID_IDENTITY_PREFIX'] in message and "buddy_command_flag" in message
 
     if isValid:
-        message_text = urllib.unquote(message).replace("\\", "").replace("\"", "'").replace("+", " ")
+        message_text = urllib.parse.unquote(message).replace("\\", "").replace("\"", "'").replace("+", " ")
+        server_client_log(message_text)
         with open("RelevantPubNubCommunications.txt", "a") as f:
             f.write(message_text)
         
+        if "Exception in framework killed TestRunner" in message_text:
+            Globals.critical_exception = True
+        
         if "heartbeat_" in message_text:
-            heartbeats += message_text
+            Globals.heartbeats += message_text
         # Store formatted message for final report.
         if "grid_source" in message_text and ("'message'" in message_text or "'notification'" in message_text):
             with open("FormattedCommunicationHistory.txt", "a") as f:
@@ -83,6 +84,7 @@ def callback(message, channel):
                         f.write(source + "##" + new_message.replace("\"", "").replace("'", "") + "$$")
                 except Exception as e:
                     log("Error Saving Formatted Message [" + str(e) + "]")
+        # See if client needs appium to take a screenshot.
         if "request_screenshot" in message:
             screenshot_test_name = message_text.split("request_screenshot||")[1].split("||")[0]
             with open("screenshot_requests.txt", "a") as f:
@@ -90,6 +92,7 @@ def callback(message, channel):
             fps = message_text.split("FPS||")[1].split("||")[0]
             with open("Screenshots_FPS_data.txt", "a") as f:
                 f.write(screenshot_test_name + "##" + fps + "##" + os.environ['APPIUM_DEVICE'] + "|")
+        # Handle any server command.
         if "SERVER_BROKER_" in message:
             initialDelimiter = "SERVER_BROKER_COMMAND|"
             finalDelimiter = "|"
@@ -101,6 +104,7 @@ def callback(message, channel):
             log("Logging SERVER BROKER command [ " + request_command + " : " + request_value + "]")
             with open("client_request_queue.txt", "a") as f:
                 f.write(request_command + "|" + request_value)
+        # Whether this is a partial json message, or full test message, we want to record the failure or success of this test. Note the lack of a pipe in this condition, versus the next condition where a pipe exists
         if "SINGLE_TEST_RESULTS_JSON" in message:
             if "@APOS@Passed@APOS@" in message:
                 with open("pass_fail_count.txt", "a") as f:
@@ -108,6 +112,7 @@ def callback(message, channel):
             elif "@APOS@Failed@APOS@" in message:
                 with open("pass_fail_count.txt", "a") as f:
                     f.write("F|")
+        # Store results from a test where the JSON did not exceed the single-pubsub message limit.
         if "SINGLE_TEST_RESULTS_JSON|" in message:
             initialDelimiter = "SINGLE_TEST_RESULTS_JSON|"
             finalDelimiter = "|"
@@ -115,6 +120,7 @@ def callback(message, channel):
             json = raw.split(finalDelimiter)[0]
             with open("testresultsjson.txt", "a") as f:
                 f.write(json)
+        # Gather pieces of a single test's results as they come in. Recombine and save the full, single test's results when all pieces have arrived.
         if "SINGLE_TEST_RESULTS_JSON_MULTI_PART|" in message:
             initialDelimiter = "SINGLE_TEST_RESULTS_JSON_MULTI_PART|"
             finalDelimiter = "|"
@@ -123,26 +129,43 @@ def callback(message, channel):
             metaData = jsonPiece.split("$$$")
             pieceId = metaData[0]
             pieceTotal = metaData[1]
-            #testId = metaData[2] #TODO: Make it test specific so that two tests in a row dont cross contaminate. Insanely unlikely, but possible.
+            # testId = metaData[2] #TODO: Make it test specific so that two tests in a row dont cross contaminate. Very unlikely, but possible.
             actualJson = metaData[3]
-            if len(test_json) == 0:
-                test_json = ["" for x in range(int(pieceTotal))]
-                test_json[int(pieceId)] = actualJson
+            # Set piece to index value in array. When all expected pieces have arrived, reconstruct the JSON into a single, valid piece of JSON and save it.
+            if len(Globals.test_json) == 0:
+                Globals.test_json = ["" for x in range(int(pieceTotal))]
+                Globals.test_json[int(pieceId)] = actualJson
             else:
-                test_json[int(pieceId)] = actualJson
-                if "" not in test_json:
-                    test_json[int(pieceId)] = actualJson
+                Globals.test_json[int(pieceId)] = actualJson
+                if "" not in Globals.test_json:
+                    Globals.test_json[int(pieceId)] = actualJson
                     with open("testresultsjson.txt", "a") as f:
-                        for x in test_json:
+                        for x in Globals.test_json:
                             f.write(x)
-                    test_json = []
+                    Globals.test_json = []
 
+# Log message to console and a Py log.
 def log(msg):
+    if msg == "":
+        return
     header = ''
     if os.environ.get('APPIUM_DEVICE'):
         header = '[%s] ' % os.environ.get('APPIUM_DEVICE')
     message = "%s%s: %s" % (header, time.strftime("%H:%M:%S"),msg)
-    fileWrite = open("PyLog.txt", "a")
+    fileWrite = open("PyLog.log", "a")
+    fileWrite.write(message)
+    fileWrite.close()
+    print(message)
+    sys.stdout.flush()
+
+def server_client_log(msg):
+    if msg == "":
+        return
+    header = ''
+    if os.environ.get('APPIUM_DEVICE'):
+        header = '[%s] ' % os.environ.get('APPIUM_DEVICE')
+    message = "%s%s: %s" % (header, time.strftime("%H:%M:%S"),msg)
+    fileWrite = open("ServerClientLogRaw.log", "a")
     fileWrite.write(message)
     fileWrite.close()
     print(message)
@@ -150,28 +173,35 @@ def log(msg):
 
 class BaseAppiumTest(unittest.TestCase):
     
-    #These should match with the ports provided in GameMaster.cs
+    #These should match with the ports provided in TrilleonConfig.txt.
     master_android_port = 9191
     master_ios_port = 9292
     master_webgl_port = 9393
     assigned_port_instance = 0
     
-    driver = None
-    screenshot_count = 0
-    screenshot_dir = None
-    desired_capabilities_cloud = {}
+    socket = None
+    thread = None
+    socket_port = 9595
+    socket_host = "127.0.0.1"
+    pubsub = None
+    channel = "Trilleon_Automation"
+
+    pubnub = None
+
+    driver = None # Appium driver that will load the app onto device, and dismiss device alerts or take screenshots.
+    screenshot_count = 0 # Number of screenshots already taken successfully, and saved.
+    screenshot_dir = None # URL to save screenshots at.
+    appium_capabilities = {}
     ignoreBuddyTests = 0
     buddyCommandName = ""
     buddyName = ""
     buddyCheckFileName = ""
     buddyCheckComplete = False
-    channel = "Trilleon-Automation"
     DBID = ""
     project_id = ""
     gridIdentity = ""
     additionalCommands = ""
     buddyIdentity = ""
-    pubnub = None
     jsonGridPrefix = ""
     jsonBuddyGridPrefix = ""
     heartbeat_index = 1
@@ -195,17 +225,27 @@ class BaseAppiumTest(unittest.TestCase):
 
     def setUp(self, appium_url=None, platform_name=None, bundle_id = None, application_file=None, application_package=None, screenshot_dir=None,
                  application_activity=None, automation_name=None):
-        global test_run_id
-        test_run_id = str(uuid.uuid4())
-        self.test_run_id_internal = test_run_id
-        log("test_run_id [" + test_run_id + "]")
+        Globals.test_run_id = str(uuid.uuid4())
+        self.test_run_id_internal = Globals.test_run_id
+        log("test_run_id [" + Globals.test_run_id + "]")
         with open("test_run_id.txt", "w") as f:
-            f.write(test_run_id)
-
-        self.pubnub = Pubnub(publish_key="TODO: YOUR KEY HERE!",subscribe_key="TODO: YOUR KEY HERE!")
+            f.write(Globals.test_run_id)
         self.setChannelPrefixes()
-        self.pubnub.subscribe(channels=self.channel, callback=callback, error=error)
         self.set_screenshot_dir('%s/screenshots' % (os.getcwd()))
+
+        if os.environ.get('CONNECTION_STRATEGY').lower() == "pubnub":
+            pnconfig = PNConfiguration()
+            pnconfig.subscribe_key = "YOUR_PUBNUB_SUBSCRIBE_KEY"
+            pnconfig.publish_key = "YOUR_PUBNUB_PUBLISH_KEY"
+            self.pubnub = PubNub(pnconfig)
+            self.pubnub.add_listener(PubnubSubscribeCallback())
+            self.pubnub.subscribe().channels(self.channel).execute()
+        else:
+            self.thread = Thread(target=self.socket_callback, args=(10, ))
+            self.socket = redis.StrictRedis(host=self.socket_host, port=self.socket_port, db=0)
+            self.pubsub = self.socket.pubsub()
+            self.pubsub.subscribe(self.channel)
+            self.thread.start()
         
         # Buddy test run information.
         self.buddyName = "Trilleon-Automation-" + os.environ.get('BUDDY')
@@ -230,85 +270,68 @@ class BaseAppiumTest(unittest.TestCase):
         
         # Set up driver
         if os.environ['DEVICE_PLATFORM'] == "ios":
-            self.desired_capabilities_cloud["showXcodeLog"] = True
-            self.desired_capabilities_cloud["useNewWDA"] = False
-            self.desired_capabilities_cloud["wdaLocalPort"] = os.environ['WDA_LOCAL_PORT']
-            self.desired_capabilities_cloud["autoAcceptAlerts"] = True # iOS -- Dismisses device level popups automatically.
+            self.appium_capabilities["showXcodeLog"] = True
+            self.appium_capabilities["useNewWDA"] = False
+            self.appium_capabilities["wdaLocalPort"] = os.environ['WDA_LOCAL_PORT']
+            self.appium_capabilities["autoAcceptAlerts"] = True # iOS -- Dismisses device level popups automatically.
         else:
-            self.desired_capabilities_cloud["systemPort"] = os.environ['UNIQUE_BOOT_PORT']
-            self.desired_capabilities_cloud["autoGrantPermissions"] = True # Android 1.6.3+ -- Gives app permissions before starting.
-        self.desired_capabilities_cloud["app"] = os.environ['APPLICATION']
-        self.desired_capabilities_cloud["udid"] = os.environ['DEVICE_UDID']
-        self.desired_capabilities_cloud["automationName"] = os.environ['DRIVER']
-        self.desired_capabilities_cloud["platformName"] = os.environ['DEVICE_PLATFORM']
+            self.appium_capabilities["fullReset"] = True
+            self.appium_capabilities["systemPort"] = os.environ['UNIQUE_BOOT_PORT']
+            self.appium_capabilities["autoGrantPermissions"] = True # Android 1.6.3+ -- Gives app permissions before starting.
+            self.appium_capabilities["androidInstallTimeout"] = 180000 # Double the default timeout of 90 seconds.
+
+        self.appium_capabilities["app"] = os.environ['APPLICATION']
+        self.appium_capabilities["udid"] = os.environ['DEVICE_UDID']
+        self.appium_capabilities["automationName"] = os.environ['DRIVER']
+        self.appium_capabilities["platformName"] = os.environ['DEVICE_PLATFORM']
         if 'PLATFORM_VERSION' in os.environ:
-            self.desired_capabilities_cloud["platformVersion"] = os.environ['PLATFORM_VERSION']
-        self.desired_capabilities_cloud["deviceName"] = os.environ['DEVICE_UDID']
-        self.desired_capabilities_cloud["newCommandTimeout"] = 99999
-        self.desired_capabilities_cloud["launchTimeout"] = 99999
+            self.appium_capabilities["platformVersion"] = os.environ['PLATFORM_VERSION']
+        self.appium_capabilities["deviceName"] = os.environ['DEVICE_UDID']
+        self.appium_capabilities["newCommandTimeout"] = 999999
+        self.appium_capabilities["launchTimeout"] = 99999
         time.sleep(5)
         #try:
-        log("Starting driver on " + "http://" + os.environ['HOST'] + ":" + os.environ['UNIQUE_PORT'] + "/wd/hub")
         log("Starting driver on " + "http://localhost:" + os.environ['UNIQUE_PORT'] + "/wd/hub")
-        self.driver = webdriver.Remote("http://localhost:" + os.environ['UNIQUE_PORT'] + "/wd/hub", self.desired_capabilities_cloud)
-        # self.driver = webdriver.Remote("http://" + os.environ['HOST'] + ":" + os.environ['UNIQUE_PORT'] + "/wd/hub", self.desired_capabilities_cloud)
-        #except Exception as e:
-        #log("Error Instantiating Driver [" + str(e) + "]. Attempting to continue anyway.")
+        self.driver = webdriver.Remote("http://localhost:" + os.environ['UNIQUE_PORT'] + "/wd/hub", self.appium_capabilities)
         time.sleep(10)
+
+
+    def socket_callback(self, message):
+        while Globals.test_done != True:
+            time.sleep(0.05)
+            message = self.pubsub.get_message()
+            if message != None and str(message['data']) != "":
+                callback(str(message['data']), "")
 
     def postMessage(self, message):
         postString = self.jsonGridPrefix + message
-        self.pubnub.publish(self.channel, postString, callback=_callback, error=error)
-        log("Request posted to PubNub [" + postString + "]")
+        if os.environ.get('CONNECTION_STRATEGY').lower() == "pubnub":
+            #self.pubnub.publish(self.channel, postString, callback=_callback, error=error)
+            log("Request posted to PubNub [" + postString + "]")
+        else:
+            self.socket.publish(self.channel, postString)
+            log("Request posted to socket listeners [" + postString + "]")
 
     def setChannelPrefixes(self):
-        global test_run_id
         log("PUBSUB CHANNEL ID: " + self.channel)
         self.gridIdentity = "Trilleon-Automation-" + os.environ['GRID_IDENTITY_PREFIX']
-        self.jsonGridPrefix = "{\"test_run_id\":\"" + test_run_id + "\"},{\"grid_identity\":\"" + self.gridIdentity + "\"},{\"grid_source\":\"server\"},{\"grid_context\":\"StandardAlert\"},"
-        self.jsonBuddyGridPrefix = "{\"test_run_id\":\"" + test_run_id + "\"},{\"grid_identity\":\"" + self.buddyName + "\"},{\"grid_source\":\"server\"},{\"grid_context\":\"BuddyMessage\"},"
-
-    # Determine the port assigned to this client/server relationship.
-    def GetAssignedPort(self):
-        #TODO: This is a server connection. We need a client-only connection for this. Also make the master server py script that listens and assigns.
-        host = '127.0.0.1'
-        if os.environ['DEVICE_PLATFORM'] == "ios":
-            port = master_ios_port
-        if os.environ['DEVICE_PLATFORM'] == "android":
-            port = master_android_port
-        if os.environ['DEVICE_PLATFORM'] == "webgl":
-            port = master_webgl_port
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind((host, port))
-        s.listen(100)
-        conn, addr = s.accept()
-        while True:
-            try:
-                data = conn.recv(1024)
-                if not data: break
-                if "checking_in" in data:
-                    conn.sendall("Request_Port:" + os.environ['DEVICE_UDID'])
-            except socket.error:
-                print "Master Socket Error Occured: " + socket.error
-                break
-        conn.close()
-            
-    # Determine the port assigned to this client/server relationship.
-    def BeginListenOnAssignedPort(self):
-        host = '127.0.0.1'
-        port = 9595
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.settimeout(10)
-        s.bind((host, port))
-        s.settimeout(None)
-        s.listen(100)
-        conn, addr = s.accept()
+        self.jsonGridPrefix = "{\"test_run_id\":\"" + Globals.test_run_id + "\"},{\"grid_identity\":\"" + self.gridIdentity + "\"},{\"grid_source\":\"server\"},{\"grid_context\":\"StandardAlert\"},"
+        self.jsonBuddyGridPrefix = "{\"test_run_id\":\"" + Globals.test_run_id + "\"},{\"grid_identity\":\"" + self.buddyName + "\"},{\"grid_source\":\"server\"},{\"grid_context\":\"BuddyMessage\"},"
 
     # Close down the driver, call XML and JSON finalizer, close PubNub connection, and handle any fatal execution error.
     def tearDown(self):
-        self.pubnub.unsubscribe(self.channel)
+        Globals.test_done = True
+        if os.environ.get('CONNECTION_STRATEGY').lower() == "pubnub":
+            try:
+                self.pubnub.remove_listener(PubnubSubscribeCallback())
+            except:
+                log("Could remove Pubnub listener.")
+            self.pubnub.unsubscribe().channels("my_channel").execute()
+        else:
+            self.pubsub.unsubscribe()
+            self.thread.join(10)
+
+        #self.pubnub.unsubscribe(self.channel)
         self.writeAutomationResults('TEST-all.xml')
         if self.fatalErrorDetected == True:
             with open("FatalErrorDetected.txt", "w") as f:
@@ -322,7 +345,7 @@ class BaseAppiumTest(unittest.TestCase):
         with open("test_status.txt", "w") as f:
             f.write(os.environ['TEST_RUN_STATUS'])
         pylogtext = ""
-        with open("PyLog.txt", "r") as f:
+        with open("PyLog.log", "r") as f:
             pylogtext = f.read()
         if "CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST" in pylogtext:
             raise Exception("CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST Detected!")
@@ -387,26 +410,32 @@ class BaseAppiumTest(unittest.TestCase):
         if os.environ['DEVICE_PLATFORM'] == "android":
             # Try to dismiss any Android account alerts.
             try:
-                acceptButton = self.driver.find_element_by_xpath("//*[@text='Allow']")
-                action = TouchAction(self.driver)
-                action.tap(acceptButton).perform()
-                log("Chose 'Allow' for Google Play alert.")
+                acceptButtons = self.driver.find_element_by_xpath("//*[@text='Allow']")
+                if len(acceptButtons) > 0:
+                    action = TouchAction(self.driver)
+                    action.tap(acceptButton[0]).perform()
+                    log("Chose 'Allow' for Google Play alert.")
             except Exception as e:
                 log("Exception accepting Android alert! " + str(e))
             try:
-                acceptButton = self.driver.find_element_by_xpath("//*[@text='OK']")
-                action = TouchAction(self.driver)
-                action.tap(acceptButton).perform()
-                log("Chose 'OK' for Google Play alert.")
+                acceptButtons = self.driver.find_element_by_xpath("//*[@text='OK']")
+                if len(acceptButtons) > 0:
+                    action = TouchAction(self.driver)
+                    action.tap(acceptButton[0]).perform()
+                    log("Chose 'OK' for Google Play alert.")
             except Exception as e:
                 log("Exception accepting Android alert! " + str(e))
         else:
             try:
-                log("Attempting to dismiss any iOS device-level alert.")
-                if accept == True:
-                    self.driver.switch_to.alert.accept()
+                alert_text = self.driver.switch_to.alert.text
+                if self.driver.switch_to.alert != None and len(alert_text) > 0:
+                    log("Attempting to dismiss iOS device-level alert. Text: " + alert_text)
+                    if accept == True:
+                        self.driver.switch_to.alert.accept()
+                    else:
+                        self.driver.switch_to.alert.dismiss()
                 else:
-                    self.driver.switch_to.alert.dismiss()
+                    log("No device level alerts found. Skipping alert dismissal.")
             except Exception as e:
                 log("Exception accepting iOS alert! " + str(e))
                     
@@ -440,7 +469,6 @@ class BaseAppiumTest(unittest.TestCase):
     # Break final XML generated by AutomationReport.cs out from total pubsub history and format it properly before placing it in final xml file.
     def get_xml_from_client_run(self):
         log("Command Recieved: [Get XML]")
-        global test_run_id
         recent_posts = self.get_communication_history()
         # Toke "xml_complete" is required for this script to know that a client has reached completion of its test run.
         if ("xml_complete" not in recent_posts and "completed_automation" not in recent_posts) or self.parsing_xml == True:
@@ -465,7 +493,7 @@ class BaseAppiumTest(unittest.TestCase):
 
         # PubNub does not guarantee sequential order of messages. We know how many xml fragments to expect, but not the order they will be recieved.
         xml_parsed = [None] * xmlPiecesCount
-        list_history = recent_posts.split(test_run_id)
+        list_history = recent_posts.split(Globals.test_run_id)
 
         # Split each fragment from history and place it into a dictionary that guarantees the proper order of reconstituted xml.
         for v in list_history:
@@ -511,11 +539,10 @@ class BaseAppiumTest(unittest.TestCase):
 
     # This is used by the server to check for client "heartbeats", or to request them, to verify that client has not crashed or hanged in execution.
     def has_heartbeat(self):
-        global heartbeats
         if self.last_heartbeat_detected == None:
             self.last_heartbeat_detected = datetime.now()
 
-        if len(heartbeats) > 0:
+        if len(Globals.heartbeats) > 0:
             log("Registered heartbeat #" + str(self.heartbeat_index))
             self.heartbeat_index += 1
             self.last_heartbeat_detected = datetime.now()
@@ -523,9 +550,9 @@ class BaseAppiumTest(unittest.TestCase):
         timeDifference = (datetime.now() - self.last_heartbeat_detected).total_seconds()
         if timeDifference > self.max_time_since_heartbeat:
             self.postMessage("{\"health_check\":0}")
-            log("Any heartbeat ??" + heartbeats)
+            log("Any heartbeat ??" + Globals.heartbeats)
             time.sleep(15)
-            if len(heartbeats) > 0:
+            if len(Globals.heartbeats) > 0:
                 log("Registered heartbeat #" + str(self.heartbeat_index) + " after explicit request")
                 self.heartbeat_index += 1
                 self.last_heartbeat_detected = datetime.now()
@@ -553,13 +580,12 @@ class BaseAppiumTest(unittest.TestCase):
         if len(historyText) == 0:
             return ""
         history = historyText.split("messageFull")
-        global test_run_id
         resultsString = ""
         for x in history:
-            rawMessage = urllib.unquote(str(x)).replace("\\", "").replace("\"", "'").replace("+", " ")
+            rawMessage = urllib.parse.unquote(str(x)).replace("\\", "").replace("\"", "'").replace("+", " ")
             splitMessage = rawMessage.split("test_run_id")
             for s in splitMessage:
-                if test_run_id in s and (True if jsonFlag == None else (jsonFlag in s)):
+                if Globals.test_run_id in s and (True if jsonFlag == None else (jsonFlag in s)):
                     resultsString += s
         return resultsString
 

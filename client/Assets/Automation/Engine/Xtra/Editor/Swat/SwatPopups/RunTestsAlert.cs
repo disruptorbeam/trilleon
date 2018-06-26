@@ -48,7 +48,7 @@ namespace TrilleonAutomation {
 		int breakSpace = 40;
 
 		Vector2 scrollY;
-		GUIStyle additionalTestsStyle, border, buttons, divider, fo, header, requiredTestsStyle, scrollBar, testsToggle, toggleGroup;
+		GUIStyle additionalTestsStyle, buttons, divider, fo, header, requiredTestsStyle, scrollBar, testsToggle, toggleGroup;
 
 		public static void Pop(List<KeyValuePair<string, MethodInfo>> requestedTests, List<KeyValuePair<string, MethodInfo>> additionalTests, string testName, string testType, bool isTestSubset = false) {
 

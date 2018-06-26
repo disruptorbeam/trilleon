@@ -19,14 +19,10 @@
 
 ﻿using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEditor.AnimatedValues;
-using System.Collections;
 using System.Collections.Generic;
 using System;
 using System.Text;
 using System.Globalization;
-using System.IO;
 
 namespace TrilleonAutomation {
 
@@ -40,8 +36,7 @@ namespace TrilleonAutomation {
 		List<KeyValuePair<string, string>> settingsSaved = new List<KeyValuePair<string, string>>();
 
 		DateTime saveTime = new DateTime();
-		bool _isEditorPlayingNow;
-		GUIStyle button, buttonChoices, error, horizontal, inputField, inputToggle, label, newItemValueField, savedStyle, sectionHeader, warning;
+		GUIStyle button, buttonChoices, error, horizontal, inputField, inputToggle, label, savedStyle, sectionHeader, warning;
 		Color green;
 
 		const string xIcon = "×";

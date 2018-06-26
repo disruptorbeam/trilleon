@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -19,21 +19,11 @@
 
 ﻿using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
 using System.Collections.Generic;
 using System;
-using System.Text;
 using System.Reflection;
 
 namespace TrilleonAutomation {
-
-	/*
-      **********************NOTES********************
-      
-
-      ***********************************************
-   */
 
 	/// <summary>
 	/// Single Window Accessability Template (SWAT).
@@ -94,7 +84,7 @@ namespace TrilleonAutomation {
 
 		public static Dock DockNextTo { 
 			get { 
-				switch(ConfigReader.GetString("DEFAULT_DOCK_NEXUS")) {
+				switch(AutomationMaster.ConfigReader.GetString("DEFAULT_DOCK_NEXUS")) {
 					case "Float":
 						return Dock.Float;
 					case "NextToHierarchy":

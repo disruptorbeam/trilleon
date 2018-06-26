@@ -18,9 +18,7 @@
 */
 
 ﻿using System;
-using System.Reflection;
 using System.Collections;
-using UnityEngine;
 
 namespace TrilleonAutomation {
 

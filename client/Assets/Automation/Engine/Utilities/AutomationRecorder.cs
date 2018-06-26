@@ -23,9 +23,6 @@ using UnityEngine.UI;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
 
 namespace TrilleonAutomation {
 
@@ -48,7 +45,6 @@ namespace TrilleonAutomation {
 				return AutomationMaster.StaticSelf;
 			}
 		}
-		private static GameObject _staticSelf;
 
 		public static AutomationRecorder StaticSelfComponent {
 			get { 
@@ -95,7 +91,7 @@ namespace TrilleonAutomation {
 		}
 		static List<RecordedGameObjectData> _recordedActions = new List<RecordedGameObjectData>();
 
-		public static bool SelectionUpdatesHeirarchy { get; set; }
+		public static bool SelectionUpdatesHierarchy { get; set; }
 		public static bool NotRecordingActions { get; set; }
 		public static bool PauseOnSelect { get; set; }
 		public static bool ActivateTextComponentSelection { get; set; }

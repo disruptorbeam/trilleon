@@ -1,32 +1,10 @@
-﻿/* 
-+   This file is part of Trilleon.  Trilleon is a client automation framework.
-+  
-+   Copyright (C) 2017 Disruptor Beam
-+  
-+   Trilleon is free software: you can redistribute it and/or modify
-+   it under the terms of the GNU Lesser General Public License as published by
-+   the Free Software Foundation, either version 3 of the License, or
-+   (at your option) any later version.
-+
-+   This program is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+   GNU Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public License
-+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+*/
-
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using System.Reflection;
-using System.Diagnostics;
 
 namespace TrilleonAutomation {
 
 	[UnityTestClass]
-	public class ExampleUnityTests : UnityTestBase {
+	public class TrilleonFrameworkTests : UnityTestBase {
 
 		[SetUpClass]
 		public IEnumerator SetUpClass() {
@@ -36,8 +14,8 @@ namespace TrilleonAutomation {
 
 		}
 
-		[UnityTest("Debug/UnityTests")]
-		public IEnumerator LaunchMonoFromGameCodeExampleTest() {
+		[UnityTest("Debug/Trilleon")]
+		public IEnumerator LaunchMonoFromGameCodeWorks() {
 
 			string setString = "Set The String!";
 			string somePrivateString = GetPrivateVariableValue<ExampleMonoForUnitTest, string>(this.gameObject, "somePrivateString");
@@ -52,7 +30,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		[UnityTest("Debug/UnityTests")]
+		[UnityTest("Debug/Trilleon")]
 		public IEnumerator HelpRandomStringReturnsAlphaNumericOnlyWhenExplicitlyRequested() {
 
 			List<char> alphaNumerics = GetFieldValue<HelperFunctions,char[]>("alphaNumerics").ToList();
@@ -63,7 +41,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		[UnityTest("Debug/UnityTests")]
+		[UnityTest("Debug/Trilleon")]
 		public IEnumerator HelpRandomStringReturnsAlphaAndNonAlphaNumericByDefault() {
 
 			List<char> alphaNumerics = GetFieldValue<HelperFunctions,char[]>("alphaNumerics").ToList();
@@ -74,7 +52,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		[UnityTest("Debug/UnityTests")]
+		[UnityTest("Debug/Trilleon")]
 		public IEnumerator HelpRandomStringPasswordEnforcesOneUpperOneLowerOneNumberAndOneSpecialCharacter() {
 
 			List<char> nonAlphaNumerics = GetFieldValue<HelperFunctions,char[]>("nonAlphaNumerics").ToList();
@@ -84,7 +62,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		[UnityTest("Debug/UnityTests")]
+		[UnityTest("Debug/Trilleon")]
 		public IEnumerator HelpRandomStringPasswordEnforcesOneUpperOneLowerOneNumberAndNoSpecialCharacterIfSpecialCharacterIsExplicitlyOmitted() {
 			 
 			List<char> nonAlphaNumerics = GetFieldValue<HelperFunctions,char[]>("nonAlphaNumerics").ToList();
@@ -94,7 +72,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		[UnityTest("Debug/UnityTests")]
+		[UnityTest("Debug/Trilleon")]
 		public IEnumerator HelpRandomStringPasswordEnforcesEightCharacterMinimumLength() {
 
 			List<char> val = U.help.RandomString(7, false, true).ToCharArray().ToList();

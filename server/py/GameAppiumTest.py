@@ -24,6 +24,7 @@ import xmlrunner
 import time
 from BaseAppiumTest import BaseAppiumTest, log
 from appium.webdriver.common.touch_action import TouchAction
+import Globals
 
 class GameAppiumTest(BaseAppiumTest):
     def setUp(self):
@@ -106,11 +107,15 @@ class GameAppiumTest(BaseAppiumTest):
         testRunTime = 0
         hasHeartbeat = True
         while(isReady == False and hasHeartbeat == True):
+            if Globals.critical_exception == True:
+                break
             if self.buddyCheckComplete == False and (self.ignoreBuddyTests == 0 or self.ignoreBuddyTests == "0") and testRunTime > self.timeout_default / 2:
                 self.buddy_check() #Check if Buddy has declared itself ready now. If not, send command to ignore buddy tests.
             self.check_for_client_requests("handle_client_commands")
             self.check_for_client_requests("screenshot")
-            self.handle_device_alert(True)
+            #Check every other loop
+            if testRunTime % 10 == 0:
+                self.handle_device_alert(True)
             hasHeartbeat = self.has_heartbeat()
             isReady = self.check_for_client_responses("complete", False)
             self.check_for_client_responses("fatal_error_check", False)
@@ -123,9 +128,13 @@ class GameAppiumTest(BaseAppiumTest):
         if testRunTime >= self.test_execution_timeout:
             failure_message = "Timed out waiting for client to complete automation."
             is_failure = True
-        if hasHeartbeat == False:
+        elif hasHeartbeat == False:
             failure_message = "Application crashed during test run."
             is_failure = True
+        elif Globals.critical_exception == True:
+            failure_message = "Trilleon test runner experienced an unhandled exception that stopped test execution."
+            is_failure = True
+        
         if is_failure == True:
             self.take_screenshot("/launch_failure.png")
             log(failure_message)
@@ -146,6 +155,8 @@ class GameAppiumTest(BaseAppiumTest):
         exceptionsDataRetrieved = False
         log("Waiting for all test results data to be communicated.")
         while((xmlRetrieved == False or jsonRetrieved == False or exceptionsDataRetrieved == False or fpsRetrieved == False or fpsJSONRetrieved == False or deviceDetailsRetrieved == False or heapSizeRetrieved == False or heapSizeJSONRetrieved == False or garbageCollectionRetrieved == False or garbageCollectionJSONRetrieved == False or gameLoadTimeRetrieved == False) and timeout < self.timeout_default and self.fatalErrorDetected == False):
+            if Globals.critical_exception == True:
+                break
             if xmlRetrieved == False:
                 xmlRetrieved = self.get_xml_from_client_run()
             if jsonRetrieved == False:
@@ -169,16 +180,19 @@ class GameAppiumTest(BaseAppiumTest):
             if exceptionsDataRetrieved == False:
                 exceptionsDataRetrieved = self.check_for_client_responses("exceptions_data", True)
             if is_failure == True:
-                self.get_json_from_client_run(True)
+                self.format_json_from_client_run(True)
                 return False # If a fatal error occurred, we run this check loop just once and stop execution here.
             time.sleep(15)
             timeout+=15
         
-        if timeout < self.timeout_default:
+        if Globals.critical_exception == False and timeout < self.timeout_default:
             log("Automation Script Completed!")
             self.postMessage("{\"notification\":\"Server Success: Automation script complete; shutting down...\"}",)
         else:
-            error_message = "Could not retrieve required test run results data. XML Retrieved? [" + str(xmlRetrieved) + "]. Json Retrieved? [" + str(jsonRetrieved) + "]. Heap Size Values Retrieved? [" + str(heapSizeRetrieved) + "]. Heap JSON Retrieved? [" + str(heapSizeJSONRetrieved) + "]. Garbage Collection Values Retrieved? [" + str(garbageCollectionRetrieved) + "]. Garbage Collection JSON Retrieved? [" + str(garbageCollectionJSONRetrieved) + "]. FPS Values Retrieved? [" + str(fpsRetrieved) + "]. FPS JSON Retrieved? [" + str(fpsJSONRetrieved) + "]"
+            if Globals.critical_exception == True:
+                error_message = "Critical exception in Trilleon killed test execution."
+            else:
+                error_message = "Could not retrieve required test run results data. XML Retrieved? [" + str(xmlRetrieved) + "]. Json Retrieved? [" + str(jsonRetrieved) + "]. Heap Size Values Retrieved? [" + str(heapSizeRetrieved) + "]. Heap JSON Retrieved? [" + str(heapSizeJSONRetrieved) + "]. Garbage Collection Values Retrieved? [" + str(garbageCollectionRetrieved) + "]. Garbage Collection JSON Retrieved? [" + str(garbageCollectionJSONRetrieved) + "]. FPS Values Retrieved? [" + str(fpsRetrieved) + "]. FPS JSON Retrieved? [" + str(fpsJSONRetrieved) + "]"
             log(error_message)
             self.postMessage("{\"notification\":\"" + error_message + "\"}")
         
