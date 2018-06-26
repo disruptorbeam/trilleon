@@ -18,9 +18,7 @@
 */
 
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace TrilleonAutomation {
 
@@ -51,7 +49,7 @@ namespace TrilleonAutomation {
 		[Automation("Debug")]
 		[TestRunnerFlags(TestFlag.DisregardSetUpClassGlobal, TestFlag.DisregardSetUpGlobal)]
 		public IEnumerator Test() {
-
+            
 			yield return null;
 
 		}

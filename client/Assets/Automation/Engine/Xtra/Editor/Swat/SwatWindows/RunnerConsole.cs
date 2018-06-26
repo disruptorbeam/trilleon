@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -35,7 +35,7 @@ namespace TrilleonAutomation {
 		List<ConsoleMessageType> _consoleAbridgedReportTypes = new List<ConsoleMessageType>() { ConsoleMessageType.AssertionFail, ConsoleMessageType.AssertionPass };
 		int _lastPassConsoleMessageCount = 0;
 		DateTime _lastConsoleMessageButtonClick = new DateTime();
-		bool _autoScroll, _runningTestListFoldout, _pubsubMode;
+		bool _autoScroll, _pubsubMode;
 		Vector2 _scroll = new Vector2();
 
 		const int FPS_SAMPLE_RATE = 15;
@@ -137,7 +137,7 @@ namespace TrilleonAutomation {
 
 			Nexus.Self.Button("Clear", "Remove all messages in the console.", 
 				new Nexus.SwatDelegate(delegate() {                
-					FileBroker.SaveUnboundFile(string.Format("{0}{1}{2}/console_before_start.txt", FileBroker.BASE_NON_UNITY_PATH, ConfigReader.GetString("EDITOR_RESOURCE_CONSOLE_LOG_DIRECTORY"), GameMaster.GAME_NAME), string.Empty);
+					FileBroker.SaveUnboundFile(string.Format("{0}{1}{2}/console_before_start.txt", FileBroker.BASE_NON_UNITY_PATH, AutomationMaster.ConfigReader.GetString("EDITOR_RESOURCE_CONSOLE_LOG_DIRECTORY"), GameMaster.GAME_NAME), string.Empty);
 					AutoConsole.messageListDisplayed = new List<AutoConsoleMessage>();
 					AutoConsole.messageListQueued = new List<AutoConsoleMessage>();
 					_selectedConsoleMessage = null;

@@ -17,10 +17,7 @@
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-﻿using UnityEngine;
 using System;
-using System.Reflection;
-using System.Collections.Generic;
 
 namespace TrilleonAutomation {
 

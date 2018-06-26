@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -314,11 +314,7 @@ namespace TrilleonAutomation {
 			} else {
 
 				jsonBody.Append(json);
-				if(!Application.isEditor) {
-					
-					AutoConsole.PostMessage(string.Format("SINGLE_TEST_RESULTS_JSON|{0}|", json), MessageLevel.Abridged);
-
-				}
+				AutoConsole.PostMessage(string.Format("SINGLE_TEST_RESULTS_JSON|{0}|", json), MessageLevel.Abridged);
 
 			}
 
@@ -596,7 +592,7 @@ namespace TrilleonAutomation {
 			//Temporararily removing the usage of inline png's.
 			/*for(int f = 0; f < AutomationMaster.TestRunContext.Failed.tests.Count; f++) {
          	string testName = AutomationMaster.TestRunContext.Failed.tests[f].Key;
-         	bool saveInline = !ConfigReader.GetBool("EDITOR_IS_DOT_NET_SUBSET");
+         	bool saveInline = !AutomationMaster.ConfigReader.GetBool("EDITOR_IS_DOT_NET_SUBSET");
          	string inlinePngString = saveInline ? GetScreenShotAsInlinePng(testName) : string.Empty;
          	if(!string.IsNullOrEmpty(inlinePngString)) {
             	css.AppendLine(string.Format(".fail_test_image_{0} {{ background-repeat: no-repeat; width: 1240px; height: 600px; background-image:url('data:image/png;base64,{1}'); }}", testName, inlinePngString));

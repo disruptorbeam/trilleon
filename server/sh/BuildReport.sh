@@ -62,7 +62,7 @@ HEAP_JSON=$(cat ${DEFAULT_DIRECTORY}/HeapJson.txt)
 GC_JSON=$(cat ${DEFAULT_DIRECTORY}/GarbageCollectionJson.txt)
 FPS_JSON=$(cat ${DEFAULT_DIRECTORY}/FpsJson.txt)
 EXCEPTIONS_JSON=$(cat ${DEFAULT_DIRECTORY}/ExceptionsJson.txt)
-REPORT_CSS=$(cat ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/css/TrilleonDefaultAutomationReportCss.css)
+REPORT_CSS=$(cat ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportCss.css)
 GAME_LOAD_TIME=$(cat ${DEFAULT_DIRECTORY}/GameInitializationTime.txt)
 FPS_SCREENSHOT_DATA=$(cat ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}_Screenshots_FPS_data.txt)
 TEST_RUN_ID=$(cat ${DEFAULT_DIRECTORY}/test_run_id.txt)
@@ -210,6 +210,8 @@ echo "Copying ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/. to ${DEFAULT_DIRECT
 cp -rv ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/. ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts
 echo "Copying ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/css/. to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts"
 cp -rv ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/css/. ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts
+echo "cp file ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportDatatable.js ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts/TrilleonDefaultAutomationReportDatatable.js"
+cp -rv ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportDatatable.js ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/scripts/TrilleonDefaultAutomationReportDatatable.js
 
 echo "HTML sent to ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/report.html"
 echo ${HTML} > ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/report.html

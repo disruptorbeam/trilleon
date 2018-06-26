@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -267,7 +267,7 @@ namespace TrilleonAutomation {
 
             //If allowed, and Buddy is not yet set, then set Buddy to last-used Buddy.
             #if UNITY_EDITOR
-            if(ConfigReader.GetBool("EDITOR_DEFAULT_BUDDY_TO_LAST")) {
+            if(AutomationMaster.ConfigReader.GetBool("EDITOR_DEFAULT_BUDDY_TO_LAST")) {
                
                string mostRecentBuddy = AutomationReport.GetMostRecentBuddy();
                if(!string.IsNullOrEmpty(mostRecentBuddy)) {

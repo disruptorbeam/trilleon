@@ -589,7 +589,7 @@ function ShowDetails(button) {
 	show_results.removeClass("slider_reverse");
 	show_results.addClass("slider");
     last_selected_button = button;
-    setTimeout(function(){ opening = false; }, 500);
+    setTimeout(function(){ opening = false; $(".background_transparency").show(); }, 500);
 
 }
 
@@ -600,7 +600,8 @@ function HideDetails() {
 	var show_results = $("#show_results");
 	show_results.removeClass("slider");
 	show_results.addClass("slider_reverse");
-	setTimeout(function(){ show_results.hide(); }, 1000);
+    $(".background_transparency").hide(400);
+	setTimeout(function(){ show_results.hide(); }, 500);
 
 }
 
@@ -1094,7 +1095,7 @@ $(document).click(function(event) {
 
 	if(!is_screenshot_report) {
 
-	    if(!$("#screenshot_panel").is(":visible")) {
+	  if(!$("#screenshot_panel").is(":visible")) {
 		  if(!$(event.target).closest('#show_results').length) {
 		        if($('#show_results').is(":visible")) {
 		        	if(!opening){
@@ -1107,8 +1108,8 @@ $(document).click(function(event) {
 	    if(!$(event.target).closest('#screenshot_panel').length) {
 		   if($('#screenshot_panel').is(":visible")) {
 		      if(!openingScreenshotPanel){
-		      	$(".screenshot_open").css("background-color", "#0290dd");
-		        $("#screenshot_panel").hide(400);
+		      	 $(".screenshot_open").css("background-color", "#0290dd");
+		         $("#screenshot_panel").hide(400);
 		      }
 		   }
 	    } 
@@ -1116,13 +1117,17 @@ $(document).click(function(event) {
 	    var any_open = 0;
 		var panels = $(".display_panel");
 		for(var x = 0; x < panels.length; x++) {
-
 			if($(panels[x]).is(":visible")) {
 				any_open++;
 			}
-
 		}
 
+		if($('.details_panel').is(":visible")) {
+	       if(!opening){
+			 any_open++;
+		   }
+	    }
+		
 		if(any_open <= 0) {
 			$(".background_transparency").hide(400);
 		}
@@ -1132,9 +1137,9 @@ $(document).click(function(event) {
 	    if(!$(event.target).closest('#screenshot_panel').length) {
 		   if($('#screenshot_panel').is(":visible")) {
 		      if(!openingScreenshotPanel){
-		      	$(".screenshot_open").css("background-color", "#0290dd");
-		          $("#screenshot_panel").hide(400);
-		          $(".background_transparency").hide(400);
+		      	 $(".screenshot_open").css("background-color", "#0290dd");
+		         $("#screenshot_panel").hide(400);
+		         $(".background_transparency").hide(400);
 		      }
 		   }
 	    } 

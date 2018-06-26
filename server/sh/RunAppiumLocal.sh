@@ -17,6 +17,16 @@ if [ ! -d ~/Appium ]; then
     mkdir ~/Appium
 fi
 
+if [ ! -d ${DEFAULT_DIRECTORY}/resources ]; then
+    echo "Creating ${DEFAULT_DIRECTORY}/resources."
+    mkdir ${DEFAULT_DIRECTORY}/resources
+fi
+
+#Set IP Adress for client to hit Redis pubsub server on.
+#if [ -z ${IP_ADDRESS_SOCKET_SERVER} ]; then
+#export IP_ADDRESS_SOCKET_SERVER=$(ipconfig getifaddr en0)
+#fi
+
 # Delete the previous test run's results so that, if this test run files to properly execute, old results are not displayed as if they are the current run's results.
 if [ -d ${DEFAULT_DIRECTORY}/LatestTestResults ]; then
     echo "Deleting existing ${DEFAULT_DIRECTORY}/LatestTestResults directory."
@@ -57,8 +67,10 @@ echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/RelevantPubNu
 echo "" > ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/RelevantPubNubCommunications.txt
 echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/FormattedCommunicationHistory.txt"
 echo "" > ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/FormattedCommunicationHistory.txt
-echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/PyLog.txt"
-echo "" > ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/PyLog.txt
+echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/PyLog.log"
+echo "" > ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/PyLog.log
+echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/ServerClientLogRaw.log"
+echo "" > ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/ServerClientLogRaw.log
 echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/screenshot_requests.txt"
 echo "" > ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/screenshot_requests.txt
 echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/client_request_queue.txt"
@@ -71,6 +83,10 @@ echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/test_status.t
 echo "" > ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/test_status.txt
 echo "mk file ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/pass_fail_count.txt"
 echo "" > ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/pass_fail_count.txt
+echo "cp folder ${DEFAULT_DIRECTORY}/${PATH_TO_HTML_REPORT_SCRIPTS}/TrilleonDefaultAutomationReportCss.txt to ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportCss.css"
+\cp -r ${DEFAULT_DIRECTORY}/${PATH_TO_HTML_REPORT_SCRIPTS}/TrilleonDefaultAutomationReportCss.txt ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportCss.css
+echo "cp folder ${DEFAULT_DIRECTORY}/${PATH_TO_HTML_REPORT_SCRIPTS}/TrilleonDefaultAutomationReportCss.txt to ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportDatatable.js"
+\cp -r ${DEFAULT_DIRECTORY}/${PATH_TO_HTML_REPORT_SCRIPTS}/TrilleonDefaultAutomationReportDatatable.txt ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportDatatable.js
 
 if [ ${DEVICE_PLATFORM} = "ios" ]; then
 
@@ -129,15 +145,18 @@ fi
 
 # Device Python and Shell Scripts
 echo "Removing locks on project files."
+chmod a+rwx ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/py/Globals.py
 chmod a+rwx ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/py/BaseAppiumTest.py
 chmod a+rwx ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/py/GameAppiumTest.py
 chmod a+rwx ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/sh/run-tests.sh
-chmod a+rwx ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/TrilleonDefaultAutomationReportDatatable.js
+chmod a+rwx ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportDatatable.js
+chmod a+rwx ${DEFAULT_DIRECTORY}/resources/TrilleonDefaultAutomationReportCss.css
+
+#Copy files to directories
+cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/py/Globals.py" ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE} # Global variables module needed by test.
 cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/py/BaseAppiumTest.py" ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE} # Inhereted UnitTest.TestCase class with utilities needed by test.
 cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/py/GameAppiumTest.py" ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE} # Actual test case that launches server test.
 cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/sh/run-tests.sh" ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE} # Local Appium shell
-cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/TrilleonDefaultAutomationReportDatatable.js" ${DEFAULT_DIRECTORY}/TestResultsArchive/${BUILD_NUMBER}/HtmlReport/${BASE_SCRIPTS_PATH}/js/report.js # Javascript used in html report.
-cp "${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/js/TrilleonDefaultAutomationReportDatatable.js" ${DEFAULT_DIRECTORY}/LatestTestResults/${BASE_SCRIPTS_PATH}/js/report.js
 
 # Copy json config files for nodes.
 chmod +x ${DEFAULT_DIRECTORY}/${BASE_SCRIPTS_PATH}/sh/CreateUniqueNodeJson.sh
@@ -256,6 +275,9 @@ cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/Screenshots_FPS_data.txt
 
 echo "Copying PyLog logging text to ${DEFAULT_DIRECTORY}/PyLog.txt"
 cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/PyLog.txt ${DEFAULT_DIRECTORY}/PyLog.txt
+
+echo "Copying PyLog logging text to ${DEFAULT_DIRECTORY}/PyLog.txt"
+cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/ServerClientLogRaw.log ${DEFAULT_DIRECTORY}/ServerClientLogRaw.log
 
 echo "Copying Pass/Fail count text to ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}_pass_fail_count.txt"
 cp ~/Appium/${DEVICE_PLATFORM}/${GAME}/${APPIUM_DEVICE}/pass_fail_count.txt ${DEFAULT_DIRECTORY}/${APPIUM_DEVICE}_pass_fail_count.txt

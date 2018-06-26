@@ -19,20 +19,15 @@
 
 ﻿using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEditor.AnimatedValues;
-using System.Collections;
 using System.Collections.Generic;
 using System;
 using System.Text;
 using System.Reflection;
-using System.IO;
 
 namespace TrilleonAutomation {
 
 	public class DependencyArchitecture : SwatWindow {
 
-		AnimBool m_ShowExtraFields;
 		List<KeyValuePair<KeyValuePair<int,string>,List<KeyValuePair<Type,MethodInfo>>>> DependencyOrderingMaster;
 		List<KeyValuePair<KeyValuePair<int,string>,List<KeyValuePair<Type,MethodInfo>>>> DependencyOrderingMasterless;
 		List<bool> FoldoutListMasterBools;

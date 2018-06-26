@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -102,7 +102,7 @@ namespace TrilleonAutomation {
 		}   
 
 		public static string GetNewTestObjectPath(string fileName) {
-			return string.Format("{0}/Automation/{1}/Core/{2}/{3}.cs", Application.dataPath, ConfigReader.GetString("GAME_FOLDER_NAME"), ConfigReader.GetString("GAME_TEST_OBJECTS_FOLDER_NAME"), fileName);
+			return string.Format("{0}/Automation/{1}/Core/{2}/{3}.cs", Application.dataPath, AutomationMaster.ConfigReader.GetString("GAME_FOLDER_NAME"), AutomationMaster.ConfigReader.GetString("GAME_TEST_OBJECTS_FOLDER_NAME"), fileName);
 		}
 
 		public static void FullReset() {

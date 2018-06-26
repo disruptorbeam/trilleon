@@ -158,12 +158,11 @@ namespace TrilleonAutomation {
 			m_ShowExtraFields.valueChanged.AddListener(Repaint);
 
 			//Custom defined Tab order set from Additional Tools?
-			List<string> tabOrderData = FileBroker.GetNonUnityTextResource(FileResource.NexusTabs).Split(AutomationMaster.DELIMITER).ToList().RemoveNullAndEmpty();
+            List<string> tabOrderData = Customizer.Self.GetString("nexus_custom_tab_order").Split(AutomationMaster.DELIMITER).ToList().RemoveNullAndEmpty();
 			Dictionary<string,int> tabData = new Dictionary<string,int>();
 			for(int t = 0; t < tabOrderData.Count; t++) {
 
-				string[] data = tabOrderData[t].Split('$');
-				tabData.Add(data.First(), data.Last().ToInt());
+                tabData.Add(tabOrderData[t], t + 1);
 
 			}
 

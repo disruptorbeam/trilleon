@@ -285,7 +285,7 @@ namespace TrilleonAutomation {
 
 			}
 
-			if(AutomationRecorder.SelectionUpdatesHeirarchy) {
+			if(AutomationRecorder.SelectionUpdatesHierarchy) {
 
 				Selection.activeGameObject = gameObject;
 				if(AutomationRecorder.PauseOnSelect) {

@@ -18,17 +18,10 @@
 */
 
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System;
-using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Reflection.Emit;
 using System.Diagnostics;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace TrilleonAutomation {
 
@@ -93,6 +86,24 @@ namespace TrilleonAutomation {
 		private bool isTry;
 
 		#endregion
+
+        /// <summary>
+        /// Kills execution of entire test run. Starting with next test execution, the provided message (value) is posted as a "test result" in reports, explaining that all tests are skipped for the provided reason.
+        /// </summary>
+        public void CriticalTestRunFailure(string reason) {
+            
+            _critical_Test_Run_Failure = new KeyValuePair<bool, string>(true, reason);
+
+        }
+        public static KeyValuePair<bool, string> Critical_Test_Run_Failure {
+            get {
+                return _critical_Test_Run_Failure;
+            }
+            set {
+                _critical_Test_Run_Failure = value;
+            }
+        }
+        static KeyValuePair<bool, string> _critical_Test_Run_Failure = new KeyValuePair<bool, string>();
 
 		/// <summary>
 		/// Setting this to true will tell the Assert class to not kill test execution if any assertion of any variety fails from this point until the current test completes.
@@ -357,9 +368,7 @@ namespace TrilleonAutomation {
 				}
 
 				IsFailing = true;
-				bool recordLogDetails = newFailureContext != FailureContext.Skipped;
 
-				SetReflectedTestData();
 				string recentLogs = AutomationReport.EncodeCharactersForJson(AutoConsole.ReturnLatestLogs(5));
 
 				if(newFailureContext == FailureContext.Skipped) {
@@ -368,9 +377,10 @@ namespace TrilleonAutomation {
 
 				} else {
 
+                    SetReflectedTestData();
 					AutomationMaster.TestRunContext.Failed.Add(AutomationMaster.CurrentTestContext.TestName, new string[] {
 						message,
-						recentLogs.ToString(),
+						recentLogs,
 						lineNumber
 					});
 
@@ -378,10 +388,11 @@ namespace TrilleonAutomation {
 
 				AutomationMaster.CurrentTestContext.IsSuccess = false;
 				AutomationMaster.CurrentTestContext.AddAssertion(message);
-				AutomationMaster.CurrentTestContext.ErrorDetails += string.Format("Error Message [{0}] : Test Line [{1}] : Debug Logs [{2}] ", message, string.Format("Line [{0}] Call [{1}]", lineNumber, lineCall), (recordLogDetails ? recentLogs : string.Format("#SKIPPED#{0}", message)));
-				AutomationMaster.CurrentTestContext.ErrorDetails += string.Format(" FULL STACK: [{0}]", Environment.StackTrace.Replace(" at", string.Format(" {0} at", AutomationMaster.NEW_LINE_INDICATOR)));
+
 				if(failureContext != FailureContext.Skipped) {
 
+                    AutomationMaster.CurrentTestContext.ErrorDetails += string.Format("Error Message [{0}] : Test Line [{1}] : Debug Logs [{2}] \n\n", message, string.Format("Line [{0}] Call [{1}]", lineNumber, lineCall), recentLogs);
+                    AutomationMaster.CurrentTestContext.ErrorDetails += string.Format(" FULL STACK: [{0}]", Environment.StackTrace.Replace(" at", string.Format(" {0} at", AutomationMaster.NEW_LINE_INDICATOR)));
 					//Take screenshot if a failure is not a "Skip" failure (In which case a test does not run at all, and there is no value in taking a screenshot as the current screen has no relevance to the reason it failed).
 					yield return StartCoroutine(AutomationMaster.StaticSelfComponent.TakeScreenshot());
 					screenshotRequestTime = DateTime.UtcNow;
@@ -397,15 +408,13 @@ namespace TrilleonAutomation {
 						AutomationMaster.AutoSkips.Add(new KeyValuePair<string[], string>(new string[] { "test" , AutomationMaster.CurrentTestContext.TestName}, string.Format("FAILURE OCCURRED IN SETUP:", message)) );
 						break;
 					case AutomationMaster.CurrentExecutionContext.TearDownClass:
-					yield return StartCoroutine(Q.assert.Warn(string.Format("A failure occurred in the TearDownClass logic for  the test \"{0}.{1}\". This fails the last-run test, and may cause other undesirable behavior for downstream test execution.", AutomationMaster.CurrentTestContext.ClassName, AutomationMaster.CurrentTestContext.TestName)));
+					    yield return StartCoroutine(Q.assert.Warn(string.Format("A failure occurred in the TearDownClass logic for  the test \"{0}.{1}\". This fails the last-run test, and may cause other undesirable behavior for downstream test execution.", AutomationMaster.CurrentTestContext.ClassName, AutomationMaster.CurrentTestContext.TestName)));
 						//Will automatically handle the failure of this test.
 						break;
-					case AutomationMaster.CurrentExecutionContext.TearDown:
+					//case AutomationMaster.CurrentExecutionContext.TearDown:
 						//Will automatically handle the failure of this test.
-					case AutomationMaster.CurrentExecutionContext.Test:
+					//case AutomationMaster.CurrentExecutionContext.Test:
 						//Will automatically handle the failure of this test.
-					default:
-						break;
 					
 				}
 
@@ -464,6 +473,7 @@ namespace TrilleonAutomation {
 		/// Get test name and line number where error occurred.
 		/// </summary>
 		private static void SetReflectedTestData() {
+            
 			StackTrace st = new StackTrace(true);
 			List<StackFrame> stf = st.GetFrames().ToList();
 

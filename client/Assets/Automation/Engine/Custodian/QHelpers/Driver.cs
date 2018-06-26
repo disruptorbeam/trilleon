@@ -21,11 +21,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
-using System.Timers;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using System.Reflection;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -82,7 +79,7 @@ namespace TrilleonAutomation {
 			}
 
 			#if UNITY_EDITOR
-			if(AutomationRecorder.SelectionUpdatesHeirarchy) {
+			if(AutomationRecorder.SelectionUpdatesHierarchy) {
 
 				Selection.activeGameObject = selectedObject;
 
@@ -414,9 +411,77 @@ namespace TrilleonAutomation {
 
 		}
 
-		#endregion
+        #endregion
 
-		#region Find Objects
+        #region Find Objects
+
+        public GameObject FindParent(GameObject obj, By by, string val, bool isContains = true) {
+
+            if(obj == null) {
+
+                if(isTry) {
+
+                    Q.assert.StartCoroutine(Q.assert.Quiet.Try.Fail(string.Format("Null GameObject provided to finder (FindParent) along with By \"{0}\" and Search term was \"{1}\".", Enum.GetName(typeof(By), by), val)));
+
+                } else {
+
+                    Q.assert.StartCoroutine(Q.assert.Fail(string.Format("Null GameObject provided to finder (FindParent) along with By \"{0}\" and Search term was \"{1}\".", Enum.GetName(typeof(By), by), val)));
+
+                }
+                return null;
+
+            }
+            GameObject match = null;
+            GameObject currentObjectToInspect = obj.transform.parent != null ? obj.transform.parent.gameObject : null;
+            while(match == null && currentObjectToInspect != null) {
+
+                bool isMatch = false;
+                switch(by) {
+                    case By.Name:
+                        if(isContains) {
+
+                            isMatch = currentObjectToInspect.name.Contains(val);
+
+                        } else {
+
+                            isMatch = currentObjectToInspect.name == val;
+
+                        }
+                        break;
+                    case By.TagName:
+                        if(isContains) {
+
+                            isMatch = currentObjectToInspect.tag.Contains(val);
+
+                        } else {
+
+                            isMatch = currentObjectToInspect.tag == val;
+
+                        }
+                        break;
+                    case By.ContainsComponent:
+                        isMatch = currentObjectToInspect.GetComponent(val) != null;
+                        break;
+                    default:
+                        throw new NotImplementedException("That search condition has not yet been implemented in FindParent().");
+
+                }
+      
+                if(isMatch) {
+
+                    match = currentObjectToInspect;
+                    break;
+
+                } else {
+
+                    currentObjectToInspect = currentObjectToInspect.transform.parent != null ? currentObjectToInspect.transform.parent.gameObject : null;
+
+                }
+
+            }
+            return match;
+
+        }
 
 		/// <summary>
 		/// Find single object by attribute type and provided value.
@@ -562,35 +627,35 @@ namespace TrilleonAutomation {
 		/// </summary>
 		public T Find<T>() {
 
-			GameObject result = SceneMaster.GetObjectPool().FindAll(c => c.GetComponent<T>() != null).First();
+			GameObject result = SceneMaster.GetObjectPool().FindAll(c => c.GetComponent<T>() != null && IsActiveVisibleAndInteractable(c)).First();
 			return result == null ? default(T) : result.GetComponent<T>();
 
 		}
 		public T FindIn<T>(List<GameObject> findInThese) {
 
-			GameObject result = findInThese.GetChildren().FindAll(c => c.GetComponent<T>() != null).First();
+			GameObject result = findInThese.GetChildren().FindAll(c => c.GetComponent<T>() != null && IsActiveVisibleAndInteractable(c)).First();
 			return result == null ? default(T) : result.GetComponent<T>();
 
 		}
 		public T FindIn<T>(GameObject findInThis) {
 
-			GameObject result = findInThis.GetChildren().FindAll(c => c.GetComponent<T>() != null).First();
+			GameObject result = findInThis.GetChildren().FindAll(c => c.GetComponent<T>() != null && IsActiveVisibleAndInteractable(c)).First();
 			return result == null ? default(T) : result.GetComponent<T>();
 
 		}
 		public List<T> FindAll<T>() {
 
-			return SceneMaster.GetObjectPool().FindAll(c => c.GetComponent<T>() != null).ToComponenentList<T>();
+			return SceneMaster.GetObjectPool().FindAll(c => c.GetComponent<T>() != null && IsActiveVisibleAndInteractable(c)).ToComponenentList<T>();
 
 		}
 		public List<T> FindAllIn<T>(GameObject findInThis) {
 
-			return findInThis.GetChildren().FindAll(c => c.GetComponent<T>() != null).ToComponenentList<T>();
+			return findInThis.GetChildren().FindAll(c => c.GetComponent<T>() != null && IsActiveVisibleAndInteractable(c)).ToComponenentList<T>();
 
 		}
 		public List<T> FindAllIn<T>(List<GameObject> findInThese) {
 
-			return findInThese.GetChildren().FindAll(c => c.GetComponent<T>() != null).ToComponenentList<T>();
+			return findInThese.GetChildren().FindAll(c => c.GetComponent<T>() != null && IsActiveVisibleAndInteractable(c)).ToComponenentList<T>();
 
 		}
 
@@ -845,7 +910,7 @@ namespace TrilleonAutomation {
 		#region Interact With Object
 
 		/// <summary>
-		/// Select the supplied object using pointer handlersF
+		/// Select the supplied object using pointer handlers
 		/// </summary>
 		/// <param name="g">GameObject to click.</param>
 		/// <param name="optionalOnFailMessage">Click fail message.</param>
@@ -910,7 +975,7 @@ namespace TrilleonAutomation {
 					yield return StartCoroutine(WaitRealTime(WAIT_AFTER_CLICK));
 
 				}
-				Q.assert.Pass(assertion);
+				yield return StartCoroutine(Q.assert.Pass(assertion));
 
 			}
 			yield return StartCoroutine(Q.game.WaitForNoLoadingIndicators());
@@ -980,7 +1045,7 @@ namespace TrilleonAutomation {
 					yield return StartCoroutine(WaitRealTime(WAIT_AFTER_CLICK));
 
 				}
-				Q.assert.Pass(assertion);
+				yield return StartCoroutine(Q.assert.Pass(assertion));
 
 			}
 
@@ -1077,7 +1142,7 @@ namespace TrilleonAutomation {
 			ExecuteEvents.Execute<IPointerUpHandler>(o, new PointerEventData(EventSystem.current), ExecuteEvents.pointerUpHandler);
 			yield return StartCoroutine(Q.game.WaitForNoLoadingIndicators());
 
-			Q.assert.Pass(assertion);
+			yield return StartCoroutine(Q.assert.Pass(assertion));
 			PostCommandCheck();
 
 		}
@@ -1177,7 +1242,7 @@ namespace TrilleonAutomation {
 			data.position = data.pressPosition = releaseDragAt;
 			ExecuteEvents.Execute<IPointerUpHandler>(g, data, ExecuteEvents.pointerUpHandler);
 
-			Q.assert.Pass(assertion);
+			yield return StartCoroutine(Q.assert.Pass(assertion));
 			PostCommandCheck();
 
 		}
@@ -1190,7 +1255,7 @@ namespace TrilleonAutomation {
 		/// Waits for a single value to not be null or default. Waits for a list of values to return more than 0. Waits for object(s) to be active, visible, and interactable.
 		/// </summary>
 		/// <param name="propertyExpression">Lamba expression representing the check you wish to perform with each iteration of the loop. This is syntactically as simple as "() => SomeCondition && SomeOtherCondition", for example.</param>
-		public IEnumerator WaitFor(Func<bool> condition, string optionalOnFailMessage = "", float timeout = TIMEOUT_DEFAULT) {
+		public IEnumerator WaitFor(Func<bool> condition, string optionalOnFailMessage = "", float timeout = TIMEOUT_DEFAULT, params int[] testCaseIds) {
 
 			PreCommandCheck();
 
@@ -1216,11 +1281,18 @@ namespace TrilleonAutomation {
 
 			if(!string.IsNullOrEmpty(optionalOnFailMessage)) {
 
-				Q.assert.Pass(optionalOnFailMessage);
+                yield return StartCoroutine(Q.assert.Pass(optionalOnFailMessage));
+
+			}
+
+			if(testCaseIds.Length > 0) {
+
+				Q.assert.MarkTestRailsTestCase(timer > timeout, testCaseIds);
 
 			}
 
 			PostCommandCheck();
+			yield return null;
 
 		}
 
@@ -1243,6 +1315,7 @@ namespace TrilleonAutomation {
 			}
 
 			PostCommandCheck();
+			yield return null;
 
 		}
 

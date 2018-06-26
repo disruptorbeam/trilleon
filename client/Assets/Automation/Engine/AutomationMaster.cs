@@ -18,13 +18,10 @@
 */
 
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System;
 using System.Text;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Reflection;
-using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using Debug = UnityEngine.Debug;
@@ -163,7 +160,7 @@ namespace TrilleonAutomation {
 		private static int _maxLastUseLimit = 60; //Used to detect stall in current test execution.
 		#endif
 
-		public static int SessionRunCount { get; set; }
+        public static int SessionRunCount { get; set; }
 
 		public static int HeartBeatIndex { get; set; }
 
@@ -259,6 +256,16 @@ namespace TrilleonAutomation {
 			set { busy = value; }
 		}
 		private static bool busy;
+
+        public static ConfigReader ConfigReader { 
+            get {
+                if(_configReader == null) {
+                    _configReader = new ConfigReader();
+                }
+                return _configReader;
+            } 
+        }
+        private static ConfigReader _configReader;
 
 		public static List<KeyValuePair<string[], string>> AutoFails {
 			get { return _autoFails; }
@@ -357,7 +364,7 @@ namespace TrilleonAutomation {
 
 		public static void Initialize() {
 
-			if(!GameMaster.Enabled) {
+            if(!GameMaster.Enabled || StaticSelf != null) {
 				
 				return;
 
@@ -420,10 +427,10 @@ namespace TrilleonAutomation {
 
 				//Lock reload assemblies while automation is active and application is running.
 				if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
+                
+                if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket && StaticSelf != null && StaticSelf.GetComponent<SocketConnectionStrategy>() != null) {
 
-					if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
-
-						AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
+						StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
 
 					}
 					EditorApplication.UnlockReloadAssemblies();
@@ -439,7 +446,7 @@ namespace TrilleonAutomation {
 
 					if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
 
-						AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
+						StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
 
 					}
 					EditorApplication.UnlockReloadAssemblies();
@@ -717,10 +724,23 @@ namespace TrilleonAutomation {
 
 			yield return StartCoroutine(GameMaster.PreTestRunLaunch()); //Launch any game-specific pretest code.
 			yield return StartCoroutine(CheckForUnexpectedErrorAlerts());
-			//TODO: StartCoroutine(FindBuddyHandler.Buddy()); //Dynamically find Buddy from active/available devices.
+            //TODO: StartCoroutine(FindBuddyHandler.Buddy()); //Dynamically find Buddy from active/available devices.
 
 			//Run each test one after another.
 			for(int m = 0; m < Methods.Count; m++) {
+
+                //Check for declared critical failure. Mark test results and shut down test run.
+                if(Assert.Critical_Test_Run_Failure.Key) {
+
+                    CurrentTestContext = new TestContext();
+                    CurrentTestContext.IsInitialized = true;
+                    CurrentTestContext.IsSuccess = false;
+                    CurrentTestContext.TestName = "CRITICAL FAILURE";
+                    CurrentTestContext.ErrorDetails = Assert.Critical_Test_Run_Failure.Value;
+                    AutomationReport.AddToReport(false, 0, false); //Save results to test run's XML file.
+                    break;
+
+                }
 
 				//If we are still running tests within the same class as the previous tests, skip check for masterless dependencies.
 				if(Methods[m].Key.Split(DELIMITER)[0] != CurrentTestContext.ClassName) {
@@ -796,7 +816,7 @@ namespace TrilleonAutomation {
 			}
 
 			//If there are any BuddyHandler.Buddy system tests, then the test run is not complete.
-			if(BuddyHandler.Buddies.Any()) {
+            if(!Assert.Critical_Test_Run_Failure.Key && BuddyHandler.Buddies.Any()) {
 
 				yield return StartCoroutine(BuddyHandler.RunBuddySystemTests());
 
@@ -855,14 +875,14 @@ namespace TrilleonAutomation {
 			AutomationReport.SendJsonInPieces("FPS_JSON", PerformanceTracker.GetFpsJsonReportWithReset());
 			yield return StartCoroutine(Q.driver.WaitRealTime(1));
 
-			if(AutomationMaster.TestRunContext.Exceptions.Reported.Count > 0) {
+			if(TestRunContext.Exceptions.Reported.Count > 0) {
 
 				StringBuilder exceptionsData = new StringBuilder();
 				exceptionsData.Append("[");
-				for(int ed = 0; ed < AutomationMaster.TestRunContext.Exceptions.Reported.Count; ed++) {
+				for(int ed = 0; ed < TestRunContext.Exceptions.Reported.Count; ed++) {
 
-					exceptionsData.Append(string.Format("{{\"screenshot_name\":\"{0}\",\"error\":\"{1}\",\"error_details\":\"{2}\",\"occurrences\":\"{3}\"}}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].ScreenshotName, AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Length > 75 ? AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error.Substring(0, 75) : AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, string.Format("{0}: {1}", AutomationMaster.TestRunContext.Exceptions.Reported[ed].Error, AutomationMaster.TestRunContext.Exceptions.Reported[ed].ErrorDetails), AutomationMaster.TestRunContext.Exceptions.Reported[ed].Occurrences));
-					if(ed + 1 != AutomationMaster.TestRunContext.Exceptions.Reported.Count) {
+					exceptionsData.Append(string.Format("{{\"screenshot_name\":\"{0}\",\"error\":\"{1}\",\"error_details\":\"{2}\",\"occurrences\":\"{3}\"}}", TestRunContext.Exceptions.Reported[ed].ScreenshotName, TestRunContext.Exceptions.Reported[ed].Error.Length > 75 ? TestRunContext.Exceptions.Reported[ed].Error.Substring(0, 75) : TestRunContext.Exceptions.Reported[ed].Error, string.Format("{0}: {1}", TestRunContext.Exceptions.Reported[ed].Error, TestRunContext.Exceptions.Reported[ed].ErrorDetails), TestRunContext.Exceptions.Reported[ed].Occurrences));
+					if(ed + 1 != TestRunContext.Exceptions.Reported.Count) {
 						
 						exceptionsData.Append(",");
 
@@ -878,7 +898,7 @@ namespace TrilleonAutomation {
 			ResetTestRunner();			
 			if(!Application.isEditor && ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
 
-				AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
+				StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
 
 			}
 			yield return StartCoroutine(Q.driver.WaitRealTime(1f));
@@ -2333,8 +2353,8 @@ namespace TrilleonAutomation {
 						//If current method has failed to stop after a failure, ensure it is killed.
 						try {
 
-						AutoConsole.PostMessage("Stall detected. Killing test from TestRunnerMonitor.", MessageLevel.Abridged);
-						CurrentTestMethod.Stop(); //Kill current test, only if the currently queued test has been initialized.
+						    AutoConsole.PostMessage("Stall detected. Killing test from TestRunnerMonitor.", MessageLevel.Abridged);
+						    CurrentTestMethod.Stop(); //Kill current test, only if the currently queued test has been initialized.
 
 						} catch { }
 

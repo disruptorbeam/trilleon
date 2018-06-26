@@ -22,7 +22,6 @@
 	ExtendableResource,
 	LaunchInstructions,
 	BuddyHistory,
-	NexusTabs,
 	ManifestGUISettings,
 	LatestTestResults,
 	LatestTestResultsMeta,
@@ -30,6 +29,7 @@
 	FavoritesUnit,
 	TrilleonConfig,
 	ReportCss,
-	ReportJavascript
+	ReportJavascript,
+    CustomizationConfig
 
 }

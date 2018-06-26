@@ -1,4 +1,4 @@
-/* 
+﻿/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -46,7 +46,7 @@ namespace TrilleonAutomation {
 		public override void Set() {
 
 			//Will we populate elements based on highlighted element in hierarchy window, or by dragging the desired object into our editor window.
-			inspectBasedOnSelectedHierarchy = ConfigReader.GetBool("EDITOR_WINDOW_INSPECT_BY_HIERARCHY_HIGHLIGHTED");
+			inspectBasedOnSelectedHierarchy = AutomationMaster.ConfigReader.GetBool("EDITOR_WINDOW_INSPECT_BY_HIERARCHY_HIGHLIGHTED");
 		
 		}
 
@@ -98,7 +98,7 @@ namespace TrilleonAutomation {
 			if(GUILayout.Button("Recorder", TabOptions)) {
 
 				EditorGUI.indentLevel++;
-				AutomationRecorder.SelectionUpdatesHeirarchy = true; //Default on.
+				AutomationRecorder.SelectionUpdatesHierarchy = true; //Default on.
 				SelectedSubTab = GeneratorSubTab.Recorder;
 				EditorGUI.indentLevel--;
 
@@ -189,7 +189,7 @@ namespace TrilleonAutomation {
 				new Nexus.SwatDelegate(delegate() {  
 					if(EditorApplication.isPlaying) {
 
-						activateHierarchySelector = AutomationRecorder.NotRecordingActions = AutomationRecorder.SelectionUpdatesHeirarchy = !activateHierarchySelector;
+						activateHierarchySelector = AutomationRecorder.NotRecordingActions = AutomationRecorder.SelectionUpdatesHierarchy = !activateHierarchySelector;
 						AutomationRecorder.StaticSelfComponent.Initialize();
 
 					} else {
@@ -213,7 +213,7 @@ namespace TrilleonAutomation {
 				button.normal.textColor = Selection.activeGameObject.activeSelf ? Swat.ToggleButtonSelectedTextColor : Swat.ToggleButtonTextColor;
 				button.normal.background = Selection.activeGameObject.activeSelf ? Swat.ToggleButtonBackgroundSelectedTexture : Swat.ToggleButtonBackgroundTexture;
 
-				Nexus.Self.Button(Selection.activeGameObject.activeSelf ? "Hide" : "Show", "Show/Hide currently-selected game object in heirarchy window.", 
+				Nexus.Self.Button(Selection.activeGameObject.activeSelf ? "Hide" : "Show", "Show/Hide currently-selected game object in hierarchy window.", 
 					new Nexus.SwatDelegate(delegate() {
 						Selection.activeGameObject.SetActive(!Selection.activeGameObject.activeSelf);
 					}), button, new GUILayoutOption[] { GUILayout.Width(120), GUILayout.Height(30) });
@@ -221,7 +221,7 @@ namespace TrilleonAutomation {
 				button.normal.textColor = advancedSearch ? Swat.ToggleButtonSelectedTextColor : Swat.ToggleButtonTextColor;
 				button.normal.background = advancedSearch ? Swat.ToggleButtonBackgroundSelectedTexture : Swat.ToggleButtonBackgroundTexture;
 
-				Nexus.Self.Button(advancedSearch ? "Default Search" : "Full Search", "Search for references to selected objects in just the current parent-child heirarchy (default), or in all scene game objects (full).", 
+				Nexus.Self.Button(advancedSearch ? "Default Search" : "Full Search", "Search for references to selected objects in just the current parent-child hierarchy (default), or in all scene game objects (full).", 
 					new Nexus.SwatDelegate(delegate() {                
 						advancedSearch = !advancedSearch;
 						setUpReferences = true;
@@ -1191,9 +1191,9 @@ namespace TrilleonAutomation {
 						AutomationRecorder.NotRecordingActions = !AutomationRecorder.NotRecordingActions;
 					}), 125, 90, null, new string[] { "Active", "Paused" }, true);
 
-				Nexus.Self.ToggleButton(AutomationRecorder.SelectionUpdatesHeirarchy, "Heirarchy Select", "Toggle automatic selection of interacted game objects in heirarchy window.", 
+				Nexus.Self.ToggleButton(AutomationRecorder.SelectionUpdatesHierarchy, "Hierarchy Select", "Toggle automatic selection of interacted game objects in hierarchy window.", 
 					new Nexus.SwatDelegate(delegate() {                
-						AutomationRecorder.SelectionUpdatesHeirarchy = !AutomationRecorder.SelectionUpdatesHeirarchy;
+						AutomationRecorder.SelectionUpdatesHierarchy = !AutomationRecorder.SelectionUpdatesHierarchy;
 					}), 160);
 
 				Nexus.Self.ToggleButton(AutomationRecorder.PauseOnSelect, "Pause On Select", "Some objects are destroyed after executing their click events. If this is anticipated, and examining the object in the hierarchy window is desired, activate this option to pause the game immediately after highlighting GameObject.", 
