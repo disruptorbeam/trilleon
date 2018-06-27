@@ -26,9 +26,7 @@ namespace TrilleonAutomation {
 
 		Vector2 scroll = new Vector2();
 
-		public override void Set() {
-
-		}
+		public override void Set() { }
 
 		public override bool UpdateWhenNotInFocus() {
 
@@ -55,13 +53,13 @@ namespace TrilleonAutomation {
 			GUIStyle tests = new GUIStyle(EditorStyles.foldout);
 			tests.margin = new RectOffset(15, 15, 2, 2);
 			GUILayout.Space(25);
-			EditorGUILayout.BeginScrollView(scroll);
+            scroll = GUILayout.BeginScrollView(scroll);
 			for(int x = 0; x < AutomationMaster.Methods.Count; x++) {
 
 				EditorGUILayout.Foldout(false, AutomationMaster.Methods[x].Value.Name, tests);
 
 			}
-			EditorGUILayout.EndScrollView();
+            GUILayout.EndScrollView();
 
 		}
 

@@ -95,7 +95,6 @@ namespace TrilleonAutomation {
 
 					string error = string.Format("Unrecognized file path encountered. Trilleon cannot interact with local files, and will not be fully functional until the issue is corrected. Path [{0}]", basePath);
 					AutoConsole.PostMessage(error);
-					Debug.Log(error);
 					return;
 
 				}
@@ -173,6 +172,7 @@ namespace TrilleonAutomation {
 			if(!Exists(copyThis)) {
 				
 				AutoConsole.PostMessage(string.Format("Could not copy \"{0}\" to \"{1}\". File to copy does not currently exist.", copyThis.Replace("/", FILE_PATH_SPLIT), destination.Replace("/", FILE_PATH_SPLIT)), MessageLevel.Abridged);
+                return;
 
 			}
 			if(Exists(destination)) {
@@ -311,8 +311,9 @@ namespace TrilleonAutomation {
 
 			if(!knownEditorResourceFiles.FindAll(x => x.Key == file).Any()) {
 				
-				Debug.Log("The supplied file could not be found. Make sure you are referencing a file stored outside of the Unity project."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
-			
+				AutoConsole.PostMessage("The supplied file could not be found. Make sure you are referencing a file stored outside of the Unity project."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
+                return;
+
 			}
 
 			string directory = string.Format("{0}{1}{2}", RESOURCES_DIRECTORY, FILE_PATH_SPLIT, knownEditorResourceFiles.Find(x => x.Key == file).Value);
@@ -366,8 +367,11 @@ namespace TrilleonAutomation {
 			}
 
 			if(!knownEditorResourceFiles.FindAll(x => x.Key == file && (file == FileResource.ExtendableResource ? x.Value == extendableResourceName : true)).Any()) {
-				Debug.Log("The supplied file is not an expected Trilleon resource. Make sure you are referencing a file declared in the FileBroker.cs Set() logic."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
-			}
+				
+                AutoConsole.PostMessage("The supplied file is not an expected Trilleon resource. Make sure you are referencing a file declared in the FileBroker.cs Set() logic."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
+                return string.Empty;
+
+            }
 
 			string directory = string.Format("{0}{1}{2}", RESOURCES_DIRECTORY, FILE_PATH_SPLIT, knownEditorResourceFiles.Find(x => x.Key == file).Value);
 			string fileText = string.Empty;
@@ -396,8 +400,9 @@ namespace TrilleonAutomation {
 
 			if(!knownTrilleonResourceFiles.FindAll(x => x.Key == file).Any()) {
 				
-				Debug.Log("The supplied file is not an expected Trilleon resource. Make sure you are referencing a file declared in the FileBroker.cs Set() logic."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
-			
+				AutoConsole.PostMessage("The supplied file is not an expected Trilleon resource. Make sure you are referencing a file declared in the FileBroker.cs Set() logic."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
+                return string.Empty;
+
 			}
 
 			TextAsset txt = (TextAsset)Resources.Load(knownTrilleonResourceFiles.Find(x => x.Key == file && (file == FileResource.ExtendableResource ? x.Value == extendableResourceName : true)).Value, typeof(TextAsset));
@@ -425,8 +430,9 @@ namespace TrilleonAutomation {
 
 			if(!knownTrilleonResourceFiles.FindAll(x => x.Key == file).Any()) {
 				
-				Debug.Log("The supplied file could not be found. Make sure you are referencing a file stored outside of the Unity project."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
-			
+				AutoConsole.PostMessage("The supplied file could not be found. Make sure you are referencing a file stored outside of the Unity project."); //No usage of string.Format with file name data. Using Enum.GetName here causes exceptions on compile "Recursive Serialization is not supported. You can't dereference a PPtr while loading.".
+                return;
+                 
 			}
 
 			string filePath = string.Format("{0}{1}{2}.txt", Application.dataPath.Replace("/", FILE_PATH_SPLIT), AutomationMaster.ConfigReader.GetString("UNITY_RESOURCES_FILE_PATH").Replace("/", FILE_PATH_SPLIT), knownTrilleonResourceFiles.Find(x => x.Key == file).Value);

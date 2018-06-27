@@ -29,6 +29,8 @@ namespace TrilleonAutomation{
 
         public static int GarbageCollectionMemoryLeakMaximumThresholdInMegabytes { get; set; }
         public static int GarbageCollectionMemoryLeakWarningThreasholdInMegabytes { get; set; }
+        public static bool WarningHit { get; set; }
+        public static bool CriticalHit { get; set; }
         public static double StartingGCValue { get; set; }
         static int _numberOfSamplesToAverageGCUsage = 10;
 
@@ -163,14 +165,16 @@ namespace TrilleonAutomation{
 
                 }
 
-                if(averageSample - StartingGCValue >= GarbageCollectionMemoryLeakMaximumThresholdInMegabytes) {
+                if(!CriticalHit && averageSample - StartingGCValue >= GarbageCollectionMemoryLeakMaximumThresholdInMegabytes) {
 
+                    CriticalHit = true;
                     string message = string.Format("Garbage Collection MemoryLeak CRITICAL Threshold Exceeded! Order of execution [{0} > {1}]", string.Join(" > ", AutomationMaster.TestRunContext.CompletedTests.ToArray()), AutomationMaster.CurrentTestMethod);
                     yield return StartCoroutine(Q.assert.Fail(message));
                     Q.assert.CriticalTestRunFailure(message);
 
-                } else if(averageSample - StartingGCValue >= GarbageCollectionMemoryLeakWarningThreasholdInMegabytes) {
+                } else if(!WarningHit && averageSample - StartingGCValue >= GarbageCollectionMemoryLeakWarningThreasholdInMegabytes) {
 
+                    WarningHit = true;
                     string message = string.Format("Garbage Collection MemoryLeak WARNING Threshold Exceeded! Order of execution [{0}]", string.Join(" > ", AutomationMaster.TestRunContext.CompletedTests.ToArray()), AutomationMaster.CurrentTestMethod);
                     yield return StartCoroutine(Q.assert.Warn(message));
 
