@@ -37,9 +37,26 @@ from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 import Globals
 
+def publish_callback(envelope, status):
+    return #Do nothing.
+
 class PubnubSubscribeCallback(SubscribeCallback):
     def message(self, pubnub, message):
-        callback(message.message, "")
+        full_message = ""
+        if type(message.message) is dict:
+            for item in message.message:
+                full_message += str(item) + ","
+        elif type(message.message) is list:
+            full_message = ",".join(message.message)
+        else:
+            full_message = message.message
+        callback(full_message, "")
+
+def error(message):
+    log("PubNub Erred: %s" % (message))
+
+def _callback(message):
+    log("")
 
 def callback(message, channel):
     # Differentiate intended client messages from its Buddy's messages.
@@ -197,7 +214,6 @@ class BaseAppiumTest(unittest.TestCase):
     buddyName = ""
     buddyCheckFileName = ""
     buddyCheckComplete = False
-    DBID = ""
     project_id = ""
     gridIdentity = ""
     additionalCommands = ""
@@ -227,7 +243,7 @@ class BaseAppiumTest(unittest.TestCase):
                  application_activity=None, automation_name=None):
         Globals.test_run_id = str(uuid.uuid4())
         self.test_run_id_internal = Globals.test_run_id
-        log("test_run_id [" + Globals.test_run_id + "]")
+        log("Globals.test_run_id [" + Globals.test_run_id + "]")
         with open("test_run_id.txt", "w") as f:
             f.write(Globals.test_run_id)
         self.setChannelPrefixes()
@@ -306,7 +322,7 @@ class BaseAppiumTest(unittest.TestCase):
     def postMessage(self, message):
         postString = self.jsonGridPrefix + message
         if os.environ.get('CONNECTION_STRATEGY').lower() == "pubnub":
-            #self.pubnub.publish(self.channel, postString, callback=_callback, error=error)
+            self.pubnub.publish().channel(self.channel).message([postString]).async(publish_callback)
             log("Request posted to PubNub [" + postString + "]")
         else:
             self.socket.publish(self.channel, postString)
@@ -750,11 +766,7 @@ class BaseAppiumTest(unittest.TestCase):
                 return True
 
         recent_posts = self.get_communication_history()
-        if command == "ready" and ("checking_in" in recent_posts or "DBID||" in recent_posts):
-             time.sleep(5)
-             if "DBID||" in recent_posts:
-                 dbidPiece = recent_posts.split("DBID||")[1]
-                 self.DBID = dbidPiece.split("||")[0]
+        if command == "ready" and "checking_in" in recent_posts:
              return True
         if command == "started" and ("starting_automation" in recent_posts or "Starting Automation" in recent_posts or "SINGLE_TEST_RESULTS_JSON" in recent_posts):
             return True
