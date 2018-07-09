@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -27,13 +26,18 @@ namespace TrilleonAutomation {
         public static bool SubscriptionsComplete { get; private set; } //CUSTOMIZE: Change this value in TrilleonConfig.txt. Should remain identical to the port used by pubsub master scripts.
         static bool CheckedIn { get; set; }
 
+        public static void Set() {
+
+            SOCKET_PORT = AutomationMaster.ConfigReader.GetInt("SOCKET_MASTER_PUBSUB_PORT");
+            MAX_MESSAGE_LENGTH = AutomationMaster.ConfigReader.GetInt("SOCKET_MAX_MESSAGE_LENGTH");
+            SOCKET_CHANNEL_NAME = AutomationMaster.ConfigReader.GetString("PUBNUB_CHANNEL_NAME");
+
+        }
+
         void Start() {
 
             //For WebGL games, use WebGLBroker.cs and javascript execution on the client to communicate with your game.
             #if !UNITY_WEBGL
-            SOCKET_PORT = AutomationMaster.ConfigReader.GetInt("SOCKET_MASTER_PUBSUB_PORT");
-            MAX_MESSAGE_LENGTH = AutomationMaster.ConfigReader.GetInt("SOCKET_MAX_MESSAGE_LENGTH");
-            SOCKET_CHANNEL_NAME = AutomationMaster.ConfigReader.GetString("PUBNUB_CHANNEL_NAME");
             StartCoroutine(Subscribe());
             #endif
 

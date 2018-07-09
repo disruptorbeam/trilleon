@@ -24,7 +24,6 @@ using System.Collections.Generic;
 using System;
 using System.Text;
 using System.Reflection;
-using System.IO;
 
 //TODO: Pimp out the logic that places nodes in a more friendly/appealing way so that minimal dragging is necessary.
 //TODO: Detect circular dependencies among nodes, and color the breziers for these connections red.
@@ -57,7 +56,7 @@ namespace TrilleonAutomation {
 		[MenuItem ("Trilleon/Dependencies/Web")]
 		static void Init () {
 
-			Swat.ShowWindow<DependencyVisualizer>(typeof(DependencyVisualizer), "Web", Dock.NextToScene);
+            ShowWindow<DependencyVisualizer>(typeof(DependencyVisualizer), "Web", DockNextTo.SceneView);
 
 		}
 

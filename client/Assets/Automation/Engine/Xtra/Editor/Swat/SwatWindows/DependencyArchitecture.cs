@@ -91,7 +91,7 @@ namespace TrilleonAutomation {
 			if(GUILayout.Button("Open", open)) {
 
 				//Web must be viewed in a large screen move. Dock next to Game, or allow float.
-				Swat.ShowWindow<DependencyVisualizer>(typeof(DependencyVisualizer), "Web", Swat.DockNextTo == Dock.Float ? Dock.Float : Dock.NextToGame);
+				Swat.ShowWindow<DependencyVisualizer>(typeof(DependencyVisualizer), "Web", Swat.DockNextTo == DockNextTo.Float ? DockNextTo.Float : DockNextTo.GameView);
 
 			}
 			GUILayout.Space(18);

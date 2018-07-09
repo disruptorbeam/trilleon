@@ -17,7 +17,7 @@
 +   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-﻿using System;
+using System;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,42 +29,42 @@ using MiniJSON;
 
 namespace TrilleonAutomation {
 
-	public abstract class ConsoleCommandsBase : MonoBehaviour {
+    public abstract class ConsoleCommandsBase : MonoBehaviour {
 
-		public const KeyCode TOGGLE_CONSOLE_VISIBLE = KeyCode.BackQuote; //aka "Tilde".
+        public const KeyCode TOGGLE_CONSOLE_VISIBLE = KeyCode.BackQuote; //aka "Tilde".
 
-		/// <summary>
-		/// Add all valid commands with accompanying logic to launch in region below. Command aliases cannot contains spaces.
-		/// </summary>
-		public static List<Command> RegisteredCommands = new List<Command> {
+        /// <summary>
+        /// Add all valid commands with accompanying logic to launch in region below. Command aliases cannot contains spaces.
+        /// </summary>
+        public static List<Command> RegisteredCommands = new List<Command> {
 
 			#region Trilleon commands.
-			new Command("Runs the provided Test(s), Category(ies) etc.", RunTests, 
-				new List<KeyValuePair<string,string>> { 
-					new KeyValuePair<string,string>("Manifest", "Test(s) or Cateogory(ies) to run. Examples: \"rt all\" would run all tests" +
-						", \"rt *SomeTest\" would launch a single test, \"rt SomeCategory\" would run a single category. To run multiple," +
-						" begin command in same way, and then provided comma-delimited list.")
-				}, "RT", "RunTests"),
-			new Command("Posts logs from the Auto Console. Abridged messages are important framework notifications. " +
-				"Pubsub messages are only messages sent and received to/from a server. Verbose messages include both important and unimportant messages.", PostAutoConsoleLogs, 
-				new List<KeyValuePair<string,string>> { 
-					new KeyValuePair<string,string>("LogCount", "The max number of most recent logs to post, up to AutoConsole.MAX_LOG_COUNT_HISTORY."),
-					new KeyValuePair<string,string>("MessageLevel", "Expects A for Abridged, V for Verbose, P for Pubsub, or left empty for Abridged."),
-				}, "L", "Logs"),
-			new Command("Returns automation details relevant to test run context and device identification.", ReturnDetails, 
-				new List<KeyValuePair<string,string>>(), "AD", "Details"),
-			new Command("Change identity that this client responds to in any communications.", ChangeIdentity, 
-				new List<KeyValuePair<string,string>> { 
-					new KeyValuePair<string,string>("NewIdentity", "The new idendity for this client.")
-				}, "CI", "ChangeIdentity"),
-			new Command("Returns simplified results of tests already run in the current test run (if test run is active).", CurrentTestRunResults, 
-				new List<KeyValuePair<string,string>>(), "TR", "Results"),
-			new Command("Resets all tests as Untested in the provided TestRails test run.", ResetTestRailsTestStatuses, 
-				new List<KeyValuePair<string,string>> { 
-					new KeyValuePair<string,string>("TestRunID", "The id of the test run that contains the tests to be reset.")
-				}, "TRRS", "RailsReset"),
-			new Command("Validates Trilleon framework (effectively unit tests).", LaunchTrilleonFrameworkValidation, 
-				new List<KeyValuePair<string,string>>(), "VT", "Validate"),
+			new Command("Runs the provided Test(s), Category(ies) etc.", RunTests,
+                new List<KeyValuePair<string,string>> {
+                    new KeyValuePair<string,string>("Manifest", "Test(s) or Cateogory(ies) to run. Examples: \"rt all\" would run all tests" +
+                        ", \"rt *SomeTest\" would launch a single test, \"rt SomeCategory\" would run a single category. To run multiple," +
+                        " begin command in same way, and then provided comma-delimited list.")
+                }, "RT", "RunTests"),
+            new Command("Posts logs from the Auto Console. Abridged messages are important framework notifications. " +
+                "Pubsub messages are only messages sent and received to/from a server. Verbose messages include both important and unimportant messages.", PostAutoConsoleLogs,
+                new List<KeyValuePair<string,string>> {
+                    new KeyValuePair<string,string>("LogCount", "The max number of most recent logs to post, up to AutoConsole.MAX_LOG_COUNT_HISTORY."),
+                    new KeyValuePair<string,string>("MessageLevel", "Expects A for Abridged, V for Verbose, P for Pubsub, or left empty for Abridged."),
+                }, "L", "Logs"),
+            new Command("Returns automation details relevant to test run context and device identification.", ReturnDetails,
+                new List<KeyValuePair<string,string>>(), "AD", "Details"),
+            new Command("Change identity that this client responds to in any communications.", ChangeIdentity,
+                new List<KeyValuePair<string,string>> {
+                    new KeyValuePair<string,string>("NewIdentity", "The new idendity for this client.")
+                }, "CI", "ChangeIdentity"),
+            new Command("Returns simplified results of tests already run in the current test run (if test run is active).", CurrentTestRunResults,
+                new List<KeyValuePair<string,string>>(), "TR", "Results"),
+            new Command("Resets all tests as Untested in the provided TestRails test run.", ResetTestRailsTestStatuses,
+                new List<KeyValuePair<string,string>> {
+                    new KeyValuePair<string,string>("TestRunID", "The id of the test run that contains the tests to be reset.")
+                }, "TRRS", "RailsReset"),
+            new Command("Validates Trilleon framework (effectively unit tests).", LaunchTrilleonFrameworkValidation,
+                new List<KeyValuePair<string,string>>(), "VT", "Validate"),
             new Command("Get whatever socket ports/channels the device is listening on.", GetSockets,
                 new List<KeyValuePair<string,string>>(), "SC", "Sockets")
 			#endregion
@@ -72,10 +72,11 @@ namespace TrilleonAutomation {
 		};
 
 
-		#region Console Command delegates
+        #region Console Command delegates
 
         static string GetSockets(List<string> args) {
 
+            #if !UNITY_ANDROID
             StringBuilder sockets = new StringBuilder();
             for(int s = 0; s < SocketConnectionStrategy.Subscriptions.Count; s++) {
 
@@ -88,6 +89,9 @@ namespace TrilleonAutomation {
 
             }
             return string.Format("Sockets connected - ({0} total) - {1}", SocketConnectionStrategy.Subscriptions.Count, sockets.ToString());
+            #else
+            return "Sockets Disabled On Android";
+            #endif
 
         }
 
@@ -245,7 +249,7 @@ namespace TrilleonAutomation {
 
 		}
 
-		#endregion
+#endregion
 
 		public static Text ConsoleLog { get; set; }
 		private static GameObject console { get; set; }
@@ -501,7 +505,7 @@ namespace TrilleonAutomation {
 			inputTran.localPosition = new Vector3(0, ((Screen.height - inputHeight) / 2) * -1, 0);
 
 			//Add button to submit code if we are on devices.
-			#if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
+#if(UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
 			GameObject submit = Instantiate(Resources.Load("SubmitCommand")) as GameObject;
 			submit.transform.SetParent(console.transform);
 			RectTransform submitTran = submit.GetComponent<RectTransform>();
@@ -511,7 +515,7 @@ namespace TrilleonAutomation {
 			submitText.text = "Go";
 			submitText.fontSize = (int)(inputHeight / 3);
 			submit.GetComponent<Button>().onClick.AddListener(SendCommandInstance);
-			#endif
+#endif
 
 			GameObject log = Instantiate(Resources.Load("CommandLog")) as GameObject;
 			log.transform.SetParent(console.transform);

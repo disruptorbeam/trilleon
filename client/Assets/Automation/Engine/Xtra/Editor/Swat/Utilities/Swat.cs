@@ -82,22 +82,22 @@ namespace TrilleonAutomation {
 		}
 		List<SwatControlError> _errors = new List<SwatControlError>();
 
-		public static Dock DockNextTo { 
+		public static DockNextTo DockNextTo { 
 			get { 
-				switch(AutomationMaster.ConfigReader.GetString("DEFAULT_DOCK_NEXUS")) {
+				switch(Customizer.Self.GetString("default_dock_nexus_next_to")) {
 					case "Float":
-						return Dock.Float;
-					case "NextToHierarchy":
-						return Dock.NextToHierarchy;
-					case "NextToGame":
-						return Dock.NextToGame;
-					case "NextToScene":
-						return Dock.NextToScene;
-					case "NextToConsole":
-						return Dock.NextToConsole;
-					case "NextToInspector":
+						return DockNextTo.Float;
+                    case "Hierarchy":
+						return global::DockNextTo.Hierarchy;
+                    case "GameView":
+						return global::DockNextTo.GameView;
+                    case "SceneView":
+						return global::DockNextTo.SceneView;
+                    case "Console":
+						return global::DockNextTo.Console;
+					case "Inspector":
 					default:
-						return Dock.NextToInspector; //Default dock location.
+						return global::DockNextTo.Inspector; //Default dock location.
 				}
 			}
 		}
@@ -262,7 +262,7 @@ namespace TrilleonAutomation {
 		GUIStyle _tabButton;
 		TabSize _currentTabSize;
 
-		public static T ShowWindow<T>(Type type, string name, Dock dockNextTo = Dock.Default) where T : EditorWindow {
+        public static T ShowWindow<T>(Type type, string name, DockNextTo dockNextTo = DockNextTo.Default, string tooltip = "Swat Window") where T : EditorWindow {
 
 			/* 
 	            Close any existing windows, as window instance may exist in Editor, but not be accessible.
@@ -270,13 +270,13 @@ namespace TrilleonAutomation {
 	            broken instance. The broken window will be inaccessible and will freeze remaining GUI windows. 
 	        */
 
-			EditorWindow.GetWindow(type, false, name).Close(); 
+			GetWindow(type, false, name).Close(); 
 
 			Assembly editorAssembly = typeof(Editor).Assembly;
 			Type dockWindow = null;
-			Dock dockThis;
+			DockNextTo dockThis;
 
-			if(dockNextTo != Dock.Default) {
+			if(dockNextTo != DockNextTo.Default) {
 
 				dockThis = dockNextTo;
 
@@ -287,22 +287,22 @@ namespace TrilleonAutomation {
 			}
 
 			switch(dockThis) {
-				case Dock.Float:
+				case DockNextTo.Float:
 					dockWindow = null;
 					break;
-				case Dock.NextToScene:
+				case global::DockNextTo.SceneView:
 					dockWindow = typeof(SceneView);
 					break;
-				case Dock.NextToGame:
+				case global::DockNextTo.GameView:
 					dockWindow = editorAssembly.GetType("UnityEditor.GameView");
 					break;
-				case Dock.NextToHierarchy:
+				case global::DockNextTo.Hierarchy:
 					dockWindow = editorAssembly.GetType("UnityEditor.SceneHierarchyWindow");
 					break;
-				case Dock.NextToConsole:
+				case global::DockNextTo.Console:
 					dockWindow = editorAssembly.GetType("UnityEditor.ConsoleWindow");
 					break;
-				case Dock.NextToInspector:
+				case global::DockNextTo.Inspector:
 				default:
 					dockWindow = editorAssembly.GetType("UnityEditor.InspectorWindow");
 					break;
@@ -310,7 +310,7 @@ namespace TrilleonAutomation {
 
 			EditorWindow win = EditorWindow.GetWindow<T>(name, true, dockWindow);
 			win.minSize = new Vector2(350, 350);
-
+            win.titleContent = new GUIContent(name, tooltip);
 			return (T)win;
 
 		}
@@ -1140,12 +1140,12 @@ namespace TrilleonAutomation {
 /// <summary>
 /// Used to declare where a new window should be docked in the Unity Editor.
 /// </summary>
-public enum Dock {
+public enum DockNextTo {
 	Default,
-	NextToInspector,
-	NextToGame,
-	NextToScene,
-	NextToHierarchy,
-	NextToConsole,
+	Inspector,
+	GameView,
+	SceneView,
+	Hierarchy,
+	Console,
 	Float
 }
