@@ -28,9 +28,6 @@
 ///POSSIBILITY OF SUCH DAMAGE.
 
 using System;
-using System.Collections;
-using System.Text;
-using System.Net.Sockets;
 using System.Threading;
 using redisU.utils;
 using redisU.events;

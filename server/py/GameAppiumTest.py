@@ -102,6 +102,7 @@ class GameAppiumTest(BaseAppiumTest):
             log("CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST")
             return False
 
+        Globals.ignore_console_printing_to_save_xml_cdata_buffer_size = True
         isReady = False
         indexVal = 0
         testRunTime = 0
@@ -113,15 +114,17 @@ class GameAppiumTest(BaseAppiumTest):
                 self.buddy_check() #Check if Buddy has declared itself ready now. If not, send command to ignore buddy tests.
             self.check_for_client_requests("handle_client_commands")
             self.check_for_client_requests("screenshot")
-            #Check every other loop
+            testRunTime += 2
+            time.sleep(2)
+            #Every ten seconds, check these things.
             if testRunTime % 10 == 0:
-                self.handle_device_alert(True)
-            hasHeartbeat = self.has_heartbeat()
-            isReady = self.check_for_client_responses("complete", False)
-            self.check_for_client_responses("fatal_error_check", False)
-            testRunTime += 15
-            time.sleep(15)
-            self.postMessage("{\"server_heartbeat\": " + str(testRunTime) + "}")
+                hasHeartbeat = self.has_heartbeat()
+                isReady = self.check_for_client_responses("complete", False)
+                self.check_for_client_responses("fatal_error_check", False)
+                #Every twenty seconds, check these things.
+                if testRunTime % 20 == 0:
+                    self.handle_device_alert(True)
+                    self.postMessage("{\"server_heartbeat\": " + str(testRunTime) + "}")
         
         is_failure = False
         failure_message = ""
@@ -184,7 +187,8 @@ class GameAppiumTest(BaseAppiumTest):
                 return False # If a fatal error occurred, we run this check loop just once and stop execution here.
             time.sleep(15)
             timeout+=15
-        
+
+        Globals.ignore_console_printing_to_save_xml_cdata_buffer_size = True
         if Globals.critical_exception == False and timeout < self.timeout_default:
             log("Automation Script Completed!")
             self.postMessage("{\"notification\":\"Server Success: Automation script complete; shutting down...\"}",)
@@ -201,5 +205,10 @@ class GameAppiumTest(BaseAppiumTest):
         # Test end.
 
 if __name__ == '__main__':
-    with open('test-reports.xml', 'wb') as output:
-        unittest.main(testRunner=xmlrunner.XMLTestRunner(output=output),failfast=False, buffer=False,catchbreak=False)
+    unittest.main(failfast=False,buffer=False,catchbreak=False)
+    '''
+        CUSTOMIZE: Do you want the xmlrunner report? This report is not needed by Trilleon, but can provide extra information for debugging.
+        Essentially, it will generate an xml test report with a single test case that contains CDATA representing all console output.
+    '''
+    #with open('test-reports.xml', 'wb') as output:
+        #unittest.main(testRunner=xmlrunner.XMLTestRunner(output=output),failfast=False, buffer=False,catchbreak=False)

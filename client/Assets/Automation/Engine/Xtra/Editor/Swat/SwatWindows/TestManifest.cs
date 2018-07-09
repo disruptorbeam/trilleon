@@ -282,7 +282,7 @@ namespace TrilleonAutomation {
             //Stop running Automation processes.
             if(AutomationMaster.Busy && Application.isPlaying && !_hardStop) {
 
-                toolBarButtons.fontSize = 30;
+                toolBarButtons.fontSize = Nexus.isPc ? 24: 30;
                 toolBarButtons.normal.textColor = new Color32(250, 0, 0, 255);
 
                 Nexus.Self.Button(STOP, "Stops running tests.",

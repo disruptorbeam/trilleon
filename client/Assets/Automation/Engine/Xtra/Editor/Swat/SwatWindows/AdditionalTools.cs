@@ -20,7 +20,6 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Text;
 
 namespace TrilleonAutomation {
 
@@ -29,8 +28,8 @@ namespace TrilleonAutomation {
         enum DefaultTestView { Automation, UnitTests };
         static DefaultTestView defaultTestView;
         static DefaultTestView lastPassDefaultTestView;
-        static Dock dock;
-        static Dock lastPassDock;
+        static DockNextTo dock;
+        static DockNextTo lastPassDock;
 
         GUIStyle description, dropDownLabel, editorName, open, stepWrapper;
         byte currentAlphaStep = 60;
@@ -170,7 +169,7 @@ namespace TrilleonAutomation {
             if(GUILayout.Button("Open", open)) {
 
                 //Web must be viewed in a large screen move. Dock next to Game, or allow float.
-                Swat.ShowWindow<DependencyVisualizer>(typeof(DependencyVisualizer), "Web", dock == Dock.Float ? dock : Dock.NextToGame);
+                Swat.ShowWindow<DependencyVisualizer>(typeof(DependencyVisualizer), "Web", dock == DockNextTo.Float ? dock : DockNextTo.GameView);
 
             }
             GUILayout.Space(18);
@@ -209,7 +208,7 @@ namespace TrilleonAutomation {
             GUILayout.Space(25);
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Dock Next To:", dropDownLabel, new GUILayoutOption[] { GUILayout.Width(125) });
-            dock = (Dock)Nexus.Self.DropDown(dock, 0, 25, 140);
+            dock = (DockNextTo)Nexus.Self.DropDown(dock, 0, 25, 140);
             EditorGUILayout.EndHorizontal();
             GUILayout.Space(25);
 
@@ -378,7 +377,8 @@ namespace TrilleonAutomation {
 
         static void UpdateDockPreference() {
 
-            FileBroker.SaveConfig("DEFAULT_DOCK_NEXUS", System.Enum.GetName(typeof(Dock), dock));
+            Customizer.Self.AddKey("default_dock_nexus_next_to", System.Enum.GetName(typeof(DockNextTo), dock));
+            Customizer.Self.SaveUpdates();
 
         }
 

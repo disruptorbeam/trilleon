@@ -122,7 +122,7 @@ namespace TrilleonAutomation {
 		[MenuItem("Trilleon/Nexus #&a", false, 1)]
 		static void ShowWindow() {
 
-			Self = ShowWindow<Nexus>(typeof(Nexus), "Nexus");
+            Self = ShowWindow<Nexus>(typeof(Nexus), "Nexus", DockNextTo.Default, "Trilleon Automation tools and support window.");
 
 		}
 

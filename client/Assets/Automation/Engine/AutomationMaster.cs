@@ -153,6 +153,18 @@ namespace TrilleonAutomation {
 		}
 		static List<OnNewTestLaunch> onNewTestLaunch = new List<OnNewTestLaunch>();
 
+        public static AutoHud AutoHud {
+            get {
+                if(_autoHud == null) {
+                    _autoHud = StaticSelf.GetComponent<AutoHud>();
+                }
+                return _autoHud;
+            }
+            set { _autoHud = value; }
+        }
+        private static AutoHud _autoHud;
+
+
 		#endregion
 
 		public static DateTime LastUseTimer { get; set; } //Used to detect stall in current test execution.
@@ -428,11 +440,6 @@ namespace TrilleonAutomation {
 				//Lock reload assemblies while automation is active and application is running.
 				if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
                 
-                if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket && StaticSelf != null && StaticSelf.GetComponent<SocketConnectionStrategy>() != null) {
-
-						StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
-
-					}
 					EditorApplication.UnlockReloadAssemblies();
 
 				}
@@ -444,11 +451,6 @@ namespace TrilleonAutomation {
 				//Lock reload assemblies while automation is active and application is running.
 				if(!EditorApplication.isPlaying && !EditorApplication.isPaused) {
 
-					if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
-
-						StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
-
-					}
 					EditorApplication.UnlockReloadAssemblies();
 
 				}
@@ -572,16 +574,6 @@ namespace TrilleonAutomation {
 			GameLaunchCompleted = DateTime.UtcNow;
 			Validated_Phase1 = Validated_Phase2 = null;
 
-			//Handle creation of Automation HUD.
-			if(ConfigReader.GetBool("AUTO_HUD_ENABLED")) {
-
-				GameObject autoHudGo = new GameObject(AutoHud.GAME_OBJECT_NAME, typeof(RectTransform));
-				AutoHud hud = autoHudGo.AddComponent<AutoHud>();
-				hud.transform.SetParent(gameObject.transform);
-				AutoHud.UpdateMessage("Automation Hud Enabled");
-
-			}
-
 			#if UNITY_EDITOR
 				#if UNITY_2017_2_OR_NEWER
 					EditorApplication.playModeStateChanged += AssemblyUnlock;
@@ -594,6 +586,16 @@ namespace TrilleonAutomation {
 
 			}
 			#endif
+
+            //Handle creation of Automation HUD.
+            if(ConfigReader.GetBool("AUTO_HUD_ENABLED")) {
+
+                GameObject autoHudGo = new GameObject(AutoHud.GAME_OBJECT_NAME, typeof(RectTransform));
+                AutoHud = autoHudGo.AddComponent<AutoHud>();
+                autoHudGo.transform.SetParent(gameObject.transform);
+                AutoHud.UpdateMessage("Automation Hud Enabled");
+
+            }
 
 			ValidationRun = message.ToLower().Contains("trilleon/validation");
 			if(ValidationRun) {
@@ -896,11 +898,6 @@ namespace TrilleonAutomation {
 
 			Application.logMessageReceived -= AutoConsole.GetLog; //Clean up delegate.
 			ResetTestRunner();			
-			if(!Application.isEditor && ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
-
-				StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
-
-			}
 			yield return StartCoroutine(Q.driver.WaitRealTime(1f));
 
 		}
@@ -1452,6 +1449,7 @@ namespace TrilleonAutomation {
 
 			AutomationReport.AddToReport(CurrentTestContext.IsSuccess, _runTime, TestRunContext.Skipped.Tests.Contains(CurrentTestContext.TestName)); //Save results to test run's XML string builder.
 			ReportOnTest(); //Report success or failure.
+
 			yield return null;
 
 		}
@@ -1469,6 +1467,7 @@ namespace TrilleonAutomation {
 				runClassTearDown = Methods.Count == (m+1) || Methods[m+1].Key.Split(DELIMITER)[0] != CurrentTestContext.ClassName; //If next method's class is different.
 
 			}
+
 			//Tear down class/test.
 			if(runClassTearDown && initialized && !BuddyHandler.BuddySystemHandlingStarted) {
 				
@@ -1482,7 +1481,7 @@ namespace TrilleonAutomation {
 				yield return StartCoroutine(LaunchSupportMethod(thisType, "teardownclass"));
 
 				if(!UnitTestMode && !_flags.Contains(TestFlag.DisregardTearDownGlobal) && CurrentTestContext.IsSuccess) {
-
+                    
 					yield return StartCoroutine(Q.game.GlobalTearDownTest()); //Global TearDown dictated by game specific functionality.
 					_failureContext = !CurrentTestContext.IsSuccess ? FailureContext.TearDownGlobal : FailureContext.Unbound;
 
@@ -2058,6 +2057,12 @@ namespace TrilleonAutomation {
 
 			#endregion
 
+            if(ConnectionStrategy.MaxMessageLength <= 0) {
+
+                errors.Add(string.Format("{0}: ConnectionStrategy.MaxMessageLength bust be a positve, non-zero number. Make sure that ConnectionStrategy is finding the correct TrilleonConfig.txt value that assigns the MaxMessageLength variable.", errorPrefix));
+
+            }
+
 			errors = errors.Distinct(); //Remove duplicates (caused by class-based errors checked against each method in that class).
 			for(int e = 0; e < errors.Count; e++) {
 
@@ -2206,8 +2211,8 @@ namespace TrilleonAutomation {
 
 			#region Special Cases
 
-			if(RunnerFlagTests.TearDownClassGlobalRun) {
-				
+			if(RunnerFlagTests.TearDownClassGlobalRunByTearDown) {
+
 				errors.Add("The logic for attribute usage [TestRunnerFlag(TestFlag.DisregardTearDownClassGlobal)] failed validation. The GameMaster method TearDownClassGlobal logic ran despite this flag specifying that it should be ignored.");
 
 			}
@@ -3302,6 +3307,7 @@ namespace TrilleonAutomation {
 					ExecutionContext = CurrentExecutionContext.TearDownClass;
 					message = string.Format("Tear Down Class: {0}", type.Name);
 					result = GetClassTearDown(type);
+
 					//Check whether or not this class TearDown has run before, which potentially occurs for deferred tests in the test run.
 					if(result.Any() && _classTearDownRan.Contains(type)) {
 					
@@ -3333,7 +3339,7 @@ namespace TrilleonAutomation {
 
 				AutoConsole.PostMessage(message);
 				IEnumerator routine = (IEnumerator)result.First().Invoke(CurrentMonoBehaviourInstance, new object[]{ }); //Get the test method as an IEnumerator so that it can be launched as a coroutine. 
-				StoppableCoroutine supportMethod = CurrentMonoBehaviourInstance.StartCoroutineEx(routine);
+                StoppableCoroutine supportMethod = CurrentMonoBehaviourInstance.StartCoroutineEx(routine);
 				yield return supportMethod.WaitFor(); //Begin method and wait for completion.
 
 			} else {

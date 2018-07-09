@@ -326,7 +326,13 @@ namespace TrilleonAutomation {
 			List<string> pieces = new List<string>();
 			int charPos = 0;
 
-			while(charPos < json.Length) {
+            if(ConnectionStrategy.MaxMessageLength <= 0) {
+
+                throw new UnityException("ConnectionStrategy.MaxMessageLength must be a positive number. This would cause an infinite loop and hard crash. Please fix the source of this value and rerun automation.");
+
+            }
+
+            while(charPos < json.Length) {
 
 				if(charPos + ConnectionStrategy.MaxMessageLength <= json.Length) {
 

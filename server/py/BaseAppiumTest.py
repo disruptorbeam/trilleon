@@ -172,7 +172,8 @@ def log(msg):
     fileWrite = open("PyLog.log", "a")
     fileWrite.write(message)
     fileWrite.close()
-    print(message)
+    if Globals.ignore_console_printing_to_save_xml_cdata_buffer_size == False:
+         print(message)
     sys.stdout.flush()
 
 def server_client_log(msg):
@@ -185,24 +186,18 @@ def server_client_log(msg):
     fileWrite = open("ServerClientLogRaw.log", "a")
     fileWrite.write(message)
     fileWrite.close()
-    print(message)
+    if Globals.ignore_console_printing_to_save_xml_cdata_buffer_size == False:
+        print(message)
     sys.stdout.flush()
 
 class BaseAppiumTest(unittest.TestCase):
-    
-    #These should match with the ports provided in TrilleonConfig.txt.
-    master_android_port = 9191
-    master_ios_port = 9292
-    master_webgl_port = 9393
-    assigned_port_instance = 0
-    
+
     socket = None
     thread = None
-    socket_port = 9595
-    socket_host = "127.0.0.1"
+    socket_port = 9595  #Must match value in TrilleonConfig.txt
+    socket_host = "127.0.0.1"  #Must match value in TrilleonConfig.txt
     pubsub = None
-    channel = "Trilleon_Automation"
-
+    channel = "Trilleon-Automation"  #Must match value in TrilleonConfig.txt
     pubnub = None
 
     driver = None # Appium driver that will load the app onto device, and dismiss device alerts or take screenshots.
@@ -232,7 +227,7 @@ class BaseAppiumTest(unittest.TestCase):
     started = False
     complete = False
     timeout_default = 300
-    test_execution_timeout = 4800
+    test_execution_timeout = 0
     parsing_xml = False
     results = ""
     auto_screenshot_index = 0
@@ -251,8 +246,8 @@ class BaseAppiumTest(unittest.TestCase):
 
         if os.environ.get('CONNECTION_STRATEGY').lower() == "pubnub":
             pnconfig = PNConfiguration()
-            pnconfig.subscribe_key = "YOUR_PUBNUB_SUBSCRIBE_KEY"
-            pnconfig.publish_key = "YOUR_PUBNUB_PUBLISH_KEY"
+            pnconfig.subscribe_key = "YOUR_SUBSCRIBE_KEY_HERE"  #Must match value in TrilleonConfig.txt
+            pnconfig.publish_key = "YOUR_PUBLISH_KEY_HERE"  #Must match value in TrilleonConfig.txt
             self.pubnub = PubNub(pnconfig)
             self.pubnub.add_listener(PubnubSubscribeCallback())
             self.pubnub.subscribe().channels(self.channel).execute()
@@ -284,6 +279,11 @@ class BaseAppiumTest(unittest.TestCase):
             f.write("[")
         self.additionalCommands = os.environ.get('ADDITIONAL_COMMANDS')
         
+        if os.environ.get('MAX_TEST_RUN_TIMEOUT'):
+            self.test_execution_timeout = os.environ.get('MAX_TEST_RUN_TIMEOUT')
+        else:
+            self.test_execution_timeout = 5400 #Default test launch timeout is 1.5 hours.
+
         # Set up driver
         if os.environ['DEVICE_PLATFORM'] == "ios":
             self.appium_capabilities["showXcodeLog"] = True
@@ -310,7 +310,6 @@ class BaseAppiumTest(unittest.TestCase):
         log("Starting driver on " + "http://localhost:" + os.environ['UNIQUE_PORT'] + "/wd/hub")
         self.driver = webdriver.Remote("http://localhost:" + os.environ['UNIQUE_PORT'] + "/wd/hub", self.appium_capabilities)
         time.sleep(10)
-
 
     def socket_callback(self, message):
         while Globals.test_done != True:
@@ -341,7 +340,7 @@ class BaseAppiumTest(unittest.TestCase):
             try:
                 self.pubnub.remove_listener(PubnubSubscribeCallback())
             except:
-                log("Could remove Pubnub listener.")
+                log("Could not remove Pubnub listener.")
             self.pubnub.unsubscribe().channels("my_channel").execute()
         else:
             self.pubsub.unsubscribe()
@@ -365,6 +364,7 @@ class BaseAppiumTest(unittest.TestCase):
             pylogtext = f.read()
         if "CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST" in pylogtext:
             raise Exception("CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST Detected!")
+        log("BaseAppiumTest.py and GameAppiumTest.py complete.")
 
     # Writes all XML to storage file, and verifies JSON validity so that HTML report is rendered correctly.
     def writeAutomationResults(self, filename):
@@ -432,7 +432,7 @@ class BaseAppiumTest(unittest.TestCase):
                     action.tap(acceptButton[0]).perform()
                     log("Chose 'Allow' for Google Play alert.")
             except Exception as e:
-                log("Exception accepting Android alert! " + str(e))
+                log("No device level alerts found. Skipping alert dismissal.")
             try:
                 acceptButtons = self.driver.find_element_by_xpath("//*[@text='OK']")
                 if len(acceptButtons) > 0:
@@ -440,7 +440,7 @@ class BaseAppiumTest(unittest.TestCase):
                     action.tap(acceptButton[0]).perform()
                     log("Chose 'OK' for Google Play alert.")
             except Exception as e:
-                log("Exception accepting Android alert! " + str(e))
+                log("No device level alerts found. Skipping alert dismissal.")
         else:
             try:
                 alert_text = self.driver.switch_to.alert.text
@@ -453,8 +453,8 @@ class BaseAppiumTest(unittest.TestCase):
                 else:
                     log("No device level alerts found. Skipping alert dismissal.")
             except Exception as e:
-                log("Exception accepting iOS alert! " + str(e))
-                    
+                log("No device level alerts found. Skipping alert dismissal.")
+
     # Write name of self to parent level file that selected Buddy will check to verify both Buddy's have begun their test runs.
     def buddy_check_in(self):
         #directoryPieces = os.getcwd().split("/")
@@ -528,7 +528,7 @@ class BaseAppiumTest(unittest.TestCase):
         self.results = all_xml.replace('@APOS@', '"')
         if len(all_xml) == 0:
             log("XML empty after processing. Recent posts [" + recent_posts + "]")
-        log("ALL_XML_FINAL " + all_xml)
+        log("ALL_XML_FINAL " + self.results)
         return True
             
     # Find, extract, format, and save all single-test JSON results for server HTML report

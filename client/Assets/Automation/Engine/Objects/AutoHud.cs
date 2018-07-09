@@ -19,9 +19,7 @@
 
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace TrilleonAutomation {
 
@@ -29,20 +27,7 @@ namespace TrilleonAutomation {
 	public class AutoHud : MonoBehaviour {
 
 		public const string GAME_OBJECT_NAME = "AutoHud";
-		const int DEFAULT_MESSAGE_DURATION = 5;
-
-		public static AutoHud StaticSelfComponent {
-			get { 
-				if(_staticSelfComponent == null) {
-					_staticSelfComponent = AutomationMaster.StaticSelf.GetComponent<AutoHud>();
-				}
-				return _staticSelfComponent;
-			}
-			private set { 
-				_staticSelfComponent = value;
-			}
-		}
-		private static AutoHud _staticSelfComponent;
+		const int DEFAULT_MESSAGE_DURATION = 100;
 
 		public bool IsSet { get; set; }
 		public AutoHudAnchor PositionOnScreen {
@@ -118,6 +103,20 @@ namespace TrilleonAutomation {
 		}
 		CanvasGroup _textCanvasGroup = null;
 
+        CanvasScaler CanvasScaler {
+            get {
+                if(_canvasScaler == null) {
+                    _canvasScaler = this.GetComponent<CanvasScaler>();
+                    return _canvasScaler;
+                }
+                return _canvasScaler;
+            }
+            set {
+                _canvasScaler = value;
+            }
+        }
+        CanvasScaler _canvasScaler = null;
+
 		public GameObject AutoHudBackground {
 			get {
 				if(_autoHudBackground == null) {
@@ -149,7 +148,12 @@ namespace TrilleonAutomation {
 		RectTransform positionHud = new RectTransform();
 
 		void Start() {
+            
+            if(!Application.isEditor) {
 
+                return;
+
+            }
 			//Create AutoHud object.
 			GetComponent<RectTransform>().position = new Vector3(0, 40, 0);
 
@@ -167,10 +171,10 @@ namespace TrilleonAutomation {
 
 			AutoHudBackground = new GameObject("Bg", typeof(RectTransform));
 			//Set this object as a direct child of the AutoHud.
-			AutoHudBackground.transform.SetParent(this.transform);
+			AutoHudBackground.transform.SetParent(transform);
 
 			positionHud = AutoHudBackground.GetComponent<RectTransform>();
-			positionHud.sizeDelta = new Vector2(300, 75);
+            positionHud.sizeDelta = new Vector2(Screen.width * 0.75f, 75);
 			positionHud.position = new Vector3(0, 40, 0);
 
 			//Add region for text to appear.
@@ -194,13 +198,16 @@ namespace TrilleonAutomation {
 			Text.fontSize = 25;
 			Text.alignment = TextAnchor.MiddleCenter;
 			Text.text = "Initialized";
-			Text.gameObject.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 75);
+            Text.gameObject.GetComponent<RectTransform>().sizeDelta = new Vector2((Screen.width * 0.75f) - 20f, 75);
 			Text.transform.localPosition = new Vector3(0, 0, 0);
 			Font ArialFont = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
 			Text.font = ArialFont;
 			TextCanvasGroup = Text.gameObject.AddComponent<CanvasGroup>();
 			TextCanvasGroup.alpha = 1f;
 
+            CanvasScaler = gameObject.AddComponent<CanvasScaler>();
+            CanvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            CanvasScaler.referenceResolution = new Vector2(768, 1024);
 			IsSet = true;
 
 		}
@@ -208,9 +215,9 @@ namespace TrilleonAutomation {
 		public static void UpdateMessage(string message, int duration = DEFAULT_MESSAGE_DURATION) {
 
 			#if UNITY_EDITOR
-			if(StaticSelfComponent != null) {
+            if(AutomationMaster.AutoHud != null) {
 
-				StaticSelfComponent.SetMessage(message, duration);
+                AutomationMaster.AutoHud.SetMessage(message, duration);
 
 			}
 			#endif
@@ -221,26 +228,11 @@ namespace TrilleonAutomation {
 
 			StopCoroutine("FadeOut"); //Stop existing fade out.
 			if(Text != null) {
-
+                
 				Text.text = message;
 				TextCanvasGroup.alpha = 1f;
-				StartCoroutine(FadeOut(duration));
 
 			}
-
-		}
-
-		IEnumerator FadeOut(float duration = 2.5f) {
-
-			while(TextCanvasGroup.alpha > 0f) {
-
-				float increment = Time.deltaTime / duration * 100;
-				TextCanvasGroup.alpha -= increment * 1;
-				yield return new WaitForEndOfFrame();
-
-			}
-
-			yield return null;
 
 		}
 

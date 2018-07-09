@@ -329,11 +329,6 @@ namespace TrilleonAutomation {
 
 				}
 				#endif
-				if(ConnectionStrategy.TrilleonConnectionStrategy == ConnectionStrategyType.Socket) {
-
-					AutomationMaster.StaticSelf.GetComponent<SocketConnectionStrategy>().Stop();
-
-				}
 
 			}
 
