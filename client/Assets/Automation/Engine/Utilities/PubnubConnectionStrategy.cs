@@ -23,11 +23,9 @@ namespace TrilleonAutomation {
         void Start() {
 
             //For WebGL games, use WebGLBroker.cs and javascript execution on the client to communicate with your game.
-            #if !UNITY_WEBGL
             pubnub = new Pubnub(PUBLISH_KEY, SUBSCRIBE_KEY);
             Subscribe(PUBSUB_CHANNEL);
             ConnectionStrategy.Ready();
-            #endif
 
         }
 

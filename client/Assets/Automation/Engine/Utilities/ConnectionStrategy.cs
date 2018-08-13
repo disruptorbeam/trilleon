@@ -29,6 +29,7 @@ namespace TrilleonAutomation {
         public static SocketConnectionStrategy SocketConnectionStrategy { get; private set; }
         public static PubnubConnectionStrategy PubnubConnectionStrategy { get; private set; }
 
+		#if !UNITY_WEBGL
         void Start() {
             
             SocketConnectionStrategy.Set();
@@ -36,7 +37,7 @@ namespace TrilleonAutomation {
             Strategy = string.Empty;
 
             //TODO: Revert when Android socket issue is fixed.
-            if(Application.platform == RuntimePlatform.Android || Application.isEditor) {
+            if(Application.platform == RuntimePlatform.Android) {
 
                 ChangeConnectionStrategy("pubnub");
 
@@ -70,6 +71,7 @@ namespace TrilleonAutomation {
             }
 
         }
+		#endif
 
         public void ChangeConnectionStrategy(string newStrategy) {
 
@@ -146,7 +148,8 @@ namespace TrilleonAutomation {
 
         bool SendCommunicationActual(string json) {
 
-            bool success = false;
+			bool success = false;
+			#if !UNITY_WEBGL
             switch(TrilleonConnectionStrategy) {
                 case ConnectionStrategyType.Pubnub:
                     PubnubConnectionStrategy.SendCommunication(json);
@@ -163,6 +166,7 @@ namespace TrilleonAutomation {
 					break;
                 #endif
 			}
+			#endif
             return success;
 
 		}

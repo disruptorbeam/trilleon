@@ -65,8 +65,8 @@ namespace TrilleonAutomation {
         int _selectedCategory = 0;
         int _redrawRateSeconds = 10;
         float _lastWindowWidth = 0;
-        bool editorPlayModeActivationHandled, expandCategories, _hardStop, hideBoxArea, _ignoreBuddyTests, loopModeActive;
-        bool showPassed = true;
+		bool automationInactive, editorPlayModeActivationHandled, expandCategories, _hardStop, hideBoxArea, _ignoreBuddyTests, loopModeActive;
+		bool showPassed = true;
         bool showFailed = true;
         bool showSkipped = true;
         bool showIgnored = true;
@@ -188,6 +188,12 @@ namespace TrilleonAutomation {
 
             }
 
+			if(Application.isPlaying) {
+
+				automationInactive = AutomationMaster.StaticSelf == null;
+
+			}
+
         }
 
         public override void OnTabSelected() {
@@ -197,6 +203,16 @@ namespace TrilleonAutomation {
         }
 
         public override void Render() {
+
+			if(automationInactive) {
+
+				GUIStyle autoInactivate = new GUIStyle(GUI.skin.label);
+				autoInactivate.normal.textColor = Color.red;
+				autoInactivate.wordWrap = true;
+				autoInactivate.padding = new RectOffset(10, 10, 20, 0);
+				EditorGUILayout.LabelField("Automation inactive. Make sure you add AutomationMaster.Initialize() to game start up.", autoInactivate);
+
+			}
 
             colorIgnore = new Color32(0, 210, 225, 255);
             colorSkipped = new Color32(225, 180, 0, 255);
@@ -265,7 +281,7 @@ namespace TrilleonAutomation {
 
             testStatusBox.normal.background = Swat.BoxAreaBackgroundTexture;
 
-            GUILayout.Space(20);
+            GUILayout.Space(10);
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Filter: ", filter, new GUILayoutOption[] { GUILayout.Width(35) });
             _filterField = EditorGUILayout.TextField(_filterField, filterField, new GUILayoutOption[] { GUILayout.Width(240) });

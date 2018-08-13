@@ -102,7 +102,7 @@ class GameAppiumTest(BaseAppiumTest):
             log("CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST")
             return False
 
-        Globals.ignore_console_printing_to_save_xml_cdata_buffer_size = True
+        #Globals.ignore_console_printing_to_save_xml_cdata_buffer_size = True
         isReady = False
         indexVal = 0
         testRunTime = 0

@@ -243,11 +243,11 @@ namespace TrilleonAutomation {
 			}
 			if(logString.Length > MAX_LOG_RETURN_LENGTH) {
 				
-				return logString.ToString().Substring(0, MAX_LOG_RETURN_LENGTH);
+				return AutomationReport.EncodeCharactersForJson(logString.ToString().Substring(0, MAX_LOG_RETURN_LENGTH)).Replace(AutomationMaster.DELIMITER.ToString(), "%7C"); //Encode AutomationMaster.DELIMITER character or errors will occur in data parsing in server.
 
 			} else {
 				
-				return logString.ToString();
+				return AutomationReport.EncodeCharactersForJson(logString.ToString()).Replace(AutomationMaster.DELIMITER.ToString(), "%7C"); //Encode AutomationMaster.DELIMITER character or errors will occur in data parsing in server.
 
 			}
 

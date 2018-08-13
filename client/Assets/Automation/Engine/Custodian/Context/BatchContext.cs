@@ -107,12 +107,11 @@ namespace TrilleonAutomation {
 
 				GameException ex = new GameException();
 				ex.ScreenshotName = string.Format("EXCEPTION_{0}", Reported.Count);
-				AutomationMaster.StaticSelfComponent.TakeScreenshotAsync(false, ex.ScreenshotName);
 				ex.TimeStamp = System.DateTime.UtcNow.ToLongDateString();
 				ex.TestExecutionTime = System.DateTime.UtcNow.Subtract(AutomationMaster.CurrentTestContext.StartTime).TotalSeconds.ToString();
 				ex.CurrentRunningTest = AutomationMaster.CurrentTestContext.TestName;
-				ex.Error = AutomationReport.EncodeCharactersForJson(error.message);
-				ex.ErrorDetails = AutomationReport.EncodeCharactersForJson(error.stackTrace);
+				ex.Error = AutomationReport.EncodeCharactersForJson(error.message).Replace(AutomationMaster.DELIMITER.ToString(), "%7C"); //Encode AutomationMaster.DELIMITER character or errors will occur in data parsing in server.
+				ex.ErrorDetails = AutomationReport.EncodeCharactersForJson(error.stackTrace).Replace(AutomationMaster.DELIMITER.ToString(), "%7C"); //Encode AutomationMaster.DELIMITER character or errors will occur in data parsing in server.
 				ex.Occurrences = 1;
 				for(int r = 0; r < Reported.Count; r++) {
 
@@ -124,6 +123,7 @@ namespace TrilleonAutomation {
 					}
 
 				}
+				AutomationMaster.StaticSelfComponent.TakeScreenshotAsync(false, ex.ScreenshotName); //Only take a screenshot if it is not a duplicate. Spammed errors would lead to spammed screenshots.
 				_reported.Add(ex);
 
 			}
