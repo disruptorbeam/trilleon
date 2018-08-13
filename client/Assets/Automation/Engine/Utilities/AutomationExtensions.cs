@@ -49,6 +49,22 @@ namespace TrilleonAutomation {
 
 		}
 
+        /// <summary>
+        /// Determines if two floating point or double values are effectively equal in a low precision sense. If a float or double is used to represent money, their exact values to the maximum decimal place are not likely to be identical.
+        /// This allows you to compare these values to others in a manner similar to if you converted the values to an integer to cause rounding in finite decimal place values.
+        /// </summary>
+        public static bool ApproximatelyEqual(this float current, float compareTo) {
+
+            return ApproximatelyEqual((double)current, (double)compareTo); //Ignore IDE. Cast is not redundant. Without cast, either ambiguous call error or infinite loop.
+
+        }
+        public static bool ApproximatelyEqual(this double current, double compareTo) {
+
+            double epsilon = Math.Max(Math.Abs(current), Math.Abs(compareTo)) * 1E-15;
+            return Math.Abs(current - compareTo) <= epsilon;
+
+		}
+
 		/// <summary>
 		/// Offers option to retrieve length of array as count, so that there is consistancy between list count calls and array count calls.
 		/// Arguably, Length makes more sense in determining array character count, rather than how many items are contained in an object.

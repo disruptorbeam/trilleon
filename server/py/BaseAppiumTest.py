@@ -259,7 +259,7 @@ class BaseAppiumTest(unittest.TestCase):
             self.thread.start()
         
         # Buddy test run information.
-        self.buddyName = "Trilleon-Automation-" + os.environ.get('BUDDY')
+        self.buddyName = self.channel + "-" + os.environ.get('BUDDY')
         self.ignoreBuddyTests = os.environ.get('IGNOREBUDDYSYSTEM')
         self.buddyCommandName = "manual_set_buddy_" + os.environ.get('BUDDY_RELATIONSHIP')
         
@@ -339,9 +339,9 @@ class BaseAppiumTest(unittest.TestCase):
         if os.environ.get('CONNECTION_STRATEGY').lower() == "pubnub":
             try:
                 self.pubnub.remove_listener(PubnubSubscribeCallback())
-            except:
-                log("Could not remove Pubnub listener.")
-            self.pubnub.unsubscribe().channels("my_channel").execute()
+            except Exception as e:
+                log("Could not remove Pubnub listener. Error: " + str(e))
+            self.pubnub.unsubscribe().channels(self.channel).execute()
         else:
             self.pubsub.unsubscribe()
             self.thread.join(10)
@@ -354,8 +354,8 @@ class BaseAppiumTest(unittest.TestCase):
         time.sleep(5)
         try:
             self.driver.quit()
-        except:
-            log("Error encountered while quitting driver")
+        except Exception as e:
+            log("Error encountered while quitting driver" + str(e))
 
         with open("test_status.txt", "w") as f:
             f.write(os.environ['TEST_RUN_STATUS'])
@@ -365,6 +365,7 @@ class BaseAppiumTest(unittest.TestCase):
         if "CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST" in pylogtext:
             raise Exception("CRITICAL_SERVER_FAILURE_IN_APPIUM_TEST Detected!")
         log("BaseAppiumTest.py and GameAppiumTest.py complete.")
+        os._exit(1)
 
     # Writes all XML to storage file, and verifies JSON validity so that HTML report is rendered correctly.
     def writeAutomationResults(self, filename):
