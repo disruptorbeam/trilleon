@@ -30,7 +30,6 @@ namespace TrilleonAutomation {
 		DateTime _fileDeletedTime = new DateTime();
 		public bool ReDrawAutomationReports = true;
         bool _showFileDeletedMessage;
-        bool _toggleViewModeDefaultBrowser = true;
 		List<FileInfo> automationReports = new List<FileInfo>();
 		List<KeyValuePair<string,List<KeyValuePair<string,string>>>> metaData = new List<KeyValuePair<string,List<KeyValuePair<string,string>>>>();
 
@@ -154,10 +153,6 @@ namespace TrilleonAutomation {
 			GUIStyle padding = new GUIStyle();
 			padding.margin = new RectOffset(25, 0, 0, 0);
 			GUILayout.BeginHorizontal(padding);
-			Nexus.Self.ToggleButton(_toggleViewModeDefaultBrowser, "Open In Editor", "Open reports in editor window rather than your default browser.", 
-				new Nexus.SwatDelegate(delegate() {  
-					_toggleViewModeDefaultBrowser = !_toggleViewModeDefaultBrowser;
-				}), buttonWidth: 125);
 			EditorGUILayout.Space();
 			if(_showFileDeletedMessage) {
 
@@ -229,16 +224,8 @@ namespace TrilleonAutomation {
 				GUILayout.BeginHorizontal();
 
 				if(GUILayout.Button("Open Report", fileNameButton, new GUILayoutOption[] { GUILayout.Height(30), GUILayout.Width(150) })) {
-
-					if(!_toggleViewModeDefaultBrowser) {
 						
-						System.Diagnostics.Process.Start(automationReports[ar].FullName);
-
-					} else {
-						
-						HtmlDisplayPopup.Pop(string.Format("file://{0}", automationReports[ar].FullName));
-
-					}
+				    System.Diagnostics.Process.Start(automationReports[ar].FullName);
 
 				}
 				if(GUILayout.Button("X", deleteFileButton, new GUILayoutOption[] { GUILayout.Height(30), GUILayout.Width(30) })) {
