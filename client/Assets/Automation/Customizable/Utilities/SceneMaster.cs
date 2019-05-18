@@ -1,4 +1,4 @@
-﻿/* 
+/* 
 +   This file is part of Trilleon.  Trilleon is a client automation framework.
 +  
 +   Copyright (C) 2017 Disruptor Beam
@@ -52,7 +52,25 @@ namespace TrilleonAutomation {
 				}
 
 			}
-			return results.Distinct();
+
+            //Thanks to yasirkula for this fix to getting DontDestroyOnLoad GameObjects.
+            GameObject temp = null;
+            try
+            {
+                temp = new GameObject();
+                Object.DontDestroyOnLoad(temp);
+                Scene dontDestroyOnLoad = temp.scene;
+                Object.DestroyImmediate(temp);
+                temp = null;
+                results.AddRange(dontDestroyOnLoad.GetRootGameObjects().ToList().GetChildren());
+            }
+            finally
+            {
+                if (temp != null)
+                    Object.DestroyImmediate(temp);
+            }
+
+            return results.Distinct();
 
 		}
 
