@@ -52,7 +52,8 @@ namespace TrilleonAutomation {
 				}
 
 			}
-
+			
+			#if UNITY_EDITOR
             //Thanks to yasirkula for this fix to getting DontDestroyOnLoad GameObjects.
             GameObject temp = null;
             try
@@ -69,7 +70,7 @@ namespace TrilleonAutomation {
                 if (temp != null)
                     Object.DestroyImmediate(temp);
             }
-
+			#endif
             return results.Distinct();
 
 		}
