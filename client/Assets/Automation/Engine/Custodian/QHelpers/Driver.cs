@@ -124,40 +124,43 @@ namespace TrilleonAutomation {
 
 			PreCommandCheck(true);
 
-			SelectTracer(field.gameObject);
-				
-			if(field != null && keysToSend != null && field.isActiveAndEnabled) {
+			if(field != null) {
 
-				AutoHud.UpdateMessage(string.Format("{0} SendKeys \"{1}\"", field.gameObject.name, keysToSend));
-				Click(field.gameObject); //Send focus to input.
+				SelectTracer(field.gameObject);
 
-				if(!isAppend) {
+				if(keysToSend != null && field.isActiveAndEnabled) {
 
-					field.text = string.Empty;
+					AutoHud.UpdateMessage(string.Format("{0} SendKeys \"{1}\"", field.gameObject.name, keysToSend));
+					Click(field.gameObject); //Send focus to input.
 
+					if(!isAppend) {
+
+						field.text = string.Empty;
+
+					}
+
+					char[] keys = keysToSend.ToCharArray();
+					float waitTimeBetweenKeyPresses = BASE_TIME_PER_KEY_TO_SEND * keys.Length; //The wait between key presses reduces dramatically as the text to input increases.
+					waitTimeBetweenKeyPresses = waitTimeBetweenKeyPresses > 0.1f ? 0.1f : waitTimeBetweenKeyPresses;
+					for (int x = 0; x < keys.Length; x++) {
+
+						field.text = string.Format("{0}{1}", field.text, keys[x]);
+						yield return StartCoroutine(WaitRealTime(waitTimeBetweenKeyPresses));
+
+					}
+
+					if (isTry) {
+
+						yield return StartCoroutine(Q.assert.Try.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
+
+					} else {
+
+						yield return StartCoroutine(Q.assert.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
+
+					}
+
+					Click(field.gameObject.transform.parent.gameObject); //Remove focus from input.
 				}
-
-				char[] keys = keysToSend.ToCharArray();
-				float waitTimeBetweenKeyPresses = BASE_TIME_PER_KEY_TO_SEND * keys.Length; //The wait between key presses reduces dramatically as the text to input increases.
-				waitTimeBetweenKeyPresses = waitTimeBetweenKeyPresses > 0.1f ? 0.1f : waitTimeBetweenKeyPresses;
-				for(int x = 0; x < keys.Length; x++) {
-
-					field.text = string.Format("{0}{1}", field.text, keys[x]);
-					yield return StartCoroutine(WaitRealTime(waitTimeBetweenKeyPresses));
-
-				}
-
-				if(isTry) {
-
-					yield return StartCoroutine(Q.assert.Try.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
-
-				} else {
-
-					yield return StartCoroutine(Q.assert.Pass(string.Format("Send Keys \"{0}\" to {1}.", keysToSend, field.gameObject.name)));
-
-				}
-
-				Click(field.gameObject.transform.parent.gameObject); //Remove focus from input.
 
 			} else {
 
