@@ -55,7 +55,7 @@ namespace TrilleonAutomation {
 		public static bool NoResourceDeactivateTracer { get; set; }
 		public static GameObject AutomationSelectFeedback { get; set; }
 
-		void Start() {
+		protected virtual void Start() {
 
 			//Find Sprite asset from Resources; used by SelectTracer to show visual indication of automation-made selections.
 			BlueRing = Resources.Load<Sprite>("BlueRing");
@@ -916,7 +916,7 @@ namespace TrilleonAutomation {
 		/// <param name="optionalOnFailMessage">Click fail message.</param>
 		/// <param name="timeout">Timeout period where the driver will wait for the clickable object to be interactable.</param>
 		/// <param name="clickInactive">Ignore that the clickable object is currently inactive.</param>
-		public IEnumerator Click(GameObject g, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout = TIMEOUT_DEFAULT, bool clickInactive = false) {
+		public virtual IEnumerator Click(GameObject g, string optionalOnFailMessage = DEFAULT_ERROR_MESSAGE, float timeout = TIMEOUT_DEFAULT, bool clickInactive = false) {
 
 			PreCommandCheck(true);
 
@@ -1159,7 +1159,7 @@ namespace TrilleonAutomation {
 			objs.AddRange(obj.GetChildren());
 			for(int x = 0; x < objs.Count; x++) {
 				
-				if(objs[x] != null && (objs[x].GetComponent<Button>() != null || objs[x].GetComponent<Toggle>() != null)) {
+				if(objs[x] != null && IsFirstClickableObject(objs[x])) {
 					
 					return objs[x];
 
@@ -1168,6 +1168,17 @@ namespace TrilleonAutomation {
 			}
 			//None returned, assume object has custom click script, or no click scripts were found.
 			return obj;
+
+		}
+
+		/// <summary>
+		/// Returns true if the game object is something we want to click on.
+		/// </summary>
+		/// <param name="obj">The game object to consider clicking.</param>
+		/// <returns>true if the game object is something we want to click on.</returns>
+		protected virtual bool IsFirstClickableObject(GameObject obj) {
+
+			return obj.GetComponent<Button>() != null || obj.GetComponent<Toggle>() != null;
 
 		}
 
