@@ -169,9 +169,9 @@ HTML="
         <div id='bottom_panel' class='bottom_panel'>
         <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='https://${COMPANY_JENKINS_BASE_URL}/job/${JOB_NAME}/${BUILD_NUMBER}' style='margin-left: 200px;'>Jenkins Build ${BUILD_NUMBER}</a></div>
         <div class='link_separator'>&#9679;</div>
-        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='www.trilleonautomation.wiki/reports'>About This Report</a></div>
+        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='trilleonautomation.wiki/reports'>About This Report</a></div>
         <div class='link_separator'>&#9679;</div>
-        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='www.trilleonautomation.wiki/reports'>About Trilleon</a></div>
+        <div class='additional_tools_div'><a class='additional_tools' target='_blank' href='trilleonautomation.wiki/reports'>About Trilleon</a></div>
         </div>
         <div id='screenshot_panel' class='display_panel'>
             <div class='close' onclick='\$(this).parent().hide(400); CloseTransparencyLayer();'>X</div>
