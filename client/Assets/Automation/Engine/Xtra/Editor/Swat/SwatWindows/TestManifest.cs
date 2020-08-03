@@ -724,6 +724,7 @@ namespace TrilleonAutomation {
                 if(_reget) {
 
                     _reget = false;
+		    _firstPass = true;
                     GetTestMethods();
                     _allMethodsLast = _allMethods;
                     SetTestData();
