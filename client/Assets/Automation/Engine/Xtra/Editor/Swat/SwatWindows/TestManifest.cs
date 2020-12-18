@@ -227,6 +227,8 @@ namespace TrilleonAutomation {
 
             fo = new GUIStyle(EditorStyles.foldout);
             fo.padding = new RectOffset(10, 0, 0, 2);
+            fo.normal.textColor = Swat.WindowDefaultTextColor;
+            fo.normal.background = Swat.WindowBackgroundTexture;
 
             filter = new GUIStyle(GUI.skin.label);
             filter.margin = new RectOffset(14, 0, 0, 0);
@@ -724,7 +726,7 @@ namespace TrilleonAutomation {
                 if(_reget) {
 
                     _reget = false;
-		    _firstPass = true;
+		            _firstPass = true;
                     GetTestMethods();
                     _allMethodsLast = _allMethods;
                     SetTestData();

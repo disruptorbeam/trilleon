@@ -1,0 +1,2 @@
+C:\Users\tsibi\Desktop\trilleon-master\client\obj\Debug\Assembly-CSharp-Editor.csprojAssemblyReference.cache
+C:\Users\tsibi\Desktop\trilleon-master\client\obj\Debug\Assembly-CSharp-Editor.csproj.CoreCompileInputs.cache

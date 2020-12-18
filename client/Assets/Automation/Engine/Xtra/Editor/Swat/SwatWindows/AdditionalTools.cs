@@ -96,6 +96,7 @@ namespace TrilleonAutomation {
             dropDownLabel = new GUIStyle(GUI.skin.label);
             dropDownLabel.fontSize = 12;
             dropDownLabel.padding = new RectOffset(10, 0, -5, 0);
+            dropDownLabel.normal.textColor = Swat.WindowDefaultTextColor;
 
             editorName = new GUIStyle(GUI.skin.label);
             editorName.fontSize = 16;

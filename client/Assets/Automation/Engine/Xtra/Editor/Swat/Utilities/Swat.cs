@@ -848,13 +848,14 @@ namespace TrilleonAutomation {
 
 			GUILayout.Space(-25f);
 
-			EditorGUILayout.BeginVertical();
+			EditorGUILayout.BeginVertical(); 
 
 			GUILayout.Space(-10f);
-			if(GUILayout.Button(MOVEUP, upDownArrowButtons)) {}               
+			if (GUILayout.Button(MOVEUP, upDownArrowButtons)) {}               
 			GUILayout.Space(-3f);
+
 			upDownArrowButtons.fontSize = (int)upDownArrowButtons.fixedHeight - 6;
-			if(GUILayout.Button(MOVEDOWN, upDownArrowButtons)) {}
+			if (GUILayout.Button(MOVEDOWN, upDownArrowButtons)) {}
 
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.EndHorizontal();

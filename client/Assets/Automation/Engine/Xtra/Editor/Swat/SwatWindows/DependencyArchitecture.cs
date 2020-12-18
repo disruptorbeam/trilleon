@@ -98,11 +98,17 @@ namespace TrilleonAutomation {
 
 			GUIStyle s = new GUIStyle(GUI.skin.label);
 			s.padding = new RectOffset(18, 0, 0, 0);
-			Color defaultColor = s.normal.textColor;
+			s.normal.textColor = Swat.WindowDefaultTextColor;
+
+			GUIStyle fo = new GUIStyle(EditorStyles.foldout);
+			fo.padding = new RectOffset(10, 0, 0, 2);
+			fo.normal.textColor = Swat.WindowDefaultTextColor;
+			fo.normal.background = Swat.WindowBackgroundTexture;
 
 			GUIStyle header = new GUIStyle(GUI.skin.label);
 			header.fontSize = 16;
 			header.fixedHeight = 18;
+			header.normal.textColor = Swat.WindowDefaultTextColor;
 			header.fontStyle = FontStyle.Bold;
 			header.padding = new RectOffset(5, 0, 0, 0);
 
@@ -133,9 +139,9 @@ namespace TrilleonAutomation {
 
 					}
 
-					string FoldoutTitle = string.Format("Dependency Class {0}", index);
+					string FoldoutTitle = string.Format( "Dependency Class {0}", index);
 					EditorGUILayout.BeginHorizontal(padding);
-					FoldoutListMasterBools[index] = Nexus.Self.Foldout(FoldoutListMasterBools[index], FoldoutTitle, true);
+					FoldoutListMasterBools[index] = Nexus.Self.Foldout(FoldoutListMasterBools[index], FoldoutTitle, true, fo);
 					EditorGUILayout.EndHorizontal();
 
 					if(FoldoutListMasterBools[index]) {
@@ -176,7 +182,7 @@ namespace TrilleonAutomation {
 
 								s.normal.textColor = Color.red;
 								EditorGUILayout.LabelField("The above test class name does not match the file name. Please ensure that they match.", s);
-								s.normal.textColor = defaultColor;
+								s.normal.textColor = Swat.WindowDefaultTextColor;
 
 							}
 
@@ -238,7 +244,7 @@ namespace TrilleonAutomation {
 					EditorGUILayout.BeginVertical(padding);
 					masterlessSriptFiles[scriptIndex] = thisScript;
 					masterlessSriptFiles[scriptIndex] = EditorGUILayout.ObjectField(masterlessSriptFiles[scriptIndex], DependencyOrderingMasterless[z].Value[0].Key, true, new GUILayoutOption[] { GUILayout.MaxWidth(175) }) as MonoScript;
-					FoldoutListMasterLessBools[index] = Nexus.Self.Foldout(FoldoutListMasterLessBools[index], FoldoutTitle, true);
+					FoldoutListMasterLessBools[index] = Nexus.Self.Foldout(FoldoutListMasterLessBools[index], FoldoutTitle, true, fo);
 					EditorGUILayout.EndVertical();
 
 					//If the MonoScript is empty, the current test class has a different name than the file containing it. Warn that this should not be the case.
@@ -246,7 +252,7 @@ namespace TrilleonAutomation {
 
 						s.normal.textColor = Color.red;
 						EditorGUILayout.LabelField("The above test class name does not match the file name. Please ensure that they match.", s);
-						s.normal.textColor = defaultColor;
+						s.normal.textColor = Swat.WindowDefaultTextColor;
 
 					}
 

@@ -84,13 +84,14 @@ namespace TrilleonAutomation {
 
 			label = new GUIStyle(GUI.skin.label);
 			label.fontStyle = FontStyle.Bold;
+			label.normal.textColor = Swat.WindowDefaultTextColor;
 
 			savedStyle = new GUIStyle(GUI.skin.label);
 			savedStyle.normal.textColor = EditorGUIUtility.isProSkin ? green : (Color)new Color32(0, 140, 20, 255);
 
 			sectionHeader = new GUIStyle(GUI.skin.label);
 			sectionHeader.fontSize = 22;
-			sectionHeader.normal.textColor = Color.gray;
+			sectionHeader.normal.textColor = Swat.WindowDefaultTextColor;
 			sectionHeader.fixedHeight = 50;
 
 			inputToggle = new GUIStyle();
