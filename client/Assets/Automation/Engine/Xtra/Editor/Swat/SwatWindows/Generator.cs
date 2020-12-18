@@ -257,7 +257,11 @@ namespace TrilleonAutomation {
 			}
 			EditorGUILayout.BeginHorizontal(); // ID 03
 			GUILayout.Space(10);
-			EditorGUILayout.LabelField("Master Step Type: ", new GUILayoutOption[] { GUILayout.Width(100) } );
+
+			GUIStyle launchCatLabel = new GUIStyle(GUI.skin.label);
+			launchCatLabel.padding = new RectOffset(10, 0, 0, 0);
+			launchCatLabel.normal.textColor = Swat.WindowDefaultTextColor;
+			EditorGUILayout.LabelField("Master Step Type: ", launchCatLabel);
 			Nexus.Overseer.stepMaster = (AutoStepMaster)Nexus.Self.DropDown(Nexus.Overseer.stepMaster, 0, 25, 200);
 			EditorGUILayout.EndHorizontal(); // ID 03
 

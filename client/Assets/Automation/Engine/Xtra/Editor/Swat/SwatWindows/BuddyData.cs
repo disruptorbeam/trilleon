@@ -66,6 +66,8 @@ namespace TrilleonAutomation {
 			GUIStyle buddyWindowLabel = new GUIStyle(GUI.skin.label);
 			buddyWindowLabel.fontStyle = FontStyle.Bold;
 			buddyWindowLabel.padding = Nexus.BaseRectOffset;
+			buddyWindowLabel.normal.textColor = Swat.WindowDefaultTextColor;
+
 			GUIStyle sl = new GUIStyle(GUI.skin.label);
 			sl.padding = new RectOffset(15, 0, 0, 0);
 
