@@ -272,7 +272,7 @@ namespace TrilleonAutomation {
 
 			GetWindow(type, false, name).Close(); 
 
-			Assembly editorAssembly = typeof(Editor).Assembly;
+			Assembly editorAssembly = typeof(UnityEditor.Editor).Assembly;
 			Type dockWindow = null;
 			DockNextTo dockThis;
 
