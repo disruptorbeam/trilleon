@@ -504,7 +504,7 @@ namespace TrilleonAutomation {
 			allXml.Append("</testsuites>");
 			SetCompleteReport();
 
-			#if UNITY_WEBGL
+			#if UNITY_WEBGL && !UNITY_EDITOR
 			WebGLBroker.ReportXmlResults(allXml.ToString());
 			WebGLBroker.ReportJsonResults(jsonBody.ToString());
 			#endif
